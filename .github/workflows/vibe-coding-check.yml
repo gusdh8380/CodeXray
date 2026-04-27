@@ -1,0 +1,15 @@
+name: Vibe Coding Check
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check CLAUDE.md exists
+        run: test -f CLAUDE.md
+      - name: Check .claude directory
+        run: test -d .claude

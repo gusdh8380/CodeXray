@@ -1,0 +1,15 @@
+# OMC working state
+.omc/
+
+# Editor / OS
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Local Claude settings (user-specific)
+.claude/settings.local.json

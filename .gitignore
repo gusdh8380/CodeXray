@@ -11,5 +11,16 @@
 node_modules/
 npm-debug.log*
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
 # Local Claude settings (user-specific)
 .claude/settings.local.json

@@ -12,6 +12,8 @@ from .graph import to_json as graph_to_json
 from .inventory import aggregate
 from .metrics import build_metrics
 from .metrics import to_json as metrics_to_json
+from .quality import build_quality
+from .quality import to_json as quality_to_json
 from .render import render
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="CodeXray CLI")
@@ -68,6 +70,14 @@ def entrypoints_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     target = _validate_dir(path)
     result = build_entrypoints(target)
     typer.echo(entrypoints_to_json(result))
+
+
+@app.command("quality")
+def quality_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit a 4-dimension quality grade JSON for ``PATH``."""
+    target = _validate_dir(path)
+    report = build_quality(target)
+    typer.echo(quality_to_json(report))
 
 
 def main() -> None:

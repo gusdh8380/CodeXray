@@ -17,6 +17,16 @@ class BriefingCard:
 
 
 @dataclass(frozen=True, slots=True)
+class BriefingSlide:
+    id: str
+    title: str
+    eyebrow: str
+    narrative: str
+    evidence: tuple[BriefingEvidence, ...]
+    deep_links: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class GitCommitSummary:
     hash: str
     subject: str
@@ -45,4 +55,6 @@ class CodebaseBriefing:
     build_process: tuple[BriefingCard, ...]
     explain: tuple[BriefingCard, ...]
     deep_dive: tuple[BriefingCard, ...]
+    presenter_summary: str
+    presentation_slides: tuple[BriefingSlide, ...]
     git_history: GitHistorySummary

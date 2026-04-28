@@ -48,8 +48,26 @@ def test_briefing_composes_sections_and_serializes(tmp_path: Path) -> None:
     assert briefing.build_process
     assert briefing.explain
     assert briefing.deep_dive
+    assert briefing.presenter_summary
+    assert len(briefing.presentation_slides) == 6
     assert payload["schema_version"] == 1
+    assert payload["presenter_summary"] == briefing.presenter_summary
+    assert len(payload["presentation_slides"]) == 6
     assert to_json(briefing) == to_json(build_codebase_briefing(tmp_path))
+
+
+def test_briefing_presentation_slides_have_evidence_and_links(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+
+    briefing = build_codebase_briefing(tmp_path)
+
+    for slide in briefing.presentation_slides:
+        assert slide.id
+        assert slide.title
+        assert slide.eyebrow
+        assert slide.narrative
+        assert slide.evidence
+        assert slide.deep_links
 
 
 def test_git_history_detects_vibe_process_commits(tmp_path: Path) -> None:

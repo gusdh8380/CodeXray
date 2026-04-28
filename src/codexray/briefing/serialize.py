@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from .types import BriefingCard, CodebaseBriefing, GitCommitSummary
+from .types import BriefingCard, BriefingSlide, CodebaseBriefing, GitCommitSummary
 
 
 def to_json(briefing: CodebaseBriefing) -> str:
@@ -16,6 +16,8 @@ def to_json(briefing: CodebaseBriefing) -> str:
         "build_process": [_card(card) for card in briefing.build_process],
         "explain": [_card(card) for card in briefing.explain],
         "deep_dive": [_card(card) for card in briefing.deep_dive],
+        "presenter_summary": briefing.presenter_summary,
+        "presentation_slides": [_slide(slide) for slide in briefing.presentation_slides],
         "git_history": {
             "available": briefing.git_history.available,
             "commit_count": briefing.git_history.commit_count,
@@ -42,6 +44,19 @@ def _card(card: BriefingCard) -> dict[str, object]:
         "evidence": [
             {"label": item.label, "value": item.value} for item in card.evidence
         ],
+    }
+
+
+def _slide(slide: BriefingSlide) -> dict[str, object]:
+    return {
+        "id": slide.id,
+        "title": slide.title,
+        "eyebrow": slide.eyebrow,
+        "narrative": slide.narrative,
+        "evidence": [
+            {"label": item.label, "value": item.value} for item in slide.evidence
+        ],
+        "deep_links": list(slide.deep_links),
     }
 
 

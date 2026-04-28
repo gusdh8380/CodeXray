@@ -80,6 +80,72 @@
     }
   }
 
+  function setupBriefingPresentation(root) {
+    const deck = root.querySelector("[data-briefing-presentation='true']");
+    if (!deck || deck.dataset.briefingReady === "true") {
+      return;
+    }
+    deck.dataset.briefingReady = "true";
+    const slides = Array.from(deck.querySelectorAll("[data-briefing-slide]"));
+    const current = deck.querySelector("[data-briefing-current]");
+    const dots = Array.from(deck.querySelectorAll("[data-briefing-target]"));
+    const prev = deck.querySelector("[data-briefing-prev]");
+    const next = deck.querySelector("[data-briefing-next]");
+    let index = 0;
+
+    function show(nextIndex) {
+      if (!slides.length) {
+        return;
+      }
+      index = Math.max(0, Math.min(nextIndex, slides.length - 1));
+      slides.forEach(function (slide, slideIndex) {
+        const active = slideIndex === index;
+        slide.classList.toggle("is-active", active);
+        slide.setAttribute("aria-hidden", active ? "false" : "true");
+      });
+      dots.forEach(function (dot, dotIndex) {
+        const active = dotIndex === index;
+        dot.classList.toggle("is-active", active);
+        dot.setAttribute("aria-current", active ? "step" : "false");
+      });
+      if (current) {
+        current.textContent = String(index + 1);
+      }
+      if (prev) {
+        prev.disabled = index === 0;
+      }
+      if (next) {
+        next.disabled = index === slides.length - 1;
+      }
+    }
+
+    if (prev) {
+      prev.addEventListener("click", function () {
+        show(index - 1);
+      });
+    }
+    if (next) {
+      next.addEventListener("click", function () {
+        show(index + 1);
+      });
+    }
+    dots.forEach(function (dot) {
+      dot.addEventListener("click", function () {
+        show(Number(dot.dataset.briefingTarget || "0"));
+      });
+    });
+    deck.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        show(index + 1);
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        show(index - 1);
+      }
+    });
+    show(0);
+  }
+
   select.addEventListener("change", function () {
     if (select.value) {
       input.value = select.value;
@@ -110,6 +176,7 @@
     resultPanel.classList.remove("is-loading");
     if (event.detail.successful) {
       setStatus("Ready");
+      setupBriefingPresentation(resultPanel);
     } else {
       setStatus("Request failed");
     }
@@ -134,6 +201,7 @@
   applyTheme(preferredTheme());
   renderOptions();
   setActiveTab(activeTab);
+  setupBriefingPresentation(document);
   window.setTimeout(function () {
     rerunActiveTab();
   }, 0);

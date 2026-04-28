@@ -122,17 +122,22 @@ def render_codebase_briefing(briefing: CodebaseBriefing) -> str:
         ]
     body = "".join(
         [
-            '<article class="briefing-deck" data-codexray-briefing="deck">',
+            '<article class="briefing-deck briefing-presentation" data-codexray-briefing="deck" '
+            'data-briefing-presentation="true" tabindex="0">',
             f"<header class=\"briefing-hero\"><h2>{html.escape(briefing.title)}</h2>"
-            "<p>소스파일/레포를 팀에 설명할 수 있는 발표자료형 분석입니다.</p></header>",
+            "<p>소스파일/레포를 팀에 설명할 수 있는 발표자료형 분석입니다.</p>"
+            f'<p class="presenter-summary">{html.escape(briefing.presenter_summary)}</p>'
+            "</header>",
+            _briefing_presentation(briefing),
+            (
+                '<section class="briefing-supporting-evidence"><h3>Git 제작 과정 근거</h3>'
+                + _table(("hash", "type", "message", "process evidence"), history_rows)
+                + "</section>"
+            ),
             _briefing_section("Briefing", briefing.executive),
             _briefing_section("Architecture", briefing.architecture),
             _briefing_section("Quality & Risk", briefing.quality_risk),
             _briefing_section("How It Was Built", briefing.build_process),
-            (
-                "<h3>Git 제작 과정 근거</h3>"
-                + _table(("hash", "type", "message", "process evidence"), history_rows)
-            ),
             _briefing_section("Explain", briefing.explain),
             _briefing_section("Deep Dive", briefing.deep_dive),
             _raw_details(payload),
@@ -514,6 +519,59 @@ def render_summary_cards(summary: SummaryResult) -> str:
         + _summary_card_html("약점", summary.weaknesses, "card-weakness")
         + _summary_card_html("다음 행동", summary.actions, "card-action")
         + "</div>"
+    )
+
+
+def _briefing_presentation(briefing: CodebaseBriefing) -> str:
+    total = len(briefing.presentation_slides)
+    nav = "".join(
+        '<button class="briefing-dot" type="button" '
+        f'data-briefing-target="{index}" aria-label="Go to slide {index + 1}">'
+        f"{index + 1}</button>"
+        for index, _slide in enumerate(briefing.presentation_slides)
+    )
+    slides = "".join(
+        _briefing_slide(slide, index=index, total=total)
+        for index, slide in enumerate(briefing.presentation_slides)
+    )
+    return (
+        '<section class="briefing-presenter" data-briefing-slide-count="'
+        f'{total}">'
+        '<div class="briefing-controls" aria-label="Briefing slide controls">'
+        '<button class="briefing-nav-button" type="button" data-briefing-prev '
+        'aria-label="Previous briefing slide">Previous</button>'
+        f'<span class="briefing-counter">Slide <strong data-briefing-current>1</strong> '
+        f"/ {total}</span>"
+        '<button class="briefing-nav-button" type="button" data-briefing-next '
+        'aria-label="Next briefing slide">Next</button>'
+        "</div>"
+        f'<nav class="briefing-dots" aria-label="Briefing sections">{nav}</nav>'
+        f'<div class="briefing-slides">{slides}</div>'
+        "</section>"
+    )
+
+
+def _briefing_slide(slide, *, index: int, total: int) -> str:
+    active = " is-active" if index == 0 else ""
+    evidence = "".join(
+        '<span class="briefing-evidence">'
+        f"<strong>{html.escape(item.label)}</strong>: {html.escape(item.value)}"
+        "</span>"
+        for item in slide.evidence
+    )
+    links = "".join(
+        f'<span class="deep-link-chip">{html.escape(link)}</span>' for link in slide.deep_links
+    )
+    return (
+        f'<section class="briefing-slide{active}" data-briefing-slide="{index}" '
+        f'data-briefing-slide-id="{html.escape(slide.id)}" '
+        f'aria-label="Slide {index + 1} of {total}">'
+        f'<p class="briefing-eyebrow">{html.escape(slide.eyebrow)}</p>'
+        f"<h3>{html.escape(slide.title)}</h3>"
+        f'<p class="briefing-narrative">{html.escape(slide.narrative)}</p>'
+        f'<div class="briefing-evidence-list">{evidence}</div>'
+        f'<div class="deep-link-list" aria-label="Deep dive references">{links}</div>'
+        "</section>"
     )
 
 

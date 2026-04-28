@@ -122,12 +122,31 @@ def test_briefing_endpoint_renders_deck_sections(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     assert 'data-codexray-briefing="deck"' in response.text
+    assert 'data-briefing-presentation="true"' in response.text
+    assert 'data-briefing-slide-count="6"' in response.text
+    assert 'data-briefing-current' in response.text
+    assert 'data-briefing-prev' in response.text
+    assert 'data-briefing-next' in response.text
+    assert 'data-briefing-target="0"' in response.text
+    assert 'data-briefing-slide="0"' in response.text
+    assert "presenter-summary" in response.text
+    assert "오늘 이 레포를 어떻게 볼 것인가" in response.text
     assert "Briefing" in response.text
     assert "Architecture" in response.text
     assert "Quality &amp; Risk" in response.text
     assert "How It Was Built" in response.text
     assert "Git 제작 과정 근거" in response.text
     assert "비개발자 설명" in response.text
+
+
+def test_static_app_contains_briefing_navigation_hooks() -> None:
+    script = Path("src/codexray/web/static/app.js").read_text()
+
+    assert "setupBriefingPresentation" in script
+    assert "data-briefing-next" in script
+    assert "data-briefing-prev" in script
+    assert "ArrowRight" in script
+    assert "ArrowLeft" in script
 
 
 def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> None:

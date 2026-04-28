@@ -271,6 +271,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  outline: none;
 }
 
 .briefing-hero {
@@ -288,6 +289,135 @@ select {
 .briefing-hero p {
   margin: 0;
   color: var(--text-muted);
+}
+
+.presenter-summary {
+  margin-top: 12px;
+  max-width: 980px;
+  color: var(--text-strong);
+  line-height: 1.6;
+}
+
+.briefing-presenter {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  padding: 14px;
+}
+
+.briefing-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.briefing-nav-button,
+.briefing-dot {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-strong);
+  cursor: pointer;
+  min-height: 34px;
+}
+
+.briefing-nav-button {
+  min-width: 88px;
+  padding: 0 12px;
+}
+
+.briefing-nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.briefing-counter {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.briefing-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.briefing-dot {
+  width: 34px;
+  height: 34px;
+}
+
+.briefing-dot.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.briefing-slides {
+  min-height: 330px;
+}
+
+.briefing-slide {
+  display: none;
+  min-height: 330px;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.briefing-slide.is-active {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.briefing-eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.briefing-slide h3 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.18;
+}
+
+.briefing-narrative {
+  max-width: 960px;
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.deep-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.deep-link-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.briefing-supporting-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .briefing-section h3 {

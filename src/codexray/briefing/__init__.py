@@ -5,6 +5,7 @@ from .serialize import to_json
 from .types import (
     BriefingCard,
     BriefingEvidence,
+    BriefingSlide,
     CodebaseBriefing,
     GitCommitSummary,
     GitHistorySummary,
@@ -13,6 +14,7 @@ from .types import (
 __all__ = [
     "BriefingCard",
     "BriefingEvidence",
+    "BriefingSlide",
     "CodebaseBriefing",
     "GitCommitSummary",
     "GitHistorySummary",

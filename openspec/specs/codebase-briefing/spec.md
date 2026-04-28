@@ -2,7 +2,6 @@
 
 ## Purpose
 The codebase-briefing capability composes CodeXray's deterministic analyzers into a presentation-like repository briefing that explains what the codebase is, its current status, how it was built, key risks, and next actions. It combines inventory, graph, metrics, entrypoints, quality, hotspots, summary, vibe-coding evidence, and git-history creation-process analysis, then feeds the web UI Briefing experience while preserving deep-dive access to the underlying analyzers.
-
 ## Requirements
 ### Requirement: Briefing composition
 The system SHALL build a codebase briefing model by composing existing deterministic analysis results and vibe-coding process evidence.
@@ -65,3 +64,33 @@ The system SHALL complete deterministic briefing analysis within 5 seconds on th
 #### Scenario: CivilSim validation
 - **WHEN** CivilSim repository path is analyzed
 - **THEN** the briefing completes within 5 seconds or returns a graceful history-unavailable marker while still rendering meaningful repository status
+
+### Requirement: Briefing presentation slides
+The system SHALL build deterministic presentation slide data from the existing codebase briefing evidence.
+
+#### Scenario: Slide set contains audience-ready sections
+- **WHEN** a valid repository path is analyzed
+- **THEN** the briefing result includes presentation slides for opening summary, system shape, current health, build history, explanation for non-developers, and recommended next actions
+
+#### Scenario: Slides cite concrete evidence
+- **WHEN** presentation slides are built
+- **THEN** each slide includes at least one concrete evidence item such as grade, path, metric, hotspot, commit message, or process artifact
+
+#### Scenario: Presenter summary exists
+- **WHEN** the briefing result is built
+- **THEN** it includes a concise presenter summary suitable for reading aloud to a teammate or non-developer stakeholder
+
+### Requirement: Presentation serialization
+The system SHALL serialize presentation slide data with `schema_version: 1`, deterministic ordering, and root-relative POSIX paths where paths are present.
+
+#### Scenario: Repeatable presentation serialization
+- **WHEN** the same repository is analyzed twice without file or git-history changes
+- **THEN** the serialized briefing presentation fields are byte-for-byte identical
+
+### Requirement: Presentation depth preservation
+The system SHALL preserve deep analysis access from the presentation briefing.
+
+#### Scenario: Slides point to deep dives
+- **WHEN** a presentation slide summarizes architecture, quality, hotspots, build process, or next actions
+- **THEN** it includes references to the relevant detailed analyzer or briefing section that can be used to inspect the underlying evidence
+

@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<!-- codexray-dashboard-v1 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CodeXray Dashboard — /Users/jeonhyeono/Project/personal/CivilSim</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, system-ui, sans-serif; color: #111827; background: #f9fafb; }
+  header { padding: 12px 18px; background: #111827; color: #f9fafb; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; }
+  header .meta { font-size: 13px; opacity: 0.85; display: flex; gap: 14px; flex-wrap: wrap; }
+  header .grade strong { font-size: 15px; padding: 1px 8px; border-radius: 4px; background: #dc2626; color: white; }
+  header .grade.A strong { background: #16a34a; }
+  header .grade.B strong { background: #65a30d; }
+  header .grade.C strong { background: #ca8a04; }
+  header .grade.D strong { background: #ea580c; }
+  header .grade.F strong { background: #dc2626; }
+  header .grade.NA strong { background: #6b7280; }
+  .layout { display: flex; height: calc(100vh - 50px); }
+  .sidebar { width: 320px; padding: 14px; border-right: 1px solid #e5e7eb; overflow-y: auto; background: #ffffff; }
+  .sidebar input[type=search] { width: 100%; padding: 6px 10px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 12px; }
+  .legend { font-size: 12px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  .legend .row { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.hotspot { background: #dc2626; }
+  .dot.active_stable { background: #f59e0b; }
+  .dot.neglected_complex { background: #eab308; }
+  .dot.stable { background: #9ca3af; }
+  .detail { font-size: 13px; line-height: 1.5; }
+  .detail h3 { margin: 0 0 6px; font-size: 14px; word-break: break-all; }
+  .detail .badge { display: inline-block; padding: 1px 7px; border-radius: 3px; color: white; font-size: 11px; }
+  .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0; }
+  .detail dt { color: #6b7280; }
+  .detail dd { margin: 0; }
+  .detail .empty { color: #9ca3af; font-style: italic; }
+  .graph { flex: 1; position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; display: block; background: #f9fafb; }
+  .node { stroke: #ffffff; stroke-width: 1.5px; cursor: pointer; }
+  .node.hotspot { fill: #dc2626; }
+  .node.active_stable { fill: #f59e0b; }
+  .node.neglected_complex { fill: #eab308; }
+  .node.stable { fill: #9ca3af; }
+  .node.selected { stroke: #111827; stroke-width: 3px; }
+  .node.dim { opacity: 0.15; }
+  .edge { stroke: #cbd5e1; stroke-width: 1.2px; opacity: 0.6; }
+  .edge.dim { opacity: 0.05; }
+  .label { font-size: 10px; fill: #374151; pointer-events: none; }
+  .label.dim { opacity: 0.15; }
+  .empty-state { padding: 24px; color: #6b7280; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CodeXray</h1>
+  <div class="meta">
+    <span class="path">/Users/jeonhyeono/Project/personal/CivilSim</span>
+    <span class="date">2026-04-28</span>
+    <span class="grade D">Grade: <strong>D</strong> (40)</span>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <input type="search" id="search" placeholder="filter by path..." autocomplete="off" />
+    <div class="legend">
+      <div class="row"><span class="dot hotspot"></span> hotspot (high change × high coupling)</div>
+      <div class="row"><span class="dot active_stable"></span> active_stable</div>
+      <div class="row"><span class="dot neglected_complex"></span> neglected_complex</div>
+      <div class="row"><span class="dot stable"></span> stable</div>
+    </div>
+    <div class="detail" id="detail">
+      <p class="empty">노드를 클릭하면 상세가 여기에 표시됩니다.</p>
+    </div>
+  </aside>
+  <div class="graph">
+    <svg id="viz"></svg>
+    <div id="empty" class="empty-state" style="display:none">분석 대상 노드가 없습니다.</div>
+  </div>
+</div>
+
+<script type="application/json" id="codexray-data-inventory">{"schema_version": 1, "rows": [{"language": "C#", "file_count": 53, "loc": 8878, "last_modified_at": "2026-03-05T17:55:20+09:00"}]}</script>
+<script type="application/json" id="codexray-data-graph">{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "path": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingData.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/BulidingTestInput.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameClock.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEventBus.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEvents.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameStartContext.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/LoadingSceneContext.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/TickSystem.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Core/WebGLRuntimeOptimizer.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyConfig.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridCell.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridSystem.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadTileDatabase.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessFormula.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/HUDController.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/UI/StartMenuUI.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/World/GroundGenerator.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneManager.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EconomyFormulaTests.cs",
+      "language": "C#"
+    },
+    {
+      "path": "Assets/Tests/EditMode/HappinessFormulaTests.cs",
+      "language": "C#"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "System.IO",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "UnityEditor",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "System.IO",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "System.Linq",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "UnityEditor",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "UnityEditor.Build",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "UnityEditor.Build.Reporting",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingData.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/BulidingTestInput.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/BulidingTestInput.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/BulidingTestInput.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Core/GameClock.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Economy/EconomyManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameClock.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameClock.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameClock.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEventBus.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEventBus.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEventBus.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEvents.cs",
+      "to": "Assets/Scripts/Core/GameClock.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEvents.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameEvents.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "to": "UnityEngine.InputSystem.Controls",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/GameClock.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Core/TickSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Economy/EconomyManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Population/HappinessManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "Assets/Scripts/Zones/ZoneManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/GameManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Core/GameClock.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Core/GameStartContext.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Economy/EconomyManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "System.Collections",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "System.IO",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/TickSystem.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/TickSystem.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Core/TickSystem.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Core/WebGLRuntimeOptimizer.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyConfig.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Economy/EconomyConfig.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Economy/EconomyManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridCell.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridCell.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridSystem.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridSystem.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridSystem.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "UnityEngine.EventSystems",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadTileDatabase.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/RoadTileDatabase.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Population/HappinessFormula.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Population/HappinessManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/HappinessManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/HappinessManager.cs",
+      "to": "Assets/Scripts/Population/HappinessFormula.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Population/HappinessManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "UnityEngine.EventSystems",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Core/GameClock.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/HUDController.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "Assets/Scripts/Core/LoadingSceneContext.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "System.Collections",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "UnityEngine.SceneManagement",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/Economy/EconomyManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "to": "Assets/Scripts/Buildings/BuildingData.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "to": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "Assets/Scripts/Core/GameStartContext.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "Assets/Scripts/Core/LoadingSceneContext.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "System",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "TMPro",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "UnityEngine.SceneManagement",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/UI/StartMenuUI.cs",
+      "to": "UnityEngine.UI",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/World/GroundGenerator.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/World/GroundGenerator.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/World/GroundGenerator.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "Assets/Scripts/Zones/ZoneManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "System.Collections.Generic",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "UnityEngine.EventSystems",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "to": "UnityEngine.InputSystem",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "Assets/Scripts/Core/GameEventBus.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "Assets/Scripts/Core/GameEvents.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "Assets/Scripts/Core/GameManager.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "Assets/Scripts/Grid/GridCell.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "Assets/Scripts/Grid/GridSystem.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Scripts/Zones/ZoneManager.cs",
+      "to": "UnityEngine",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Tests/EditMode/EconomyFormulaTests.cs",
+      "to": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Tests/EditMode/EconomyFormulaTests.cs",
+      "to": "NUnit.Framework",
+      "kind": "external"
+    },
+    {
+      "from": "Assets/Tests/EditMode/HappinessFormulaTests.cs",
+      "to": "Assets/Scripts/Population/HappinessFormula.cs",
+      "kind": "internal"
+    },
+    {
+      "from": "Assets/Tests/EditMode/HappinessFormulaTests.cs",
+      "to": "NUnit.Framework",
+      "kind": "external"
+    }
+  ]
+}</script>
+<script type="application/json" id="codexray-data-metrics">{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "path": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 0,
+      "external_fan_out": 7
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingData.cs",
+      "language": "C#",
+      "fan_in": 13,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "language": "C#",
+      "fan_in": 4,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "language": "C#",
+      "fan_in": 4,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "language": "C#",
+      "fan_in": 6,
+      "fan_out": 6,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "language": "C#",
+      "fan_in": 3,
+      "fan_out": 9,
+      "external_fan_out": 3
+    },
+    {
+      "path": "Assets/Scripts/BulidingTestInput.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 6,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Core/GameClock.cs",
+      "language": "C#",
+      "fan_in": 5,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEventBus.cs",
+      "language": "C#",
+      "fan_in": 21,
+      "fan_out": 0,
+      "external_fan_out": 3
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEvents.cs",
+      "language": "C#",
+      "fan_in": 22,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "language": "C#",
+      "fan_in": 7,
+      "fan_out": 0,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/Core/GameManager.cs",
+      "language": "C#",
+      "fan_in": 22,
+      "fan_out": 22,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Core/GameStartContext.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 0
+    },
+    {
+      "path": "Assets/Scripts/Core/LoadingSceneContext.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 0
+    },
+    {
+      "path": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 13,
+      "external_fan_out": 6
+    },
+    {
+      "path": "Assets/Scripts/Core/TickSystem.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Core/WebGLRuntimeOptimizer.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyConfig.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyManager.cs",
+      "language": "C#",
+      "fan_in": 4,
+      "fan_out": 7,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridCell.cs",
+      "language": "C#",
+      "fan_in": 8,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridSystem.cs",
+      "language": "C#",
+      "fan_in": 12,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 4,
+      "external_fan_out": 3
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "language": "C#",
+      "fan_in": 3,
+      "fan_out": 5,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 6,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "language": "C#",
+      "fan_in": 3,
+      "fan_out": 5,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadTileDatabase.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "language": "C#",
+      "fan_in": 4,
+      "fan_out": 6,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "language": "C#",
+      "fan_in": 4,
+      "fan_out": 6,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessFormula.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessManager.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 3,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 3,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 5,
+      "external_fan_out": 5
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/UI/HUDController.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 10,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 6
+    },
+    {
+      "path": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "language": "C#",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 6,
+      "external_fan_out": 2
+    },
+    {
+      "path": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 6,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 5,
+      "external_fan_out": 3
+    },
+    {
+      "path": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "language": "C#",
+      "fan_in": 1,
+      "fan_out": 2,
+      "external_fan_out": 3
+    },
+    {
+      "path": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 6,
+      "external_fan_out": 5
+    },
+    {
+      "path": "Assets/Scripts/UI/StartMenuUI.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 3,
+      "external_fan_out": 6
+    },
+    {
+      "path": "Assets/Scripts/World/GroundGenerator.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 7,
+      "external_fan_out": 4
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneManager.cs",
+      "language": "C#",
+      "fan_in": 2,
+      "fan_out": 5,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Tests/EditMode/EconomyFormulaTests.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "Assets/Tests/EditMode/HappinessFormulaTests.cs",
+      "language": "C#",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    }
+  ],
+  "graph": {
+    "node_count": 53,
+    "edge_count_internal": 178,
+    "edge_count_external": 121,
+    "scc_count": 39,
+    "largest_scc_size": 14,
+    "is_dag": false
+  }
+}</script>
+<script type="application/json" id="codexray-data-entrypoints">{
+  "schema_version": 1,
+  "entrypoints": [
+    {
+      "path": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Start"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/BulidingTestInput.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Update"
+    },
+    {
+      "path": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Update"
+    },
+    {
+      "path": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDisable, OnEnable, Start"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameClock.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Update"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy"
+    },
+    {
+      "path": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/Core/TickSystem.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDisable, OnEnable"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridSystem.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Start"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDisable, OnEnable, Start"
+    },
+    {
+      "path": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDisable, OnEnable, Start"
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDisable, OnEnable, Start"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDestroy"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy"
+    },
+    {
+      "path": "Assets/Scripts/UI/HUDController.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "OnDestroy, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, Start"
+    },
+    {
+      "path": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDisable, OnEnable, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, OnDisable, OnEnable, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, OnDisable, OnEnable, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDisable, OnEnable"
+    },
+    {
+      "path": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, OnDisable, OnEnable, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/UI/StartMenuUI.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start"
+    },
+    {
+      "path": "Assets/Scripts/World/GroundGenerator.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Start"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Awake, OnDestroy, Start, Update"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneManager.cs",
+      "language": "C#",
+      "kind": "unity_lifecycle",
+      "detail": "Start"
+    }
+  ]
+}</script>
+<script type="application/json" id="codexray-data-quality">{
+  "schema_version": 1,
+  "overall": {
+    "score": 40,
+    "grade": "D"
+  },
+  "dimensions": {
+    "coupling": {
+      "score": 33,
+      "grade": "F",
+      "detail": {
+        "avg_fan_inout": 6.72,
+        "max": 44
+      }
+    },
+    "cohesion": {
+      "score": 92,
+      "grade": "A",
+      "detail": {
+        "groups_evaluated": 3
+      }
+    },
+    "documentation": {
+      "score": 33,
+      "grade": "F",
+      "detail": {
+        "items_total": 262,
+        "documented": 86
+      }
+    },
+    "test": {
+      "score": 4,
+      "grade": "F",
+      "detail": {
+        "src_loc": 8684,
+        "test_loc": 194,
+        "ratio": 0.02
+      }
+    }
+  }
+}</script>
+<script type="application/json" id="codexray-data-hotspots">{
+  "schema_version": 1,
+  "thresholds": {
+    "change_count_median": 3,
+    "coupling_median": 8
+  },
+  "summary": {
+    "hotspot": 23,
+    "active_stable": 9,
+    "neglected_complex": 7,
+    "stable": 14
+  },
+  "files": [
+    {
+      "path": "Assets/Editor/PandazoleBuildingDataGenerator.cs",
+      "change_count": 2,
+      "coupling": 6,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Editor/WebGLReleaseBuilder.cs",
+      "change_count": 3,
+      "coupling": 7,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingData.cs",
+      "change_count": 4,
+      "coupling": 14,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingDatabase.cs",
+      "change_count": 2,
+      "coupling": 7,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingInstance.cs",
+      "change_count": 4,
+      "coupling": 6,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingManager.cs",
+      "change_count": 6,
+      "coupling": 14,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Buildings/BuildingPlacer.cs",
+      "change_count": 11,
+      "coupling": 15,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/BulidingTestInput.cs",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Camera/RTSCameraController.cs",
+      "change_count": 9,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Core/CityProgressionManager.cs",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameClock.cs",
+      "change_count": 3,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEventBus.cs",
+      "change_count": 1,
+      "coupling": 24,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameEvents.cs",
+      "change_count": 11,
+      "coupling": 25,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameHotkeySettings.cs",
+      "change_count": 2,
+      "coupling": 11,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameManager.cs",
+      "change_count": 15,
+      "coupling": 45,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Core/GameStartContext.cs",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Core/LoadingSceneContext.cs",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Core/SaveLoadManager.cs",
+      "change_count": 3,
+      "coupling": 21,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Core/TickSystem.cs",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Core/WebGLRuntimeOptimizer.cs",
+      "change_count": 1,
+      "coupling": 1,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyConfig.cs",
+      "change_count": 7,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyFormula.cs",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Economy/EconomyManager.cs",
+      "change_count": 11,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridCell.cs",
+      "change_count": 3,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridSystem.cs",
+      "change_count": 6,
+      "coupling": 15,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Grid/GridVisualizer.cs",
+      "change_count": 4,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationBuilder.cs",
+      "change_count": 6,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/FoundationManager.cs",
+      "change_count": 5,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadBuilder.cs",
+      "change_count": 8,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadManager.cs",
+      "change_count": 8,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/RoadTileDatabase.cs",
+      "change_count": 4,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Infrastructure/UtilityManager.cs",
+      "change_count": 7,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Population/CityDemandSystem.cs",
+      "change_count": 7,
+      "coupling": 11,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessFormula.cs",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/Population/HappinessManager.cs",
+      "change_count": 2,
+      "coupling": 5,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/UI/BudgetReportTextFormatter.cs",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingButtonUI.cs",
+      "change_count": 2,
+      "coupling": 8,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingPanelUI.cs",
+      "change_count": 5,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/BuildingTooltipUI.cs",
+      "change_count": 5,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/UI/HUDController.cs",
+      "change_count": 12,
+      "coupling": 14,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/LoadingSceneUI.cs",
+      "change_count": 3,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/PanelOpenCoordinator.cs",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Scripts/UI/PlacedBuildingSelector.cs",
+      "change_count": 2,
+      "coupling": 8,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/UI/PolicyPanelUI.cs",
+      "change_count": 4,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/ReportPanelUI.cs",
+      "change_count": 10,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/SelectedBuildingPanel.cs",
+      "change_count": 4,
+      "coupling": 6,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/UI/SettingsPanelUI.cs",
+      "change_count": 14,
+      "coupling": 11,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/UI/StartMenuUI.cs",
+      "change_count": 2,
+      "coupling": 9,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Scripts/World/GroundGenerator.cs",
+      "change_count": 6,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneBuilder.cs",
+      "change_count": 3,
+      "coupling": 13,
+      "category": "hotspot"
+    },
+    {
+      "path": "Assets/Scripts/Zones/ZoneManager.cs",
+      "change_count": 2,
+      "coupling": 8,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "Assets/Tests/EditMode/EconomyFormulaTests.cs",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "stable"
+    },
+    {
+      "path": "Assets/Tests/EditMode/HappinessFormulaTests.cs",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "stable"
+    }
+  ]
+}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+(function () {
+  function readJSON(id) {
+    var el = document.getElementById(id);
+    return el ? JSON.parse(el.textContent) : null;
+  }
+  var graphData = readJSON('codexray-data-graph') || {nodes: [], edges: []};
+  var metricsData = readJSON('codexray-data-metrics') || {nodes: []};
+  var hotspotsData = readJSON('codexray-data-hotspots') || {files: []};
+  var entrypointsData = readJSON('codexray-data-entrypoints') || {entrypoints: []};
+
+  var couplingByPath = {};
+  (metricsData.nodes || []).forEach(function (n) {
+    couplingByPath[n.path] = n;
+  });
+  var hotspotByPath = {};
+  (hotspotsData.files || []).forEach(function (h) {
+    hotspotByPath[h.path] = h;
+  });
+  var entrypointKindsByPath = {};
+  (entrypointsData.entrypoints || []).forEach(function (e) {
+    if (!entrypointKindsByPath[e.path]) entrypointKindsByPath[e.path] = [];
+    entrypointKindsByPath[e.path].push(e.kind);
+  });
+
+  var nodes = (graphData.nodes || []).map(function (n) {
+    var m = couplingByPath[n.path] || {fan_in: 0, fan_out: 0, external_fan_out: 0};
+    var h = hotspotByPath[n.path] || {category: 'stable', change_count: 0, coupling: 0};
+    var coupling = (m.fan_in || 0) + (m.fan_out || 0) + (m.external_fan_out || 0);
+    return {
+      id: n.path,
+      language: n.language,
+      fan_in: m.fan_in || 0,
+      fan_out: m.fan_out || 0,
+      external_fan_out: m.external_fan_out || 0,
+      coupling: coupling,
+      category: h.category || 'stable',
+      change_count: h.change_count || 0,
+      entrypoint_kinds: entrypointKindsByPath[n.path] || []
+    };
+  });
+  var nodeById = {};
+  nodes.forEach(function (n) { nodeById[n.id] = n; });
+  var edges = (graphData.edges || [])
+    .filter(function (e) { return e.kind === 'internal' && nodeById[e.from] && nodeById[e.to]; })
+    .map(function (e) { return {source: e.from, target: e.to}; });
+
+  var svg = d3.select('#viz');
+  var emptyState = document.getElementById('empty');
+  if (nodes.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  var width = svg.node().clientWidth || 800;
+  var height = svg.node().clientHeight || 600;
+
+  svg.append('defs').append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 14).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#9ca3af');
+
+  var link = svg.append('g').selectAll('line')
+    .data(edges)
+    .enter().append('line')
+    .attr('class', 'edge')
+    .attr('marker-end', 'url(#arrow)');
+
+  var node = svg.append('g').selectAll('circle')
+    .data(nodes)
+    .enter().append('circle')
+    .attr('class', function (d) { return 'node ' + d.category; })
+    .attr('r', function (d) { return Math.log(d.coupling + 1) * 4 + 4; })
+    .on('click', function (event, d) { selectNode(d); event.stopPropagation(); })
+    .call(d3.drag()
+      .on('start', function (event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x; d.fy = d.y;
+      })
+      .on('drag', function (event, d) { d.fx = event.x; d.fy = event.y; })
+      .on('end', function (event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null; d.fy = null;
+      }));
+
+  node.append('title').text(function (d) { return d.id + '\nfan_in=' + d.fan_in + ' fan_out=' + d.fan_out; });
+
+  var simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(edges).id(function (d) { return d.id; }).distance(50))
+    .force('charge', d3.forceManyBody().strength(-160))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide().radius(function (d) { return Math.log(d.coupling + 1) * 4 + 6; }))
+    .on('tick', tick);
+
+  function tick() {
+    link
+      .attr('x1', function (d) { return d.source.x; })
+      .attr('y1', function (d) { return d.source.y; })
+      .attr('x2', function (d) { return d.target.x; })
+      .attr('y2', function (d) { return d.target.y; });
+    node
+      .attr('cx', function (d) { return d.x; })
+      .attr('cy', function (d) { return d.y; });
+  }
+
+  var detail = document.getElementById('detail');
+  function selectNode(d) {
+    node.classed('selected', function (n) { return n === d; });
+    var html = '<h3>' + escapeHtml(d.id) + '</h3>';
+    html += '<span class="badge dot-' + d.category + '" style="background:' + categoryColor(d.category) + '">' + d.category + '</span>';
+    html += '<dl>';
+    html += '<dt>language</dt><dd>' + escapeHtml(d.language) + '</dd>';
+    html += '<dt>fan_in</dt><dd>' + d.fan_in + '</dd>';
+    html += '<dt>fan_out</dt><dd>' + d.fan_out + '</dd>';
+    html += '<dt>external_fan_out</dt><dd>' + d.external_fan_out + '</dd>';
+    html += '<dt>change_count</dt><dd>' + d.change_count + '</dd>';
+    if (d.entrypoint_kinds.length) {
+      html += '<dt>entrypoint</dt><dd>' + d.entrypoint_kinds.map(escapeHtml).join(', ') + '</dd>';
+    }
+    html += '</dl>';
+    detail.innerHTML = html;
+  }
+  function categoryColor(cat) {
+    return ({hotspot: '#dc2626', active_stable: '#f59e0b', neglected_complex: '#eab308', stable: '#9ca3af'})[cat] || '#9ca3af';
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  var search = document.getElementById('search');
+  search.addEventListener('input', function () {
+    var q = search.value.trim().toLowerCase();
+    if (q === '') {
+      node.classed('dim', false);
+      link.classed('dim', false);
+      return;
+    }
+    node.classed('dim', function (n) { return n.id.toLowerCase().indexOf(q) === -1; });
+    link.classed('dim', function (e) {
+      return e.source.id.toLowerCase().indexOf(q) === -1
+          && e.target.id.toLowerCase().indexOf(q) === -1;
+    });
+  });
+
+  window.addEventListener('resize', function () {
+    width = svg.node().clientWidth;
+    height = svg.node().clientHeight;
+    simulation.force('center', d3.forceCenter(width / 2, height / 2));
+    simulation.alpha(0.3).restart();
+  });
+})();
+</script>
+</body>
+</html>
+

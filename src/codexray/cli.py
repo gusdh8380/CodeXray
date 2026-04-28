@@ -8,6 +8,7 @@ import typer
 
 from .ai import AIAdapterError, build_review, select_adapter
 from .ai import to_json as review_to_json
+from .dashboard import build_dashboard, to_html
 from .entrypoints import build_entrypoints
 from .entrypoints import to_json as entrypoints_to_json
 from .graph import build_graph
@@ -100,6 +101,14 @@ def report_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     target = _validate_dir(path)
     data = build_report(target)
     typer.echo(to_markdown(data))
+
+
+@app.command("dashboard")
+def dashboard_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit a single self-contained HTML dashboard for ``PATH``."""
+    target = _validate_dir(path)
+    data = build_dashboard(target)
+    typer.echo(to_html(data))
 
 
 @app.command("review")

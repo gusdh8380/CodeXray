@@ -1,0 +1,3969 @@
+<!DOCTYPE html>
+<!-- codexray-dashboard-v1 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CodeXray Dashboard — /Users/jeonhyeono/Project/personal/CodeXray</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, system-ui, sans-serif; color: #111827; background: #f9fafb; }
+  header { padding: 12px 18px; background: #111827; color: #f9fafb; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; }
+  header .meta { font-size: 13px; opacity: 0.85; display: flex; gap: 14px; flex-wrap: wrap; }
+  header .grade strong { font-size: 15px; padding: 1px 8px; border-radius: 4px; background: #dc2626; color: white; }
+  header .grade.A strong { background: #16a34a; }
+  header .grade.B strong { background: #65a30d; }
+  header .grade.C strong { background: #ca8a04; }
+  header .grade.D strong { background: #ea580c; }
+  header .grade.F strong { background: #dc2626; }
+  header .grade.NA strong { background: #6b7280; }
+  .layout { display: flex; height: calc(100vh - 50px); }
+  .sidebar { width: 320px; padding: 14px; border-right: 1px solid #e5e7eb; overflow-y: auto; background: #ffffff; }
+  .sidebar input[type=search] { width: 100%; padding: 6px 10px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 12px; }
+  .legend { font-size: 12px; display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  .legend .row { display: flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.hotspot { background: #dc2626; }
+  .dot.active_stable { background: #f59e0b; }
+  .dot.neglected_complex { background: #eab308; }
+  .dot.stable { background: #9ca3af; }
+  .detail { font-size: 13px; line-height: 1.5; }
+  .detail h3 { margin: 0 0 6px; font-size: 14px; word-break: break-all; }
+  .detail .badge { display: inline-block; padding: 1px 7px; border-radius: 3px; color: white; font-size: 11px; }
+  .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0; }
+  .detail dt { color: #6b7280; }
+  .detail dd { margin: 0; }
+  .detail .empty { color: #9ca3af; font-style: italic; }
+  .graph { flex: 1; position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; display: block; background: #f9fafb; }
+  .node { stroke: #ffffff; stroke-width: 1.5px; cursor: pointer; }
+  .node.hotspot { fill: #dc2626; }
+  .node.active_stable { fill: #f59e0b; }
+  .node.neglected_complex { fill: #eab308; }
+  .node.stable { fill: #9ca3af; }
+  .node.selected { stroke: #111827; stroke-width: 3px; }
+  .node.dim { opacity: 0.15; }
+  .edge { stroke: #cbd5e1; stroke-width: 1.2px; opacity: 0.6; }
+  .edge.dim { opacity: 0.05; }
+  .label { font-size: 10px; fill: #374151; pointer-events: none; }
+  .label.dim { opacity: 0.15; }
+  .empty-state { padding: 24px; color: #6b7280; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CodeXray</h1>
+  <div class="meta">
+    <span class="path">/Users/jeonhyeono/Project/personal/CodeXray</span>
+    <span class="date">2026-04-28</span>
+    <span class="grade D">Grade: <strong>D</strong> (57)</span>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <input type="search" id="search" placeholder="filter by path..." autocomplete="off" />
+    <div class="legend">
+      <div class="row"><span class="dot hotspot"></span> hotspot (high change × high coupling)</div>
+      <div class="row"><span class="dot active_stable"></span> active_stable</div>
+      <div class="row"><span class="dot neglected_complex"></span> neglected_complex</div>
+      <div class="row"><span class="dot stable"></span> stable</div>
+    </div>
+    <div class="detail" id="detail">
+      <p class="empty">노드를 클릭하면 상세가 여기에 표시됩니다.</p>
+    </div>
+  </aside>
+  <div class="graph">
+    <svg id="viz"></svg>
+    <div id="empty" class="empty-state" style="display:none">분석 대상 노드가 없습니다.</div>
+  </div>
+</div>
+
+<script type="application/json" id="codexray-data-inventory">{"schema_version": 1, "rows": [{"language": "Python", "file_count": 97, "loc": 4664, "last_modified_at": "2026-04-28T10:55:22+09:00"}]}</script>
+<script type="application/json" id="codexray-data-graph">{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "path": "src/codexray/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/adapters.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/prompt.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/ai/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/dashboard/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/dashboard/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/dashboard/render.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/dashboard/template.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/dashboard/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/csharp_detector.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/manifest_detector.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/python_detector.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/entrypoints/unity_detector.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/csharp_index.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/csharp_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/js_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/python_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/resolve.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/graph/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/hotspots/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/hotspots/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/hotspots/git_log.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/hotspots/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/hotspots/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/inventory.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/language.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/loc.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/metrics/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/metrics/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/metrics/scc.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/metrics/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/metrics/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/cohesion.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/coupling.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/documentation.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/scoring.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/serialize.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/test.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/quality/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/render.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/report/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/report/build.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/report/recommendations.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/report/render.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/report/types.py",
+      "language": "Python"
+    },
+    {
+      "path": "src/codexray/walk.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/__init__.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_ai_adapters.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_ai_build.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_ai_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_ai_prompt.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_dashboard.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_entrypoints_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_entrypoints_csharp.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_entrypoints_manifest.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_entrypoints_python.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_build.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_csharp.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_csharp_index.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_csharp_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_csharp_types.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_js_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_python_parser.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_graph_resolve.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_hotspots_build.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_hotspots_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_hotspots_git_log.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_inventory.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_language.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_loc.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_metrics_build.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_metrics_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_metrics_scc.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_cohesion.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_coupling.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_documentation.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_scoring.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_quality_test.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_report_cli.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_report_recommendations.py",
+      "language": "Python"
+    },
+    {
+      "path": "tests/test_walk.py",
+      "language": "Python"
+    }
+  ],
+  "edges": [
+    {
+      "from": "src/codexray/ai/__init__.py",
+      "to": "src/codexray/ai/adapters.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/__init__.py",
+      "to": "src/codexray/ai/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/__init__.py",
+      "to": "src/codexray/ai/prompt.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/__init__.py",
+      "to": "src/codexray/ai/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/__init__.py",
+      "to": "src/codexray/ai/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "contextlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "os",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "shutil",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "tempfile",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/adapters.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "os",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "src/codexray/ai/adapters.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "src/codexray/ai/prompt.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "src/codexray/ai/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/build.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/prompt.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/prompt.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/prompt.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/serialize.py",
+      "to": "src/codexray/ai/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/ai/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/ai/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "os",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/ai/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/dashboard/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/entrypoints/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/quality/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/render.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "src/codexray/report/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "sys",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/cli.py",
+      "to": "typer",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/__init__.py",
+      "to": "src/codexray/dashboard/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/__init__.py",
+      "to": "src/codexray/dashboard/render.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/__init__.py",
+      "to": "src/codexray/dashboard/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "datetime",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/dashboard/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/entrypoints/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/build.py",
+      "to": "src/codexray/quality/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/dashboard/template.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/dashboard/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/entrypoints/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "src/codexray/quality/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/render.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/template.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/template.py",
+      "to": "string",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/dashboard/types.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/__init__.py",
+      "to": "src/codexray/entrypoints/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/__init__.py",
+      "to": "src/codexray/entrypoints/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/__init__.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/entrypoints/csharp_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/entrypoints/manifest_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/entrypoints/python_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/entrypoints/unity_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/build.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/csharp_detector.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/csharp_detector.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "sys",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/manifest_detector.py",
+      "to": "tomllib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/python_detector.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/python_detector.py",
+      "to": "ast",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/serialize.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/entrypoints/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/unity_detector.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/entrypoints/unity_detector.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/__init__.py",
+      "to": "src/codexray/graph/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/__init__.py",
+      "to": "src/codexray/graph/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/__init__.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/csharp_index.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/csharp_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/js_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/python_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/resolve.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/build.py",
+      "to": "sys",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_index.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_parser.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_parser.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/csharp_parser.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/js_parser.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/js_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/js_parser.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/js_parser.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/python_parser.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/python_parser.py",
+      "to": "ast",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/python_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/python_parser.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/resolve.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/resolve.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/resolve.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/serialize.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/graph/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/graph/types.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/__init__.py",
+      "to": "src/codexray/hotspots/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/__init__.py",
+      "to": "src/codexray/hotspots/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/__init__.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "src/codexray/hotspots/git_log.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "statistics",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/build.py",
+      "to": "sys",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/git_log.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/git_log.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/git_log.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/git_log.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/git_log.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/serialize.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/hotspots/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/hotspots/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "datetime",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "src/codexray/loc.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/inventory.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/language.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/language.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/loc.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/loc.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/__init__.py",
+      "to": "src/codexray/metrics/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/__init__.py",
+      "to": "src/codexray/metrics/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/__init__.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/build.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/build.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/build.py",
+      "to": "src/codexray/metrics/scc.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/build.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/scc.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/scc.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/serialize.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/metrics/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/metrics/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/__init__.py",
+      "to": "src/codexray/quality/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/__init__.py",
+      "to": "src/codexray/quality/serialize.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/__init__.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/cohesion.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/coupling.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/documentation.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/test.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/build.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/cohesion.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/coupling.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/coupling.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/coupling.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/coupling.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/coupling.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "ast",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/documentation.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/scoring.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/serialize.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/serialize.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/serialize.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/serialize.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "src/codexray/loc.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/test.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/quality/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/quality/types.py",
+      "to": "typing",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/render.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/render.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/render.py",
+      "to": "rich.console",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/render.py",
+      "to": "rich.table",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/render.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/__init__.py",
+      "to": "src/codexray/report/build.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/__init__.py",
+      "to": "src/codexray/report/render.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/__init__.py",
+      "to": "src/codexray/report/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "datetime",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/entrypoints/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/quality/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/report/recommendations.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/build.py",
+      "to": "src/codexray/report/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/recommendations.py",
+      "to": "src/codexray/report/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/render.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/render.py",
+      "to": "collections",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/render.py",
+      "to": "src/codexray/report/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "dataclasses",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/metrics/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/report/types.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "src/codexray/walk.py",
+      "to": "__future__",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/walk.py",
+      "to": "collections.abc",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/walk.py",
+      "to": "os",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/walk.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "src/codexray/walk.py",
+      "to": "pathspec",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_adapters.py",
+      "to": "pytest",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_adapters.py",
+      "to": "src/codexray/ai/adapters.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_ai_adapters.py",
+      "to": "unittest.mock",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_build.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_build.py",
+      "to": "src/codexray/ai/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_ai_build.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "src/codexray/ai/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_cli.py",
+      "to": "unittest.mock",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_prompt.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_ai_prompt.py",
+      "to": "src/codexray/ai/prompt.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "re",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "src/codexray/dashboard/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_dashboard.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_entrypoints_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_entrypoints_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_entrypoints_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_entrypoints_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_entrypoints_csharp.py",
+      "to": "src/codexray/entrypoints/csharp_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_entrypoints_csharp.py",
+      "to": "src/codexray/entrypoints/unity_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_entrypoints_manifest.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_entrypoints_manifest.py",
+      "to": "src/codexray/entrypoints/manifest_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_entrypoints_python.py",
+      "to": "src/codexray/entrypoints/python_detector.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_build.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_csharp_index.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp_index.py",
+      "to": "src/codexray/graph/csharp_index.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_csharp_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp_parser.py",
+      "to": "src/codexray/graph/csharp_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_csharp_types.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_csharp_types.py",
+      "to": "src/codexray/graph/csharp_index.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_csharp_types.py",
+      "to": "src/codexray/graph/csharp_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_js_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_js_parser.py",
+      "to": "src/codexray/graph/js_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_python_parser.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_python_parser.py",
+      "to": "src/codexray/graph/python_parser.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_resolve.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_graph_resolve.py",
+      "to": "src/codexray/graph/resolve.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_graph_resolve.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_hotspots_build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_build.py",
+      "to": "src/codexray/hotspots/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_hotspots_build.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_hotspots_cli.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_git_log.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_hotspots_git_log.py",
+      "to": "src/codexray/hotspots/git_log.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_hotspots_git_log.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_inventory.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_inventory.py",
+      "to": "src/codexray/inventory.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_language.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_language.py",
+      "to": "src/codexray/language.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_loc.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_loc.py",
+      "to": "src/codexray/loc.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_metrics_build.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_metrics_build.py",
+      "to": "src/codexray/graph/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_metrics_build.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_metrics_build.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_metrics_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_metrics_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_metrics_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_metrics_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_metrics_scc.py",
+      "to": "src/codexray/metrics/scc.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_cli.py",
+      "to": "json",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_quality_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_quality_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_quality_cohesion.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_cohesion.py",
+      "to": "src/codexray/quality/cohesion.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_coupling.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_coupling.py",
+      "to": "src/codexray/quality/coupling.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_documentation.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_quality_documentation.py",
+      "to": "src/codexray/quality/documentation.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_scoring.py",
+      "to": "src/codexray/quality/scoring.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_quality_test.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_quality_test.py",
+      "to": "src/codexray/quality/test.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_cli.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_report_cli.py",
+      "to": "src/codexray/cli.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_cli.py",
+      "to": "subprocess",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_report_cli.py",
+      "to": "typer.testing",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/entrypoints/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/graph/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/hotspots/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/metrics/__init__.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/quality/types.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_report_recommendations.py",
+      "to": "src/codexray/report/recommendations.py",
+      "kind": "internal"
+    },
+    {
+      "from": "tests/test_walk.py",
+      "to": "os",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_walk.py",
+      "to": "pathlib",
+      "kind": "external"
+    },
+    {
+      "from": "tests/test_walk.py",
+      "to": "src/codexray/walk.py",
+      "kind": "internal"
+    }
+  ]
+}</script>
+<script type="application/json" id="codexray-data-metrics">{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "path": "src/codexray/__init__.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 0,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/ai/__init__.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 5,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/ai/adapters.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 8
+    },
+    {
+      "path": "src/codexray/ai/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 4,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/ai/prompt.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/ai/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/ai/types.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/cli.py",
+      "language": "Python",
+      "fan_in": 9,
+      "fan_out": 10,
+      "external_fan_out": 5
+    },
+    {
+      "path": "src/codexray/dashboard/__init__.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/dashboard/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 7,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/dashboard/render.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 7,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/dashboard/template.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/dashboard/types.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 6,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/entrypoints/__init__.py",
+      "language": "Python",
+      "fan_in": 4,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/entrypoints/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 7,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/entrypoints/csharp_detector.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/entrypoints/manifest_detector.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 1,
+      "external_fan_out": 5
+    },
+    {
+      "path": "src/codexray/entrypoints/python_detector.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/entrypoints/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/entrypoints/types.py",
+      "language": "Python",
+      "fan_in": 8,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/entrypoints/unity_detector.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/graph/__init__.py",
+      "language": "Python",
+      "fan_in": 9,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/graph/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 8,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/graph/csharp_index.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 6
+    },
+    {
+      "path": "src/codexray/graph/csharp_parser.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/graph/js_parser.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/graph/python_parser.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/graph/resolve.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/graph/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/graph/types.py",
+      "language": "Python",
+      "fan_in": 17,
+      "fan_out": 0,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/hotspots/__init__.py",
+      "language": "Python",
+      "fan_in": 6,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/hotspots/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 4,
+      "external_fan_out": 4
+    },
+    {
+      "path": "src/codexray/hotspots/git_log.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 5
+    },
+    {
+      "path": "src/codexray/hotspots/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/hotspots/types.py",
+      "language": "Python",
+      "fan_in": 7,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/inventory.py",
+      "language": "Python",
+      "fan_in": 7,
+      "fan_out": 3,
+      "external_fan_out": 5
+    },
+    {
+      "path": "src/codexray/language.py",
+      "language": "Python",
+      "fan_in": 6,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/loc.py",
+      "language": "Python",
+      "fan_in": 3,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/metrics/__init__.py",
+      "language": "Python",
+      "fan_in": 7,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/metrics/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 3,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/metrics/scc.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/metrics/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/metrics/types.py",
+      "language": "Python",
+      "fan_in": 6,
+      "fan_out": 0,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/quality/__init__.py",
+      "language": "Python",
+      "fan_in": 4,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/quality/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 7,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/quality/cohesion.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 3,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/quality/coupling.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 3,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/quality/documentation.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 4,
+      "external_fan_out": 4
+    },
+    {
+      "path": "src/codexray/quality/scoring.py",
+      "language": "Python",
+      "fan_in": 6,
+      "fan_out": 0,
+      "external_fan_out": 1
+    },
+    {
+      "path": "src/codexray/quality/serialize.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/quality/test.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 5,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/quality/types.py",
+      "language": "Python",
+      "fan_in": 11,
+      "fan_out": 0,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/render.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 4
+    },
+    {
+      "path": "src/codexray/report/__init__.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 3,
+      "external_fan_out": 0
+    },
+    {
+      "path": "src/codexray/report/build.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 8,
+      "external_fan_out": 3
+    },
+    {
+      "path": "src/codexray/report/recommendations.py",
+      "language": "Python",
+      "fan_in": 2,
+      "fan_out": 5,
+      "external_fan_out": 1
+    },
+    {
+      "path": "src/codexray/report/render.py",
+      "language": "Python",
+      "fan_in": 1,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/report/types.py",
+      "language": "Python",
+      "fan_in": 4,
+      "fan_out": 6,
+      "external_fan_out": 2
+    },
+    {
+      "path": "src/codexray/walk.py",
+      "language": "Python",
+      "fan_in": 6,
+      "fan_out": 0,
+      "external_fan_out": 5
+    },
+    {
+      "path": "tests/__init__.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 0,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_ai_adapters.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_ai_build.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_ai_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 5
+    },
+    {
+      "path": "tests/test_ai_prompt.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_dashboard.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 5
+    },
+    {
+      "path": "tests/test_entrypoints_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_entrypoints_csharp.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_entrypoints_manifest.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_entrypoints_python.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_graph_build.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_graph_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_graph_csharp.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_graph_csharp_index.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_graph_csharp_parser.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_graph_csharp_types.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_graph_js_parser.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_graph_python_parser.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_graph_resolve.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_hotspots_build.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_hotspots_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 4
+    },
+    {
+      "path": "tests/test_hotspots_git_log.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    },
+    {
+      "path": "tests/test_inventory.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_language.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_loc.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_metrics_build.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 3,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_metrics_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_metrics_scc.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_quality_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_quality_cohesion.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_quality_coupling.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 2,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_quality_documentation.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_quality_scoring.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_quality_test.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 1
+    },
+    {
+      "path": "tests/test_report_cli.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 3
+    },
+    {
+      "path": "tests/test_report_recommendations.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 6,
+      "external_fan_out": 0
+    },
+    {
+      "path": "tests/test_walk.py",
+      "language": "Python",
+      "fan_in": 0,
+      "fan_out": 1,
+      "external_fan_out": 2
+    }
+  ],
+  "graph": {
+    "node_count": 97,
+    "edge_count_internal": 190,
+    "edge_count_external": 207,
+    "scc_count": 97,
+    "largest_scc_size": 1,
+    "is_dag": true
+  }
+}</script>
+<script type="application/json" id="codexray-data-entrypoints">{
+  "schema_version": 1,
+  "entrypoints": [
+    {
+      "path": "pyproject.toml",
+      "language": null,
+      "kind": "pyproject_script",
+      "detail": "codexray"
+    },
+    {
+      "path": "src/codexray/cli.py",
+      "language": "Python",
+      "kind": "main_guard",
+      "detail": ""
+    }
+  ]
+}</script>
+<script type="application/json" id="codexray-data-quality">{
+  "schema_version": 1,
+  "overall": {
+    "score": 57,
+    "grade": "D"
+  },
+  "dimensions": {
+    "coupling": {
+      "score": 61,
+      "grade": "C",
+      "detail": {
+        "avg_fan_inout": 3.92,
+        "max": 19
+      }
+    },
+    "cohesion": {
+      "score": 61,
+      "grade": "C",
+      "detail": {
+        "groups_evaluated": 2
+      }
+    },
+    "documentation": {
+      "score": 5,
+      "grade": "F",
+      "detail": {
+        "items_total": 505,
+        "documented": 26
+      }
+    },
+    "test": {
+      "score": 100,
+      "grade": "A",
+      "detail": {
+        "src_loc": 2528,
+        "test_loc": 2136,
+        "ratio": 0.84
+      }
+    }
+  }
+}</script>
+<script type="application/json" id="codexray-data-hotspots">{
+  "schema_version": 1,
+  "thresholds": {
+    "change_count_median": 1,
+    "coupling_median": 5
+  },
+  "summary": {
+    "hotspot": 50,
+    "active_stable": 41,
+    "neglected_complex": 5,
+    "stable": 1
+  },
+  "files": [
+    {
+      "path": "src/codexray/__init__.py",
+      "change_count": 1,
+      "coupling": 0,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/ai/__init__.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/ai/adapters.py",
+      "change_count": 1,
+      "coupling": 11,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/ai/build.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/ai/prompt.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/ai/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/ai/types.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/cli.py",
+      "change_count": 8,
+      "coupling": 24,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/dashboard/__init__.py",
+      "change_count": 0,
+      "coupling": 5,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "src/codexray/dashboard/build.py",
+      "change_count": 0,
+      "coupling": 11,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "src/codexray/dashboard/render.py",
+      "change_count": 0,
+      "coupling": 11,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "src/codexray/dashboard/template.py",
+      "change_count": 0,
+      "coupling": 3,
+      "category": "stable"
+    },
+    {
+      "path": "src/codexray/dashboard/types.py",
+      "change_count": 0,
+      "coupling": 11,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "src/codexray/entrypoints/__init__.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/entrypoints/build.py",
+      "change_count": 1,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/entrypoints/csharp_detector.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/entrypoints/manifest_detector.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/entrypoints/python_detector.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/entrypoints/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/entrypoints/types.py",
+      "change_count": 1,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/entrypoints/unity_detector.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/graph/__init__.py",
+      "change_count": 1,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/build.py",
+      "change_count": 3,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/csharp_index.py",
+      "change_count": 2,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/csharp_parser.py",
+      "change_count": 2,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/js_parser.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/python_parser.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/resolve.py",
+      "change_count": 3,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/graph/types.py",
+      "change_count": 1,
+      "coupling": 20,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/hotspots/__init__.py",
+      "change_count": 1,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/hotspots/build.py",
+      "change_count": 1,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/hotspots/git_log.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/hotspots/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/hotspots/types.py",
+      "change_count": 1,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/inventory.py",
+      "change_count": 1,
+      "coupling": 15,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/language.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/loc.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/metrics/__init__.py",
+      "change_count": 1,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/metrics/build.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/metrics/scc.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/metrics/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/metrics/types.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/__init__.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/build.py",
+      "change_count": 1,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/cohesion.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/coupling.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/documentation.py",
+      "change_count": 1,
+      "coupling": 10,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/scoring.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/serialize.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/test.py",
+      "change_count": 1,
+      "coupling": 9,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/quality/types.py",
+      "change_count": 1,
+      "coupling": 14,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/render.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/report/__init__.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/report/build.py",
+      "change_count": 1,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/report/recommendations.py",
+      "change_count": 1,
+      "coupling": 8,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/report/render.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "src/codexray/report/types.py",
+      "change_count": 1,
+      "coupling": 12,
+      "category": "hotspot"
+    },
+    {
+      "path": "src/codexray/walk.py",
+      "change_count": 1,
+      "coupling": 11,
+      "category": "hotspot"
+    },
+    {
+      "path": "tests/__init__.py",
+      "change_count": 1,
+      "coupling": 0,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_ai_adapters.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_ai_build.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_ai_cli.py",
+      "change_count": 1,
+      "coupling": 7,
+      "category": "hotspot"
+    },
+    {
+      "path": "tests/test_ai_prompt.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_dashboard.py",
+      "change_count": 0,
+      "coupling": 7,
+      "category": "neglected_complex"
+    },
+    {
+      "path": "tests/test_entrypoints_cli.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_entrypoints_csharp.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_entrypoints_manifest.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_entrypoints_python.py",
+      "change_count": 1,
+      "coupling": 1,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_build.py",
+      "change_count": 2,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_cli.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_csharp.py",
+      "change_count": 2,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_csharp_index.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_csharp_parser.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_csharp_types.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_js_parser.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_python_parser.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_graph_resolve.py",
+      "change_count": 2,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_hotspots_build.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_hotspots_cli.py",
+      "change_count": 1,
+      "coupling": 5,
+      "category": "hotspot"
+    },
+    {
+      "path": "tests/test_hotspots_git_log.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_inventory.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_language.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_loc.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_metrics_build.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_metrics_cli.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_metrics_scc.py",
+      "change_count": 1,
+      "coupling": 1,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_cli.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_cohesion.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_coupling.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_documentation.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_scoring.py",
+      "change_count": 1,
+      "coupling": 1,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_quality_test.py",
+      "change_count": 1,
+      "coupling": 2,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_report_cli.py",
+      "change_count": 1,
+      "coupling": 4,
+      "category": "active_stable"
+    },
+    {
+      "path": "tests/test_report_recommendations.py",
+      "change_count": 1,
+      "coupling": 6,
+      "category": "hotspot"
+    },
+    {
+      "path": "tests/test_walk.py",
+      "change_count": 1,
+      "coupling": 3,
+      "category": "active_stable"
+    }
+  ]
+}</script>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+(function () {
+  function readJSON(id) {
+    var el = document.getElementById(id);
+    return el ? JSON.parse(el.textContent) : null;
+  }
+  var graphData = readJSON('codexray-data-graph') || {nodes: [], edges: []};
+  var metricsData = readJSON('codexray-data-metrics') || {nodes: []};
+  var hotspotsData = readJSON('codexray-data-hotspots') || {files: []};
+  var entrypointsData = readJSON('codexray-data-entrypoints') || {entrypoints: []};
+
+  var couplingByPath = {};
+  (metricsData.nodes || []).forEach(function (n) {
+    couplingByPath[n.path] = n;
+  });
+  var hotspotByPath = {};
+  (hotspotsData.files || []).forEach(function (h) {
+    hotspotByPath[h.path] = h;
+  });
+  var entrypointKindsByPath = {};
+  (entrypointsData.entrypoints || []).forEach(function (e) {
+    if (!entrypointKindsByPath[e.path]) entrypointKindsByPath[e.path] = [];
+    entrypointKindsByPath[e.path].push(e.kind);
+  });
+
+  var nodes = (graphData.nodes || []).map(function (n) {
+    var m = couplingByPath[n.path] || {fan_in: 0, fan_out: 0, external_fan_out: 0};
+    var h = hotspotByPath[n.path] || {category: 'stable', change_count: 0, coupling: 0};
+    var coupling = (m.fan_in || 0) + (m.fan_out || 0) + (m.external_fan_out || 0);
+    return {
+      id: n.path,
+      language: n.language,
+      fan_in: m.fan_in || 0,
+      fan_out: m.fan_out || 0,
+      external_fan_out: m.external_fan_out || 0,
+      coupling: coupling,
+      category: h.category || 'stable',
+      change_count: h.change_count || 0,
+      entrypoint_kinds: entrypointKindsByPath[n.path] || []
+    };
+  });
+  var nodeById = {};
+  nodes.forEach(function (n) { nodeById[n.id] = n; });
+  var edges = (graphData.edges || [])
+    .filter(function (e) { return e.kind === 'internal' && nodeById[e.from] && nodeById[e.to]; })
+    .map(function (e) { return {source: e.from, target: e.to}; });
+
+  var svg = d3.select('#viz');
+  var emptyState = document.getElementById('empty');
+  if (nodes.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  var width = svg.node().clientWidth || 800;
+  var height = svg.node().clientHeight || 600;
+
+  svg.append('defs').append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 14).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#9ca3af');
+
+  var link = svg.append('g').selectAll('line')
+    .data(edges)
+    .enter().append('line')
+    .attr('class', 'edge')
+    .attr('marker-end', 'url(#arrow)');
+
+  var node = svg.append('g').selectAll('circle')
+    .data(nodes)
+    .enter().append('circle')
+    .attr('class', function (d) { return 'node ' + d.category; })
+    .attr('r', function (d) { return Math.log(d.coupling + 1) * 4 + 4; })
+    .on('click', function (event, d) { selectNode(d); event.stopPropagation(); })
+    .call(d3.drag()
+      .on('start', function (event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x; d.fy = d.y;
+      })
+      .on('drag', function (event, d) { d.fx = event.x; d.fy = event.y; })
+      .on('end', function (event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null; d.fy = null;
+      }));
+
+  node.append('title').text(function (d) { return d.id + '\nfan_in=' + d.fan_in + ' fan_out=' + d.fan_out; });
+
+  var simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(edges).id(function (d) { return d.id; }).distance(50))
+    .force('charge', d3.forceManyBody().strength(-160))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collide', d3.forceCollide().radius(function (d) { return Math.log(d.coupling + 1) * 4 + 6; }))
+    .on('tick', tick);
+
+  function tick() {
+    link
+      .attr('x1', function (d) { return d.source.x; })
+      .attr('y1', function (d) { return d.source.y; })
+      .attr('x2', function (d) { return d.target.x; })
+      .attr('y2', function (d) { return d.target.y; });
+    node
+      .attr('cx', function (d) { return d.x; })
+      .attr('cy', function (d) { return d.y; });
+  }
+
+  var detail = document.getElementById('detail');
+  function selectNode(d) {
+    node.classed('selected', function (n) { return n === d; });
+    var html = '<h3>' + escapeHtml(d.id) + '</h3>';
+    html += '<span class="badge dot-' + d.category + '" style="background:' + categoryColor(d.category) + '">' + d.category + '</span>';
+    html += '<dl>';
+    html += '<dt>language</dt><dd>' + escapeHtml(d.language) + '</dd>';
+    html += '<dt>fan_in</dt><dd>' + d.fan_in + '</dd>';
+    html += '<dt>fan_out</dt><dd>' + d.fan_out + '</dd>';
+    html += '<dt>external_fan_out</dt><dd>' + d.external_fan_out + '</dd>';
+    html += '<dt>change_count</dt><dd>' + d.change_count + '</dd>';
+    if (d.entrypoint_kinds.length) {
+      html += '<dt>entrypoint</dt><dd>' + d.entrypoint_kinds.map(escapeHtml).join(', ') + '</dd>';
+    }
+    html += '</dl>';
+    detail.innerHTML = html;
+  }
+  function categoryColor(cat) {
+    return ({hotspot: '#dc2626', active_stable: '#f59e0b', neglected_complex: '#eab308', stable: '#9ca3af'})[cat] || '#9ca3af';
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  var search = document.getElementById('search');
+  search.addEventListener('input', function () {
+    var q = search.value.trim().toLowerCase();
+    if (q === '') {
+      node.classed('dim', false);
+      link.classed('dim', false);
+      return;
+    }
+    node.classed('dim', function (n) { return n.id.toLowerCase().indexOf(q) === -1; });
+    link.classed('dim', function (e) {
+      return e.source.id.toLowerCase().indexOf(q) === -1
+          && e.target.id.toLowerCase().indexOf(q) === -1;
+    });
+  });
+
+  window.addEventListener('resize', function () {
+    width = svg.node().clientWidth;
+    height = svg.node().clientHeight;
+    simulation.force('center', d3.forceCenter(width / 2, height / 2));
+    simulation.alpha(0.3).restart();
+  });
+})();
+</script>
+</body>
+</html>
+

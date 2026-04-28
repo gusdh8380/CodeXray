@@ -28,9 +28,12 @@ def test_main_page_contains_path_and_tabs() -> None:
     assert 'hx-post="/api/browse-folder"' in response.text
     assert 'id="result-panel"' in response.text
     assert 'class="tab-button is-active"' in response.text
-    assert 'hx-post="/api/briefing"' in response.text
-    assert "How It Was Built" in response.text
-    assert "Deep Dive" in response.text
+    assert response.text.count('hx-post="/api/briefing"') == 1
+    assert 'data-tab="Architecture"' not in response.text
+    assert 'data-tab="Quality & Risk"' not in response.text
+    assert 'data-tab="How It Was Built"' not in response.text
+    assert 'data-tab="Explain"' not in response.text
+    assert 'data-tab="Deep Dive"' not in response.text
     assert 'hx-post="/api/inventory"' in response.text
     assert 'hx-post="/api/vibe-coding"' in response.text
     assert "https://unpkg.com/htmx.org" in response.text

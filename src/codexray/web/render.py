@@ -28,7 +28,7 @@ from ..summary.types import SummaryResult
 from ..vibe import to_json as vibe_to_json
 from ..vibe.types import VibeCodingReport, VibeFinding
 from .folder_picker import FolderPickerResult
-from .jobs import ReviewJob
+from .insights import InsightResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +100,7 @@ def render_inventory(rows: Iterable[Row]) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Inventory", _analysis_layout(body, _explanation("inventory")))
+    return _panel("Inventory", _analysis_layout(body, "inventory"))
 
 
 def render_codebase_briefing(briefing: CodebaseBriefing) -> str:
@@ -123,7 +123,7 @@ def render_codebase_briefing(briefing: CodebaseBriefing) -> str:
     body = "".join(
         [
             '<article class="briefing-deck" data-codexray-briefing="deck">',
-            f'<header class="briefing-hero"><h2>{html.escape(briefing.title)}</h2>'
+            f"<header class=\"briefing-hero\"><h2>{html.escape(briefing.title)}</h2>"
             "<p>소스파일/레포를 팀에 설명할 수 있는 발표자료형 분석입니다.</p></header>",
             _briefing_section("Briefing", briefing.executive),
             _briefing_section("Architecture", briefing.architecture),
@@ -181,7 +181,7 @@ def render_graph(graph: Graph) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Dependency Graph", _analysis_layout(body, _explanation("graph")))
+    return _panel("Dependency Graph", _analysis_layout(body, "graph"))
 
 
 def render_metrics(metrics: MetricsResult) -> str:
@@ -221,7 +221,7 @@ def render_metrics(metrics: MetricsResult) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Metrics", _analysis_layout(body, _explanation("metrics")))
+    return _panel("Metrics", _analysis_layout(body, "metrics"))
 
 
 def render_entrypoints(result: EntrypointResult) -> str:
@@ -252,7 +252,7 @@ def render_entrypoints(result: EntrypointResult) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Entrypoints", _analysis_layout(body, _explanation("entrypoints")))
+    return _panel("Entrypoints", _analysis_layout(body, "entrypoints"))
 
 
 def render_quality(report: QualityReport) -> str:
@@ -280,7 +280,7 @@ def render_quality(report: QualityReport) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Quality", _analysis_layout(body, _explanation("quality")))
+    return _panel("Quality", _analysis_layout(body, "quality"))
 
 
 def render_hotspots(report: HotspotsReport) -> str:
@@ -317,7 +317,7 @@ def render_hotspots(report: HotspotsReport) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Hotspots", _analysis_layout(body, _explanation("hotspots")))
+    return _panel("Hotspots", _analysis_layout(body, "hotspots"))
 
 
 def render_review(result: Any) -> str:
@@ -356,6 +356,9 @@ def render_review(result: Any) -> str:
     ]
     body = "".join(
         [
+            '<p class="muted insights-disabled-note">'
+            "Review 탭은 자체 AI 결과를 표시하므로 시니어 인사이트 패널이 비활성화됩니다."
+            "</p>",
             _summary_grid(cards),
             _insight(
                 "AI review is qualitative. Treat it as a senior-review prompt, then verify "
@@ -404,12 +407,15 @@ def render_report(data: ReportData, markdown: str) -> str:
             f'<pre class="markdown-output">{html.escape(markdown)}</pre>',
         ]
     )
-    return _panel("Report", _analysis_layout(body, _explanation("report")))
+    return _panel("Report", _analysis_layout(body, "report"))
 
 
 def render_dashboard(data: DashboardData) -> str:
     dashboard_html = html.escape(dashboard_to_html(data), quote=True)
     body = (
+        '<p class="muted insights-disabled-note">'
+        "시니어 인사이트는 Dashboard 탭에서 본 변경에서는 비활성화됩니다."
+        "</p>"
         '<div class="dashboard-workspace">'
         '<iframe class="dashboard-frame" sandbox="allow-scripts allow-same-origin" '
         f'srcdoc="{dashboard_html}" title="CodeXray dashboard"></iframe>'
@@ -498,7 +504,7 @@ def render_overview(
         ]
     )
     body = cards_html + metrics_grid
-    return _panel("Overview", body)
+    return _panel("Overview", _analysis_layout(body, "overview"))
 
 
 def render_summary_cards(summary: SummaryResult) -> str:
@@ -508,28 +514,6 @@ def render_summary_cards(summary: SummaryResult) -> str:
         + _summary_card_html("약점", summary.weaknesses, "card-weakness")
         + _summary_card_html("다음 행동", summary.actions, "card-action")
         + "</div>"
-    )
-
-
-def _summary_card_html(title: str, items, css_class: str) -> str:
-    if not items:
-        body = '<p class="muted">특이사항 없음</p>'
-    else:
-        rendered: list[str] = []
-        for item in items:
-            evidence_pairs = ", ".join(
-                f"{k}={v}" for k, v in sorted(item.evidence.items())
-            )
-            rendered.append(
-                '<li class="summary-item">'
-                f'<strong>{html.escape(item.text)}</strong>'
-                f'<span class="summary-evidence">{html.escape(evidence_pairs)}</span>'
-                "</li>"
-            )
-        body = f'<ul class="summary-items">{"".join(rendered)}</ul>'
-    return (
-        f'<section class="summary-card {css_class}">'
-        f"<h3>{html.escape(title)}</h3>{body}</section>"
     )
 
 
@@ -556,6 +540,28 @@ def _briefing_card(card: BriefingCard) -> str:
         f"<p>{html.escape(card.text)}</p>"
         f'<div class="briefing-evidence-list">{evidence}</div>'
         "</article>"
+    )
+
+
+def _summary_card_html(title: str, items, css_class: str) -> str:
+    if not items:
+        body = '<p class="muted">특이사항 없음</p>'
+    else:
+        rendered: list[str] = []
+        for item in items:
+            evidence_pairs = ", ".join(
+                f"{k}={v}" for k, v in sorted(item.evidence.items())
+            )
+            rendered.append(
+                '<li class="summary-item">'
+                f'<strong>{html.escape(item.text)}</strong>'
+                f'<span class="summary-evidence">{html.escape(evidence_pairs)}</span>'
+                "</li>"
+            )
+        body = f'<ul class="summary-items">{"".join(rendered)}</ul>'
+    return (
+        f'<section class="summary-card {css_class}">'
+        f"<h3>{html.escape(title)}</h3>{body}</section>"
     )
 
 
@@ -621,7 +627,7 @@ def render_review_prompt(path: str) -> str:
     return _panel("AI Review", body)
 
 
-def render_review_running(job: ReviewJob) -> str:
+def render_review_running(job: Any) -> str:
     short_id = job.id[:8]
     body = (
         '<div class="warning-box running-box">'
@@ -638,12 +644,12 @@ def render_review_running(job: ReviewJob) -> str:
     return _panel("AI Review", body)
 
 
-def render_review_failed(job: ReviewJob) -> str:
+def render_review_failed(job: Any) -> str:
     message = job.error or "review failed"
     return render_error(message)
 
 
-def render_review_cancelled(job: ReviewJob) -> str:
+def render_review_cancelled(job: Any) -> str:
     short_id = job.id[:8]
     body = (
         '<div class="warning-box cancelled-box">'
@@ -672,6 +678,122 @@ def render_folder_picker_result(result: FolderPickerResult) -> str:
     )
 
 
+# --- Insights panels ---------------------------------------------------------
+
+
+def render_insights_empty(tab: str) -> str:
+    body = (
+        '<p class="muted">이 탭의 raw JSON을 시니어 관점으로 분석합니다.</p>'
+        f'<form hx-post="/api/insights/{html.escape(tab)}" '
+        'hx-include="#analysis-form" hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="primary-action" type="submit">Generate insights</button>'
+        "</form>"
+    )
+    return _insights_panel(tab=tab, state="empty", body=body)
+
+
+def render_insights_disabled(tab: str, reason: str) -> str:
+    body = f'<p class="muted">{html.escape(reason)}</p>'
+    return _insights_panel(tab=tab, state="disabled", body=body)
+
+
+def render_insights_unavailable(tab: str, message: str) -> str:
+    body = (
+        f'<p class="muted"><strong>AI 어댑터 미설정.</strong> {html.escape(message)}</p>'
+        '<p class="muted">codex login 또는 claude login으로 인증한 뒤 다시 시도하세요.</p>'
+    )
+    return _insights_panel(tab=tab, state="unavailable", body=body)
+
+
+def render_insights_running(job: Any) -> str:
+    short = html.escape(job.id[:8])
+    body = (
+        '<div class="warning-box running-box">'
+        "<strong>인사이트 생성 중...</strong>"
+        f"<p>job {short} 진행 중. 1~3분 정도 소요됩니다.</p>"
+        "</div>"
+        f'<form hx-post="/api/insights/cancel/{html.escape(job.id)}" '
+        'hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="secondary-action danger-action" type="submit">Cancel</button>'
+        "</form>"
+        f'<div hx-get="/api/insights/status/{html.escape(job.id)}" '
+        'hx-trigger="load delay:2s" hx-target="#insights-panel" hx-swap="outerHTML"></div>'
+    )
+    return _insights_panel(tab=job.tab, state="running", body=body)
+
+
+def render_insights_cancelled(job: Any) -> str:
+    body = (
+        '<p class="muted">생성이 취소되었습니다.</p>'
+        f'<form hx-post="/api/insights/{html.escape(job.tab)}" '
+        'hx-include="#analysis-form" hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="primary-action" type="submit">Generate insights</button>'
+        "</form>"
+    )
+    return _insights_panel(tab=job.tab, state="cancelled", body=body)
+
+
+def render_insights_failed(tab: str, message: str) -> str:
+    body = (
+        f'<p class="muted"><strong>AI 호출 실패.</strong> {html.escape(message)}</p>'
+        f'<form hx-post="/api/insights/{html.escape(tab)}/regenerate" '
+        'hx-include="#analysis-form" hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="secondary-action" type="submit">다시 시도</button>'
+        "</form>"
+    )
+    return _insights_panel(tab=tab, state="failed", body=body)
+
+
+def render_insights_skipped(tab: str, reason: str) -> str:
+    body = (
+        '<p class="muted"><strong>AI 응답이 형식에 맞지 않음.</strong> '
+        f"{html.escape(reason)}</p>"
+        f'<form hx-post="/api/insights/{html.escape(tab)}/regenerate" '
+        'hx-include="#analysis-form" hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="secondary-action" type="submit">다시 시도</button>'
+        "</form>"
+    )
+    return _insights_panel(tab=tab, state="skipped", body=body)
+
+
+def render_insights_ready(result: InsightResult) -> str:
+    bullet_html: list[str] = []
+    for bullet in result.bullets:
+        if bullet.tag == "risk":
+            tag_class = "tag-risk"
+            label = "위험"
+        elif bullet.tag == "next":
+            tag_class = "tag-next"
+            label = "다음 행동"
+        else:
+            tag_class = "tag-general"
+            label = ""
+        label_html = (
+            f'<span class="insights-tag {tag_class}">{html.escape(label)}</span> '
+            if label
+            else ""
+        )
+        bullet_html.append(
+            f'<li class="insights-bullet" data-tag="{html.escape(bullet.tag)}">'
+            f"{label_html}<strong>{html.escape(bullet.observation)}</strong>"
+            f"<p>{html.escape(bullet.implication)}</p>"
+            "</li>"
+        )
+    body = (
+        f'<p class="muted">{html.escape(result.backend)} · prompt '
+        f'{html.escape(result.prompt_version)}</p>'
+        f'<ul class="insights-bullets">{"".join(bullet_html)}</ul>'
+        f'<form hx-post="/api/insights/{html.escape(result.tab)}/regenerate" '
+        'hx-include="#analysis-form" hx-target="#insights-panel" hx-swap="outerHTML">'
+        '<button class="secondary-action" type="submit">다시 생성</button>'
+        "</form>"
+    )
+    return _insights_panel(tab=result.tab, state="ready", body=body)
+
+
+# --- internal helpers --------------------------------------------------------
+
+
 def _panel(title: str, body: str) -> str:
     return (
         f'<section class="result-panel" data-codexray-result="{html.escape(title.lower())}">'
@@ -681,11 +803,25 @@ def _panel(title: str, body: str) -> str:
     )
 
 
-def _analysis_layout(main: str, aside: str) -> str:
+def _analysis_layout(main: str, tab: str) -> str:
     return (
         '<div class="analysis-layout">'
         f'<div class="analysis-main">{main}</div>'
-        f'<aside class="analysis-explainer">{aside}</aside>'
+        '<aside class="analysis-explainer">'
+        f"{render_insights_empty(tab)}"
+        f"{_junior_explanation(tab)}"
+        "</aside>"
+        "</div>"
+    )
+
+
+def _insights_panel(*, tab: str, state: str, body: str) -> str:
+    return (
+        '<div id="insights-panel" class="insights-panel" '
+        f'data-codexray-insights="{html.escape(state)}" '
+        f'data-tab="{html.escape(tab)}">'
+        "<h3>시니어 인사이트</h3>"
+        f"{body}"
         "</div>"
     )
 
@@ -699,98 +835,95 @@ def _metric(label: str, value: str) -> str:
     )
 
 
-def _explanation(name: str) -> str:
-    explanations: dict[str, tuple[str, tuple[str, ...]]] = {
-        "inventory": (
-            "이 화면은 코드베이스의 규모와 언어 구성을 보는 출발점입니다.",
-            (
-                "시니어 관점에서는 LoC가 큰 언어와 파일 수가 많은 영역을 먼저 봅니다. "
-                "그곳이 테스트 비용, 리팩터링 비용, 온보딩 비용을 대부분 결정합니다.",
-                "언어가 여러 개라면 경계면을 확인해야 합니다. Python, C#, TypeScript처럼 "
-                "런타임이 다른 코드가 섞이면 빌드·배포·테스트 책임도 나뉠 가능성이 큽니다.",
-                "다음 행동은 가장 큰 언어의 entrypoint와 hotspot을 이어서 확인하는 것입니다.",
-            ),
-        ),
-        "graph": (
-            "이 화면은 파일 사이의 의존 방향을 보여줍니다.",
-            (
-                "fan-in이 높은 파일은 많은 코드가 의존하는 중심축입니다. 변경 전 회귀 테스트와 "
-                "호출자 영향 범위를 먼저 확인해야 합니다.",
-                "fan-out이 높은 파일은 많은 것을 알고 있는 조정자일 가능성이 큽니다. 비즈니스 "
-                "규칙이 한 파일에 몰렸는지, adapter나 service 분리가 필요한지 봅니다.",
-                "좋은 그래프는 모든 의존이 없는 그래프가 아니라, 중요한 의존이 "
-                "설명 가능한 그래프입니다.",
-            ),
-        ),
-        "metrics": (
-            "이 화면은 구조 리스크를 숫자로 압축한 것입니다.",
-            (
-                "coupling이 높은 파일은 작업 전후 검증 범위가 넓습니다. 작은 수정도 주변 기능에 "
-                "영향을 줄 수 있으므로 테스트 보강 우선순위가 높습니다.",
-                "largest SCC가 크면 순환 의존이 있다는 뜻입니다. 순환은 변경 순서와 "
-                "모듈 분리를 어렵게 만듭니다.",
-                "시니어는 점수를 절대값으로만 보지 않고, hotspot과 겹치는 파일을 "
-                "우선순위로 잡습니다.",
-            ),
-        ),
-        "hotspots": (
-            "이 화면은 자주 바뀌면서 구조적으로도 복잡한 파일을 찾습니다.",
-            (
-                "hotspot은 '나쁜 파일'이라기보다 투자 우선순위입니다. 자주 바뀌는 곳에 테스트와 "
-                "명확한 소유권이 없으면 개발 속도가 계속 느려집니다.",
-                "priority가 높은 파일은 바로 대규모 리팩터링하기보다, 먼저 characterization test와 "
-                "작은 추출을 반복하는 편이 안전합니다.",
-                "active stable은 많이 바뀌지만 결합은 낮은 영역이고, neglected "
-                "complex는 안 바뀌지만 "
-                "구조적으로 위험한 영역입니다. 둘은 대응 전략이 다릅니다.",
-            ),
-        ),
-        "quality": (
-            "이 화면은 코드베이스 품질을 결합도, 응집도, 문서화, 테스트 관점으로 나눠 봅니다.",
-            (
-                "전체 등급보다 중요한 것은 어떤 dimension이 발목을 잡는지입니다. "
-                "테스트 점수가 낮으면 "
-                "리팩터링보다 검증 기반을 먼저 깔아야 합니다.",
-                "coupling과 cohesion이 동시에 낮으면 설계 경계가 흐릴 가능성이 "
-                "큽니다. 이 경우 기능 추가 전에 "
-                "모듈 책임을 다시 정리하는 것이 장기적으로 싸게 먹힙니다.",
-                "품질 점수는 의사결정 신호입니다. PR 차단 기준이 아니라 다음 개선 "
-                "순서를 정하는 데 사용합니다.",
-            ),
-        ),
-        "entrypoints": (
-            "이 화면은 프로그램이 어디서 시작되는지 보여줍니다.",
-            (
-                "entrypoint는 코드 읽기의 시작점입니다. 신규 개발자는 여기서 런타임 "
-                "흐름을 따라가면 "
-                "전체 구조를 더 빨리 이해합니다.",
-                "entrypoint가 너무 많으면 실행 경로가 분산되어 테스트 전략이 "
-                "어려워질 수 있습니다. 반대로 "
-                "감지되지 않으면 빌드 설정이나 framework convention을 별도로 확인해야 합니다.",
-                "시니어는 entrypoint와 hotspot이 가까운지 봅니다. 시작점 근처 "
-                "hotspot은 사용자 영향도가 높을 수 있습니다.",
-            ),
-        ),
-        "report": (
-            "이 화면은 앞선 분석을 다음 행동 중심으로 묶은 요약 리포트입니다.",
-            (
-                "Report는 세부 수치보다 의사결정 순서를 잡는 용도입니다. grade, "
-                "top risk, recommendation을 "
-                "먼저 보고 필요한 탭으로 내려가 근거를 확인합니다.",
-                "추천은 자동 생성된 규칙 기반 제안입니다. 그대로 실행하기보다 현재 "
-                "제품 일정, 장애 이력, "
-                "팀 소유권과 맞춰 우선순위를 조정해야 합니다.",
-                "시니어 리뷰에서는 이 리포트를 작업 계획의 초안으로 쓰고, hotspot "
-                "파일을 실제 코드 리뷰로 검증합니다.",
-            ),
-        ),
-    }
-    title, paragraphs = explanations[name]
-    return (
-        "<h3>시니어 개발자 관점</h3>"
-        f"<p><strong>{html.escape(title)}</strong></p>"
-        + "".join(f"<p>{html.escape(paragraph)}</p>" for paragraph in paragraphs)
+def _junior_explanation(tab: str) -> str:
+    text = _JUNIOR_TEXT.get(
+        tab,
+        ("이 화면은 분석 결과를 보여줍니다.", ()),
     )
+    title, paragraphs = text
+    return (
+        '<section class="junior-panel" data-codexray-junior="' + html.escape(tab) + '">'
+        "<h3>주니어 학습 컨텍스트</h3>"
+        f"<p><strong>{html.escape(title)}</strong></p>"
+        + "".join(f"<p>{html.escape(p)}</p>" for p in paragraphs)
+        + "</section>"
+    )
+
+
+_JUNIOR_TEXT: dict[str, tuple[str, tuple[str, ...]]] = {
+    "overview": (
+        "Overview는 코드베이스의 한 줄 요약입니다.",
+        (
+            "파일 수, LoC, 등급, 그래프 크기, 첫 번째 hotspot 같은 핵심 지표를 한 화면에 "
+            "모았습니다. 여기서 보이는 등급은 quality 4차원의 종합입니다.",
+            "Overview는 어디부터 살펴볼지를 정하는 출발점이지 최종 판단 자료가 아닙니다. "
+            "관심이 가는 수치를 보면 해당 탭으로 들어가 근거를 확인하세요.",
+        ),
+    ),
+    "inventory": (
+        "Inventory는 코드베이스의 규모와 언어 구성입니다.",
+        (
+            "각 행은 한 언어의 파일 수와 비어있지 않은 코드 줄 수(LoC)입니다. "
+            "LoC는 빈 줄·주석을 제외해 실질 작업량을 가늠합니다.",
+            "여러 언어가 섞이면 빌드·테스트·배포가 다층화되어 학습·운영 비용이 더해집니다. "
+            "어떤 언어가 어떤 책임을 가지는지 파악하는 것이 첫 단계입니다.",
+        ),
+    ),
+    "graph": (
+        "Dependency Graph는 파일 간 import 관계입니다.",
+        (
+            "fan-in은 이 파일을 가져다 쓰는 다른 파일의 수, "
+            "fan-out은 이 파일이 의존하는 다른 파일의 수입니다. "
+            "두 값이 동시에 높으면 변경의 파급 범위도 넓습니다.",
+            "그래프가 \"의존 없음\"을 의미하지는 않습니다. "
+            "의존이 설명 가능하고 일관된 방향이면 좋은 그래프입니다.",
+        ),
+    ),
+    "metrics": (
+        "Metrics는 그래프를 숫자로 압축한 지표입니다.",
+        (
+            "fan-in / fan-out은 결합도(coupling)의 핵심 측정값이고, "
+            "largest SCC는 순환 의존의 크기, is_dag는 전체 그래프에 순환이 없는지를 나타냅니다.",
+            "큰 SCC는 모듈 분리·변경 순서·테스트 격리를 어렵게 만듭니다. "
+            "외부 의존(external)은 라이브러리·패키지 호출 횟수를 보여줍니다.",
+        ),
+    ),
+    "entrypoints": (
+        "Entrypoints는 프로그램이 시작되는 위치입니다.",
+        (
+            "Python `__main__`, Java/C# `Main`, Unity `MonoBehaviour`, pyproject scripts, "
+            "package.json bin 등이 여기에 잡힙니다.",
+            "entrypoint는 코드 흐름을 따라가는 시작점이고, "
+            "자동·수동 테스트 영향 범위를 잡을 때 기준이 됩니다.",
+        ),
+    ),
+    "quality": (
+        "Quality는 결합도·응집도·문서화·테스트 4차원의 등급입니다.",
+        (
+            "각 차원은 0~100 점수와 A~F 등급을 가집니다. 종합 등급은 4차원의 평균입니다.",
+            "낮은 점수가 \"즉시 차단\"을 의미하지는 않습니다. "
+            "다음 개선 순서를 정하는 신호로 사용합니다.",
+        ),
+    ),
+    "hotspots": (
+        "Hotspots는 자주 바뀌면서 결합도도 높은 파일입니다.",
+        (
+            "git log의 변경 빈도와 그래프 결합도를 곱해 우선순위를 만듭니다. "
+            "범주는 hotspot, active stable, neglected complex, stable 네 가지입니다.",
+            "hotspot은 \"나쁜 파일\"이 아니라 \"투자 가치가 높은 파일\"입니다. "
+            "테스트와 명확한 소유권이 우선이고, 큰 리팩터링은 그 다음입니다.",
+        ),
+    ),
+    "report": (
+        "Report는 앞선 분석을 한 페이지로 묶은 요약 리포트입니다.",
+        (
+            "Markdown 형식이며 Grade, Top risk, Recommendations 순서로 정리됩니다. "
+            "추천은 규칙 기반으로 자동 생성된 초안입니다.",
+            "이 리포트는 작업 계획의 출발점이지 결론이 아닙니다. "
+            "추천 항목은 일정·소유권·장애 이력에 맞게 조정해야 합니다.",
+        ),
+    ),
+}
 
 
 def _summary_grid(items: Iterable[tuple[str, str]]) -> str:

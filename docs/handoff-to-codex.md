@@ -1,131 +1,173 @@
-# Handoff to next agent (작성: Claude → Codex, 2026-04-28)
+# Handoff to Codex (작성: Claude Opus → Codex, 2026-04-29)
 
-## TL;DR — 다음 작업
+> ⚠️ 이번 세션은 Intent drift + ROBOCO init 자산 미활용으로 사용자가 두 차례 메타 지적했다. 같은 실수가 반복되지 않도록 **첫 메시지에서 §0의 절차를 그대로 수행**할 것. 회고는 `docs/vibe-coding/retro-2026-04-29-roboco-underuse.md`.
 
-`add-web-ui` 변경 명세부터 시작. 사용자 결정 1개 대기 중 (프론트엔드 stack).
+---
 
-## 현재 스냅샷
+## §0. Codex 첫 메시지 — 그대로 입력
 
-- 12 changes / 14 commits, MVP 6개 feature 모두 출하 (`README.md`, `AGENTS.md` 참고)
-- 233/233 pytest passing, ruff clean
-- `git push` 완료: `git@github-personal:gusdh8380/CodeXray.git` main 브랜치
-- 최근 commit: `d044ba0 docs: README rewrite + vibe-coding session retro`
+```
+이 프로젝트의 작업을 이어갑니다.
 
-## 사용자가 마지막으로 표명한 의도
+OpenSpec 사이클 진입 *전*에 AGENTS.md "매 세션 시작 절차 (Step 0/1/2/3)"
+섹션을 그대로 따릅니다. 절대 건너뛰지 말 것:
 
-> "지금 이 프로젝트를 사용하려면 명령어를 쳐야 하는데, 이거를 이제 UX/UI쪽으로 제어할 수 있게 하고싶어요"
+1. 환경 inventory:
+   ls -la
+   ls .claude/commands
+   ls .claude/skills
+   ls .omc/
 
-8개 CLI 명령을 web UI로 묶기. 1인 도구이고 `constraints.md` 원칙은 "로컬 실행 우선, SaaS 호스팅 X".
+2. 메타 문서 reread (한 번에):
+   - INTENT.md (root)
+   - AGENTS.md  ← "매 세션 시작 절차" 섹션 정독
+   - docs/vision.md
+   - docs/intent.md
+   - docs/constraints.md
+   - docs/vibe-coding/retro-2026-04-29-roboco-underuse.md  ← 이번 세션 회고
+   - docs/handoff-to-codex.md  ← 이 문서
+   - .omc/project-memory.json
 
-## 결정된 사항
+3. 진행 상태 확인:
+   - git log --oneline -10
+   - git status
+   - openspec list
 
-| 항목 | 결정 | 근거 |
-|---|---|---|
-| 새 명령 이름 | `codexray serve` | 다른 명령과 일관 |
-| 백엔드 stack | **FastAPI** | 모던 Python, async, OpenAPI 자동, dep 무게 작음 |
-| 호스팅 모델 | **localhost 단일 사용자** | constraints.md "로컬 실행 우선" |
-| 자동 브라우저 열림 | yes (default) | UX 단순화 |
-| 출력 형식 | 결과 패널에 inline (JSON pretty / Markdown 렌더 / HTML iframe) | tab 한 페이지 |
-| AI review의 위치 | 별도 탭 + 명시 클릭 + 시간 경고 (1~5분) | opt-in 강조, constraints.md 정신 유지 |
-| path 입력 UX | text input + localStorage로 최근 5개 history | 브라우저는 native folder picker 없음 |
+4. 사용자 다음 요청을 기다린다.
+   사용자 표명을 받으면 docs/intent.md / docs/vision.md 의 어느 항목과
+   매핑되는지 명시적으로 짚은 뒤 작업 진입. 매핑 불가하면 Intent/Vision
+   변경을 별도 결정으로 분리.
 
-## 미결정 (다음 메시지에서 사용자에게 확정 받을 것)
+5. 새 변경은 /opsx:propose 또는 .claude/skills/openspec-propose 호출로
+   시작. 수동 4 artifact 작성 금지 (이번 세션 실수 #3).
+```
 
-**프론트엔드 stack** — 사용자가 React를 물어본 상태에서 4 후보 중 선택 대기:
+---
 
-| 선택 | Build | 이 도구 1차 적합도 | 비고 |
+## §1. 이번 세션 (2026-04-29) 한 일
+
+### 1.1 Commit된 것
+- **7297bf8** `docs: fill capability spec purposes after archive` — 10 capability spec의 `## Purpose` TBD placeholder를 한 단락 정의로 일괄 채움. AGENTS.md OpenSpec 워크플로에 step 10 추가 (다음 archive에서 placeholder가 다시 남는 일 방지).
+- **b2596fb** `docs: add roboco-underuse retro and session start protocol` — 이번 세션 회고 문서 + AGENTS.md `매 세션 시작 절차 (Step 0/1/2/3)` 섹션 + vibe-start skill (`~/.claude/skills/vibe-start/SKILL.md`) Phase 8.5 신규.
+
+### 1.2 Commit 안 된 보류 작업 2개 (working tree dirty)
+
+#### A. `openspec/changes/add-dynamic-panel-insights/` (in-flight)
+- **무엇**: 우측 sidebar를 시니어 패널(AI 동적) + 주니어 패널(정적) 두 영역으로 분리. 시니어 패널은 raw JSON을 codex/claude CLI로 분석해 3~5 불릿 인사이트를 디스크 캐시(`~/.cache/codexray/insights/`)와 함께 생성.
+- **명세**: proposal/design/specs/web-ui/tasks 모두 작성, `openspec validate --strict` 통과.
+- **코드**: `src/codexray/web/insights.py` (신규), `web/jobs.py` 확장(InsightsJob), `web/routes.py` 4 endpoints, `web/render.py` senior/junior 분리 + 7 insights fragments, `web/static/app.css`.
+- **테스트**: `tests/test_insights.py` 11 + `tests/test_web_ui.py` 10 추가.
+- **자동 검증**: 모두 통과. **검증 게이트 4 미완** (자기/CivilSim 두 트리에서 시니어 인사이트 생성 5초 내 의미 있는 결과 + `docs/validation/dynamic-panel-insights-{self,civilsim}.md` 캡처).
+- **Intent 정합도**: ⚠️ 간접 (Intent 3번 정성 평가의 *확장*, 직접 명시 X). constraints.md "도구는 판단 근거" 정신엔 부합.
+- **사용자 결정 대기**: (a) 검증 OK → archive (b) 마음에 안 들면 revert. 사용자가 8080 옛 코드 / 8090 새 코드 두 서버에서 검증 진행 의향 표명.
+
+#### B. `openspec/changes/add-strengths-weaknesses-summary/` (in-flight, **Intent 정합도 ★★★★★**)
+- **무엇**: Intent.md 5번 "1페이지 종합 리포트 — 등급, 강점/약점 Top 3, 핫스팟, 권고"의 *부재했던* 강점/약점 Top 3를 채움. 결정론적 룰 기반 (AI 호출 없음).
+- **명세**: proposal/design/specs/{summary,report,web-ui}/tasks 모두 작성, `openspec validate --strict` 통과.
+- **코드**: `src/codexray/summary/{types,build,serialize,__init__}.py` (신규), `report/types.py` summary 필드 추가, `report/build.py` 호출, `report/render.py` 3 섹션, `web/render.py` summary cards + render_overview/render_report, `web/routes.py` _overview에서 build_summary.
+- **테스트**: `tests/test_summary_rules.py`, `tests/test_summary_serialize.py`, `tests/test_report_strengths_weaknesses.py`, `tests/test_web_ui.py` 확장 — 35개 추가.
+- **자동 검증**: 모두 통과 (303 passed, ruff clean, validate strict).
+- **검증 게이트 4 미완**: 자기 + CivilSim 두 트리에서 의미 있는 강점/약점/다음 행동 결과 + `docs/validation/summary-{self,civilsim}.md` 캡처.
+
+### 1.3 워킹 트리 상태
+```
+modified:
+  src/codexray/web/{jobs,render,routes,static/app.css}.py
+  src/codexray/web/templates/...  (변경 없음, 확인)
+  src/codexray/report/{build,render,types}.py
+  tests/test_web_ui.py
+
+new files:
+  src/codexray/web/insights.py
+  src/codexray/summary/{types,build,serialize,__init__}.py
+  openspec/changes/add-dynamic-panel-insights/  (proposal/design/specs/tasks)
+  openspec/changes/add-strengths-weaknesses-summary/  (proposal/design/specs/tasks)
+  tests/test_insights.py
+  tests/test_summary_rules.py
+  tests/test_summary_serialize.py
+  tests/test_report_strengths_weaknesses.py
+```
+
+→ 코덱스가 받았을 때 `git status`에서 위가 보일 것.
+
+---
+
+## §2. 다음 처리 순서 (Codex가 사용자 응답에 따라)
+
+### Step 1 — `add-strengths-weaknesses-summary` 검증·archive (Intent 정합도 1순위)
+
+사용자가 8090 새 코드 서버에서 다음 확인:
+- Overview / Report 탭 메인 영역 상단에 **강점·약점·다음 행동 3 카드** 표시
+- 카드별 1~3 불릿 + `grade=...`, `path=...` 같은 근거 인용
+- AI 호출 없이 즉시 표시
+- CLI: `uv run codexray report <path>` Markdown에 `## Strengths / ## Weaknesses / ## Next Actions` 섹션
+
+검증 OK이면:
+1. `docs/validation/summary-self.md` 작성 (self tree 결과 캡처)
+2. `docs/validation/summary-civilsim.md` 작성 (CivilSim tree 결과 캡처)
+3. `tasks.md` 6.4·6.5 체크오프
+4. `openspec archive add-strengths-weaknesses-summary -y`
+5. archived spec.md (`summary`, `report`, `web-ui`)의 `## Purpose` placeholder 즉시 채움 (AGENTS.md step 10)
+6. `git add` → `git commit -m "feat: add strengths/weaknesses/next-actions summary (Intent #5)"` 구체 수치 포함 (예: "self: D(57) — strengths 3, weaknesses 3, actions 3 / CivilSim: D(40)")
+
+### Step 2 — `add-dynamic-panel-insights` 처리 (사용자 결정 따름)
+
+사용자가:
+- "검증 OK" → 같은 archive·commit 사이클
+- "시니어 패널 마음에 안 듦" → revert 결정. `git checkout -- ...` 또는 `git restore --staged ...` + `rm` (사용자 인가 후만)
+
+### Step 3 — UI 가독성 큰 개편 (사용자가 표명, 후속 변경)
+
+사용자가 "메인 컨텐츠 가독성 부족"을 명시했다. `improve-result-panel-readability` 같은 변경으로 7 분석 탭(Inventory~Report) 가독성 일괄 손봐야 함. 본 변경에서 다루지 않은 영역.
+
+→ Intent의 success criteria "리포트만 보고 다음 행동 결정 가능" 정합. 명세 진입 시 `/opsx:propose` 호출.
+
+### Step 4 — 비개발자 청중 (Vision 변경 결정 필요)
+
+사용자가 후속에 "비개발자가 자기 레포를 이해할 수 있는 인사이트 패널" 표명. 그러나 Vision.md target users 4그룹이 모두 *개발자*. **Vision 자체 변경**이 선행되어야 정당화됨. 사용자에게 명시적으로 결정 받기.
+
+→ Vision 변경 OK이면 `add-vibe-coder-panel` 변경. Vision 변경 NO이면 backlog.
+
+---
+
+## §3. 환경 메모
+
+- **AI 백엔드**: 코덱스로 이어가면 `CODEXRAY_AI_BACKEND=auto`가 codex 우선 사용 (CodexCLIAdapter).
+- **두 서버 떠있음**: 8080 (옛 코드) + 8090 (새 코드). 사용자 검증 끝나면 둘 다 종료 가능. PID 확인: `lsof -i :8080 :8090`.
+- **테스트·린트 상태**: 303 passed, ruff clean, openspec validate strict — *보류 변경 두 개의 자동 게이트 모두 통과*. 4 게이트 중 검증 게이트(자기/CivilSim 캡처)만 남음.
+- **ROBOCO init 자산 인지**: `.claude/{commands/opsx, skills/openspec-*}`, `.omc/{project-memory.json, sessions, state}`, `.roboco/config.json`, `.husky/pre-commit (placeholder)`. 모두 코덱스가 활용 가능.
+- **OMC project-memory 누적**: AGENTS.md Step 4 의무. 코덱스가 새 결정·학습을 `.omc/project-memory.json` 적합한 형식으로 누적할 것.
+
+---
+
+## §4. 사용자 표명 ↔ Intent/Vision 매핑 (현재까지)
+
+| 표명 | 매핑 | 정합도 | 상태 |
 |---|---|---|---|
-| **htmx + Jinja2** | 없음 | ★★★★★ (추천) | 서버 주도, form→panel swap 패턴이 정확히 이 도구 흐름 |
-| Alpine.js | 없음 | ★★★★ | HTML 속성 기반 state |
-| Preact via CDN | 없음 | ★★★★ | React 멘탈 모델 + 빌드 0 |
-| React + Vite | 있음 | ★★★ | 모던 DX, 1차에 무거움, 미래 확장 시 진정한 가치 |
+| Overview 잘한 점/아쉬운 점 | Intent 5번 | ✅ 직접 | `add-strengths-weaknesses-summary` 진행 |
+| 메인 컨텐츠 가독성 | Intent success criteria | ✅ 직접 | 별도 변경 (`improve-result-panel-readability`) |
+| 등급 근거 강화 | Intent 2/3번 보강 | ✅ 인접 | backlog |
+| 시니어/주니어 패널 | Intent 3번 확장 | ⚠️ 간접 | `add-dynamic-panel-insights` 검증 대기 |
+| 비개발자 / 바이브 코더 | **Vision 변경 필요** | ❌ | Vision 결정 받기 |
+| Git URL / zip 입력 | Intent inputs | ✅ 미구현 | backlog |
 
-추천 근거 (사용자에게 전달됨, 수락 안 됨):
-- 이 도구 UI 복잡도는 "form + 8 tab + 결과 패널 + 로딩 상태" 수준
-- 서버(FastAPI)가 이미 모든 분석 builder 보유 — 클라이언트는 swap만 하면 됨
-- htmx는 그 swap 패턴을 한 줄(`hx-get="/api/inventory" hx-target="#panel"`)로 처리
-- 빌드 파이프라인 0 = 기존 dashboard 패턴(단일 HTML + D3 CDN)과 일관
+---
 
-사용자가 React를 명시적으로 원하면 그 결정도 정당함 — **학습 의도** 또는 **미래 확장 가능성** (멀티 사용자, 클라우드 호스팅) 의 가치가 React 도입 비용을 정당화.
+## §5. 회피해야 할 안티패턴 (이번 세션 학습)
 
-다음 응답에서 다시 4 후보 제시하고 1개로 확정 받기. 결정되면 곧장 `add-web-ui` proposal 작성으로 진행.
+1. **세션 시작 시 환경 inventory 안 함** → §0 절차 의무 수행
+2. **Intent.md 안 읽고 인터뷰만으로 도출** → 표명을 받자마자 Intent/Vision 매핑 짚기
+3. **수동 4 artifact 작성** → `.claude/skills/openspec-{propose,apply-change,archive-change}` 슬래시 명령 우선
+4. **OMC project-memory 미활용** → 결정·학습 누적 사이클 강제
+5. **archive 후 spec.md `## Purpose` TBD 방치** → step 10 강제 (AGENTS.md에 박음)
 
-## 1차 단추 스코프 (스케치, 명세에서 확정)
+---
 
-**capability**: `web-ui` 신규
+## §6. 핸드오프 종료 코맨드 (사용자에게 안내)
 
-**CLI**: `codexray serve [--port 8080] [--no-browser]`
-
-**구조** (FastAPI 가정):
-```
-src/codexray/web/
-├── __init__.py
-├── server.py          ← FastAPI app + 자동 브라우저 열림
-├── routes.py          ← REST endpoints per builder (또는 Jinja fragment endpoints if htmx)
-├── templates/         ← (htmx 채택 시) Jinja2 base.html, fragments.html
-└── static/            ← 인라인 또는 별도 파일
-```
-
-**REST endpoints** (htmx 채택 시 fragments도 같은 URL로):
-- `GET /` — 메인 페이지
-- `POST /api/inventory` body `{"path": "..."}` → JSON 또는 HTML fragment
-- `POST /api/graph`, `/api/metrics`, `/api/entrypoints`, `/api/quality`, `/api/hotspots`
-- `POST /api/report` → Markdown rendered as HTML
-- `POST /api/dashboard` → HTML iframe content
-- `POST /api/review` → JSON (long-running, 스트리밍 또는 polling)
-
-**UI 와이어프레임** (사용자가 동의한 형태):
-```
-┌─────────────────────────────────────────────┐
-│  CodeXray  [path: ...]  [최근 ▼]  [Analyze] │
-├──────────────┬──────────────────────────────┤
-│ ▣ Overview   │                              │
-│ ▣ Graph      │   결과 패널                  │
-│ ▣ Metrics    │                              │
-│ ▣ Hotspots   │                              │
-│ ▣ Quality    │                              │
-│ ▣ Entrypoints│                              │
-│ ▣ Report     │                              │
-│ ▣ Dashboard  │                              │
-│ ▣ Review (AI)│   ⚠️ 명시 클릭 1~5분         │
-└──────────────┴──────────────────────────────┘
-```
-
-## OpenSpec 명세 작성 시 주의
-
-- `proposal.md`: 새 capability `web-ui`. Modified capability 없음.
-- `design.md`: 프론트 stack 결정 + dependency 추가 (fastapi, uvicorn, [htmx면 jinja2도]) + REST 스키마 + 결정론·캐싱 정책 (path 같으면 같은 결과? 새 분석 강제?).
-- `specs/web-ui/spec.md`:
-  - "CLI 진입점", "포트 옵션", "자동 브라우저 열림", "8 endpoint 모두 작동", "AI review 명시 opt-in", "결과 캐싱 정책" 등
-  - 각 endpoint 응답 스키마 명시 (모두 JSON 또는 HTML fragment)
-  - 성능 예산: HTTP latency < 200ms (분석 자체는 builder의 5초 예산 그대로)
-- `tasks.md`: server scaffold → routes → 템플릿/SPA 클라이언트 → 통합 → 테스트 → 검증
-
-## 검증 게이트 (이전 변경들과 동일)
-
-1. `openspec validate add-web-ui` 통과
-2. `pytest -q` 회귀 0
-3. `ruff check` clean
-4. **자기 + CivilSim 두 트리에서 web UI 작동 확인** — `docs/validation/web-ui-{self,civilsim}.md`. UI는 시각이라 자동 검증 한계. 최소: HTTP endpoint smoke + 결과 schema 검증 + 사용자 직접 브라우저 열기.
-
-## 환경 메모
-
-- 사용자는 Codex Plus 구독 사용 → `codex` CLI 어댑터가 default
-- Git identity: `~/Project/personal/` 아래는 gusdh8380(personal) 자동 (이번에 셋업 완료)
-- 미해결 메모 (이번 세션에서 시작했지만 끝 못 본 것):
-  - **gh CLI에 두 계정 모두 로그인** — 사용자가 인터랙티브 진행 중이었음. `gh auth status` 확인 필요. 이미 됐으면 OK, 아니면 `gh auth login --hostname github.com --git-protocol ssh --web` (gusdh8380으로 로그인) 진행 안내.
-  - **direnv로 gh active account 디렉토리별 자동 전환** — 선택 사항, 사용자가 원하면 setup.
-  - **CodeXray 과거 commit history 재작성** — 회사 email로 commit돼 있어 GitHub graph attribution이 회사 계정에 잡힘. 사용자가 personal로 옮기고 싶으면 `git rebase --root --exec '...amend --reset-author...'` + force-push. 안 해도 무방하면 그대로 유지.
-
-## 핸드오프 시작 코맨드 (사용자에게 안내)
-
-```
+```bash
 cd /Users/jeonhyeono/Project/personal/CodeXray
 codex
 ```
 
-Codex 첫 프롬프트로 던질 후보:
-> "Read AGENTS.md and docs/handoff-to-codex.md, then propose the OpenSpec change `add-web-ui` after I confirm the frontend stack choice."
-
-또는 사용자가 곧장 결정 알려주는 것도 OK:
-> "Read AGENTS.md and docs/handoff-to-codex.md. Frontend는 htmx + FastAPI Jinja2로 갑시다. add-web-ui proposal부터 시작."
+코덱스 첫 메시지로 §0 블록 그대로 입력.

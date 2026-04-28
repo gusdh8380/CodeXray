@@ -22,6 +22,7 @@ from ..metrics.types import MetricsResult
 from ..quality import to_json as quality_to_json
 from ..quality.types import QualityReport
 from ..report.types import ReportData
+from .jobs import ReviewJob
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,6 +175,23 @@ def render_review_prompt(path: str) -> str:
         "</form>"
     )
     return _panel("AI Review", body)
+
+
+def render_review_running(job: ReviewJob) -> str:
+    body = (
+        '<div class="warning-box">'
+        "<strong>AI review is running.</strong>"
+        "<p>This page will refresh the result every 2 seconds. Other tabs remain usable.</p>"
+        "</div>"
+        f'<div hx-get="/api/review/status/{html.escape(job.id)}" '
+        'hx-trigger="load delay:2s" hx-target="#result-panel" hx-swap="innerHTML"></div>'
+    )
+    return _panel("AI Review", body)
+
+
+def render_review_failed(job: ReviewJob) -> str:
+    message = job.error or "review failed"
+    return render_error(message)
 
 
 def _panel(title: str, body: str) -> str:

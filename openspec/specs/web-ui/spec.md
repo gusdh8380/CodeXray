@@ -86,7 +86,11 @@ The system SHALL make AI review an explicit user action separate from determinis
 
 #### Scenario: 명시 실행
 - **WHEN** 사용자가 Review 실행을 명시적으로 요청하면
-- **THEN** 시스템은 기존 AI review builder를 호출하고 결과 fragment를 반환한다
+- **THEN** 시스템은 background job을 시작하고 진행 상태 fragment를 즉시 반환한다
+
+#### Scenario: Review 상태 polling
+- **WHEN** background AI review job이 완료되면
+- **THEN** 시스템은 status endpoint를 통해 schema_version을 포함하는 pretty JSON 결과 fragment를 반환한다
 
 ### Requirement: Performance budget
 The system SHALL return meaningful HTTP results within 5 seconds for deterministic endpoints on the validation codebases.
@@ -105,4 +109,3 @@ The system SHALL capture web UI validation results for both validation codebases
 #### Scenario: Validation documents
 - **WHEN** add-web-ui 구현 검증을 완료하면
 - **THEN** `docs/validation/web-ui-self.md` and `docs/validation/web-ui-civilsim.md` contain endpoint smoke results and representative output summaries
-

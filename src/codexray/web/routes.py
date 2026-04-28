@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -9,7 +8,6 @@ from fastapi import APIRouter, Request, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..ai import AIAdapterError, build_review, select_adapter
 from ..dashboard import build_dashboard
 from ..entrypoints import build_entrypoints
 from ..graph import build_graph
@@ -18,6 +16,7 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 from ..report import build_report, to_markdown
+from .jobs import get_review_job, start_review_job
 from .render import (
     render_dashboard,
     render_entrypoints,
@@ -30,7 +29,9 @@ from .render import (
     render_quality,
     render_report,
     render_review,
+    render_review_failed,
     render_review_prompt,
+    render_review_running,
     validate_root,
 )
 
@@ -99,16 +100,20 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
             return _error_response(validation.error or "invalid path")
         if form.get("run") != "true":
             return HTMLResponse(render_review_prompt(str(validation.root)))
-        try:
-            adapter = select_adapter(os.environ)
-        except AIAdapterError as exc:
-            return _error_response(f"AI backend error: {exc}")
-        top_n_env = os.environ.get("CODEXRAY_AI_TOP_N", "5").strip()
-        try:
-            top_n = max(0, int(top_n_env))
-        except ValueError:
-            return _error_response(f"invalid CODEXRAY_AI_TOP_N value: {top_n_env!r}")
-        return HTMLResponse(render_review(build_review(validation.root, top_n, adapter)))
+        return HTMLResponse(render_review_running(start_review_job(validation.root)))
+
+    @router.get("/api/review/status/{job_id}", response_class=HTMLResponse)
+    async def review_status(job_id: str) -> Response:
+        job = get_review_job(job_id)
+        if job is None:
+            return _error_response("review job not found")
+        if job.status == "running":
+            return HTMLResponse(render_review_running(job))
+        if job.status == "failed":
+            return HTMLResponse(render_review_failed(job), status_code=500)
+        if job.result is None:
+            return _error_response("review job completed without a result")
+        return HTMLResponse(render_review(job.result))
 
     return router
 

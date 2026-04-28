@@ -6,7 +6,9 @@ from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
 import codexray.cli as cli
+import codexray.web.routes as routes
 from codexray.web import create_app
+from codexray.web.jobs import ReviewJob
 
 
 def _make_tree(root: Path) -> None:
@@ -77,6 +79,30 @@ def test_review_endpoint_is_opt_in(tmp_path: Path) -> None:
     assert "AI review is opt-in" in response.text
     assert "1-5 minutes" in response.text
     assert 'name="run" value="true"' in response.text
+
+
+def test_review_run_starts_background_job(tmp_path: Path, monkeypatch) -> None:
+    _make_tree(tmp_path)
+    calls: list[Path] = []
+
+    def fake_start(root: Path) -> ReviewJob:
+        calls.append(root)
+        return ReviewJob(id="job123", root=root, status="running")
+
+    monkeypatch.setattr(routes, "start_review_job", fake_start)
+    client = TestClient(create_app())
+    response = client.post("/api/review", data={"path": str(tmp_path), "run": "true"})
+    assert response.status_code == 200
+    assert calls == [tmp_path.resolve()]
+    assert "AI review is running" in response.text
+    assert 'hx-get="/api/review/status/job123"' in response.text
+
+
+def test_review_status_unknown_job_returns_error() -> None:
+    client = TestClient(create_app())
+    response = client.get("/api/review/status/unknown")
+    assert response.status_code == 400
+    assert "review job not found" in response.text
 
 
 def test_cli_serve_wires_options(monkeypatch) -> None:

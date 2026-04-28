@@ -17,6 +17,7 @@ from .metrics import to_json as metrics_to_json
 from .quality import build_quality
 from .quality import to_json as quality_to_json
 from .render import render
+from .report import build_report, to_markdown
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="CodeXray CLI")
 
@@ -88,6 +89,14 @@ def hotspots_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     target = _validate_dir(path)
     report = build_hotspots(target)
     typer.echo(hotspots_to_json(report))
+
+
+@app.command("report")
+def report_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit a 1-page Markdown report combining all analyses for ``PATH``."""
+    target = _validate_dir(path)
+    data = build_report(target)
+    typer.echo(to_markdown(data))
 
 
 def main() -> None:

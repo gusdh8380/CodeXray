@@ -22,7 +22,9 @@ def test_main_page_contains_path_and_tabs() -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert 'id="path-input"' in response.text
+    assert 'id="status-text"' in response.text
     assert 'id="result-panel"' in response.text
+    assert 'class="tab-button is-active"' in response.text
     assert 'hx-post="/api/inventory"' in response.text
     assert "https://unpkg.com/htmx.org" in response.text
 
@@ -95,6 +97,7 @@ def test_review_run_starts_background_job(tmp_path: Path, monkeypatch) -> None:
     assert response.status_code == 200
     assert calls == [tmp_path.resolve()]
     assert "AI review is running" in response.text
+    assert "polling every 2 seconds" in response.text
     assert 'hx-get="/api/review/status/job123"' in response.text
 
 

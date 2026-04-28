@@ -168,7 +168,8 @@ def render_review_prompt(path: str) -> str:
         "<strong>AI review is opt-in.</strong>"
         "<p>This can take 1-5 minutes and may call your configured Codex or Claude CLI.</p>"
         "</div>"
-        '<form hx-post="/api/review" hx-target="#result-panel" hx-swap="innerHTML">'
+        '<form class="review-run-form" hx-post="/api/review" '
+        'hx-target="#result-panel" hx-swap="innerHTML">'
         f'<input type="hidden" name="path" value="{escaped}">'
         '<input type="hidden" name="run" value="true">'
         '<button class="primary-action" type="submit">Run AI Review</button>'
@@ -178,10 +179,11 @@ def render_review_prompt(path: str) -> str:
 
 
 def render_review_running(job: ReviewJob) -> str:
+    short_id = job.id[:8]
     body = (
-        '<div class="warning-box">'
+        '<div class="warning-box running-box">'
         "<strong>AI review is running.</strong>"
-        "<p>This page will refresh the result every 2 seconds. Other tabs remain usable.</p>"
+        f"<p>Job {html.escape(short_id)} is polling every 2 seconds. Other tabs remain usable.</p>"
         "</div>"
         f'<div hx-get="/api/review/status/{html.escape(job.id)}" '
         'hx-trigger="load delay:2s" hx-target="#result-panel" hx-swap="innerHTML"></div>'

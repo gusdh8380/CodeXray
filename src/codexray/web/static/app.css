@@ -50,7 +50,7 @@ select {
 
 .path-form {
   display: grid;
-  grid-template-columns: auto minmax(220px, 1fr) minmax(120px, 180px);
+  grid-template-columns: auto minmax(220px, 1fr) minmax(120px, 180px) minmax(90px, auto);
   gap: 10px;
   align-items: center;
 }
@@ -68,6 +68,13 @@ select {
   background: #ffffff;
   color: #202939;
   padding: 0 10px;
+}
+
+.status-text {
+  min-height: 24px;
+  color: #526070;
+  font-size: 13px;
+  text-align: right;
 }
 
 .workspace {
@@ -103,6 +110,21 @@ select {
   border-color: #5aa7d8;
 }
 
+.tabs button.is-active {
+  border-color: #1769aa;
+  background: #d9ecfb;
+  color: #102a43;
+  font-weight: 700;
+}
+
+.tabs button:focus-visible,
+.primary-action:focus-visible,
+.path-form input:focus-visible,
+.path-form select:focus-visible {
+  outline: 2px solid #1769aa;
+  outline-offset: 2px;
+}
+
 .primary-action {
   margin-top: 12px;
   text-align: center;
@@ -111,10 +133,32 @@ select {
   color: #ffffff;
 }
 
+.primary-action:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .result-host {
+  position: relative;
   min-width: 0;
   padding: 20px 24px;
   overflow: auto;
+}
+
+.result-host.is-loading::after {
+  content: "Running analysis...";
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 2;
+  padding: 8px 12px;
+  border: 1px solid #9fc5e8;
+  border-radius: 6px;
+  background: #eef7ff;
+  color: #174a7c;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgb(16 42 67 / 12%);
 }
 
 .result-panel,
@@ -179,12 +223,20 @@ select {
 
 .error-panel {
   color: #8a1f11;
+  border-left: 4px solid #c2410c;
+  padding-left: 14px;
 }
 
 .warning-box {
   max-width: 680px;
   border-color: #f4c430;
   background: #fff8db;
+}
+
+.running-box {
+  max-width: 760px;
+  border-color: #9fc5e8;
+  background: #eef7ff;
 }
 
 .warning-box p {
@@ -209,6 +261,10 @@ select {
   .workspace,
   .path-form {
     grid-template-columns: 1fr;
+  }
+
+  .status-text {
+    text-align: left;
   }
 
   .tabs {

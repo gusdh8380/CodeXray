@@ -74,11 +74,8 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
         response = client.post(endpoint, data={"path": str(tmp_path)})
         assert response.status_code == 200, endpoint
         assert 'data-codexray-result="' in response.text
-        assert (
-            "Raw JSON" in response.text
-            or endpoint in {"/api/overview", "/api/report"}
-        )
-        assert "json-output" not in response.text or "Raw JSON" in response.text
+        assert "Raw JSON" not in response.text
+        assert "json-output" not in response.text
 
 
 def test_analysis_panels_include_split_sidebar(tmp_path: Path) -> None:

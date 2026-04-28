@@ -92,12 +92,8 @@ def render_inventory(rows: Iterable[Row]) -> str:
                     ("Non-empty LoC", f"{total_loc:,}"),
                 ]
             ),
-            _insight(
-                "Inventory shows the size and language mix. Start with the largest language "
-                "rows when estimating migration, testing, or refactor cost."
-            ),
+            _insight("언어 구성과 규모를 한눈에 확인합니다. 가장 큰 언어 행부터 마이그레이션·리팩터 비용을 추정하세요."),
             _table(("language", "files", "loc", "last modified"), table_rows),
-            _raw_details(payload),
         ]
     )
     return _panel("Inventory", _analysis_layout(body, "inventory"))
@@ -140,7 +136,6 @@ def render_codebase_briefing(briefing: CodebaseBriefing) -> str:
             _briefing_section("How It Was Built", briefing.build_process),
             _briefing_section("Explain", briefing.explain),
             _briefing_section("Deep Dive", briefing.deep_dive),
-            _raw_details(payload),
             "</article>",
         ]
     )
@@ -178,12 +173,8 @@ def render_graph(graph: Graph) -> str:
                     ("External refs", str(len(external))),
                 ]
             ),
-            _insight(
-                "Graph highlights file-to-file dependency pressure. Files with both high "
-                "inbound and outbound links deserve extra care because changes can ripple."
-            ),
+            _insight("파일 간 의존 압력을 보여줍니다. 인바운드·아웃바운드 모두 높은 파일은 변경 시 파급 효과가 크므로 주의가 필요합니다."),
             _table(("path", "language", "fan in", "fan out"), rows),
-            _raw_details(payload),
         ]
     )
     return _panel("Dependency Graph", _analysis_layout(body, "graph"))
@@ -215,15 +206,11 @@ def render_metrics(metrics: MetricsResult) -> str:
                     ("DAG", "yes" if metrics.graph.is_dag else "no"),
                 ]
             ),
-            _insight(
-                "Coupling is the practical risk signal. High fan-in means many files depend "
-                "on this file; high fan-out means this file depends on many others."
-            ),
+            _insight("결합도는 실질적인 위험 신호입니다. fan-in이 높으면 많은 파일이 이 파일에 의존하고, fan-out이 높으면 이 파일이 많은 곳에 의존합니다."),
             _table(
                 ("path", "language", "fan in", "fan out", "external", "coupling"),
                 rows,
             ),
-            _raw_details(payload),
         ]
     )
     return _panel("Metrics", _analysis_layout(body, "metrics"))
@@ -249,12 +236,8 @@ def render_entrypoints(result: EntrypointResult) -> str:
                 [("Entrypoints", str(len(result.entrypoints)))]
                 + [(kind, str(count)) for kind, count in sorted(kind_counts.items())[:3]]
             ),
-            _insight(
-                "Entrypoints are where runtime behavior begins. They are useful anchors "
-                "for onboarding, smoke tests, and impact analysis."
-            ),
+            _insight("런타임 실행이 시작되는 진입점 목록입니다. 온보딩·스모크 테스트·영향 분석의 출발점으로 활용하세요."),
             _table(("path", "language", "kind", "detail"), rows),
-            _raw_details(payload),
         ]
     )
     return _panel("Entrypoints", _analysis_layout(body, "entrypoints"))
@@ -282,7 +265,6 @@ def render_quality(report: QualityReport) -> str:
             _summary_grid(cards),
             _insight(_quality_interpretation(overall.grade)),
             _table(("dimension", "grade", "score", "detail"), rows),
-            _raw_details(payload),
         ]
     )
     return _panel("Quality", _analysis_layout(body, "quality"))
@@ -314,12 +296,8 @@ def render_hotspots(report: HotspotsReport) -> str:
                     ("Stable", str(report.summary.stable)),
                 ]
             ),
-            _insight(
-                "Hotspots combine change frequency and coupling. Prioritize high score "
-                "files for tests, ownership cleanup, and small refactors."
-            ),
+            _insight("변경 빈도 × 결합도로 위험 우선순위를 계산합니다. 점수 높은 파일부터 테스트 추가·책임 분리를 진행하세요."),
             _table(("path", "category", "changes", "coupling", "priority"), rows),
-            _raw_details(payload),
         ]
     )
     return _panel("Hotspots", _analysis_layout(body, "hotspots"))
@@ -365,13 +343,9 @@ def render_review(result: Any) -> str:
             "Review 탭은 자체 AI 결과를 표시하므로 시니어 인사이트 패널이 비활성화됩니다."
             "</p>",
             _summary_grid(cards),
-            _insight(
-                "AI review is qualitative. Treat it as a senior-review prompt, then verify "
-                "the evidence lines before changing code."
-            ),
+            _insight("AI 리뷰는 정성 평가입니다. 시니어 코드리뷰 관점으로 참고하되, 코드를 변경하기 전에 근거 라인을 직접 확인하세요."),
             "".join(review_cards) or '<p class="muted">No completed AI reviews.</p>',
             _table(("skipped path", "reason"), skipped) if skipped else "",
-            _raw_details(payload),
         ]
     )
     return _panel("AI Review", body)
@@ -398,10 +372,7 @@ def render_report(data: ReportData, markdown: str) -> str:
         [
             render_summary_cards(data.summary),
             _summary_grid(cards),
-            _insight(
-                "This report combines structure, quality, entrypoints, and hotspots into "
-                "a next-action view."
-            ),
+            _insight("구조·품질·진입점·핫스팟을 종합해 '다음에 무엇을 해야 하는가'를 한 페이지로 정리한 리포트입니다."),
             "<h3>Recommendations</h3>",
             (
                 f'<ol class="recommendations">{recommendations}</ol>'
@@ -465,7 +436,6 @@ def render_vibe_coding_report(report: VibeCodingReport) -> str:
             _table(("area", "evidence count"), area_rows),
             "<h3>관찰된 근거</h3>",
             _table(("area", "path", "kind", "detail"), evidence_rows),
-            _raw_details(payload),
             "</div>",
         ]
     )

@@ -17,6 +17,7 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 from ..report import build_report, to_markdown
+from ..summary import build_summary
 from ..vibe import build_vibe_coding_report
 from .folder_picker import choose_folder
 from .jobs import cancel_review_job, get_review_job, start_review_job
@@ -170,11 +171,14 @@ async def _parse_form(request: Request) -> dict[str, str]:
 
 
 def _overview(root: Path) -> str:
-    inventory = aggregate(root)
+    inventory = tuple(aggregate(root))
     graph = build_graph(root)
+    metrics = build_metrics(graph)
+    entrypoints = build_entrypoints(root)
     quality = build_quality(root)
     hotspots = build_hotspots(root)
-    return render_overview(root, inventory, quality, hotspots, graph)
+    summary = build_summary(quality, hotspots, metrics, entrypoints, inventory)
+    return render_overview(root, inventory, quality, hotspots, graph, summary)
 
 
 def _metrics(root: Path) -> str:

@@ -15,6 +15,12 @@ def to_markdown(data: ReportData) -> str:
     parts.append("")
     parts.extend(_overall_section(data))
     parts.append("")
+    parts.extend(_strengths_section(data))
+    parts.append("")
+    parts.extend(_weaknesses_section(data))
+    parts.append("")
+    parts.extend(_actions_section(data))
+    parts.append("")
     parts.extend(_inventory_section(data))
     parts.append("")
     parts.extend(_structure_section(data))
@@ -24,6 +30,35 @@ def to_markdown(data: ReportData) -> str:
     parts.extend(_recommendations_section(data))
     parts.append("")
     return "\n".join(parts)
+
+
+def _strengths_section(data: ReportData) -> list[str]:
+    return _summary_section("Strengths", data.summary.strengths)
+
+
+def _weaknesses_section(data: ReportData) -> list[str]:
+    return _summary_section("Weaknesses", data.summary.weaknesses)
+
+
+def _actions_section(data: ReportData) -> list[str]:
+    return _summary_section("Next Actions", data.summary.actions)
+
+
+def _summary_section(title: str, items) -> list[str]:
+    lines = [f"## {title}"]
+    if not items:
+        lines.append("")
+        lines.append("(특이사항 없음)")
+        return lines
+    lines.append("")
+    for i, item in enumerate(items, start=1):
+        evidence = _format_summary_evidence(item.evidence)
+        lines.append(f"{i}. {item.text} — {evidence}")
+    return lines
+
+
+def _format_summary_evidence(evidence: dict) -> str:
+    return ", ".join(f"{k}={v}" for k, v in sorted(evidence.items()))
 
 
 def _overall_section(data: ReportData) -> list[str]:

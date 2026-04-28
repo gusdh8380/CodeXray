@@ -147,6 +147,25 @@ def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> No
     assert "AGENTS.md" in response.text
 
 
+def test_overview_renders_summary_cards(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    client = TestClient(create_app())
+    response = client.post("/api/overview", data={"path": str(tmp_path)})
+    assert response.status_code == 200
+    assert 'data-codexray-summary="cards"' in response.text
+    assert "강점" in response.text
+    assert "약점" in response.text
+    assert "다음 행동" in response.text
+
+
+def test_report_renders_summary_cards(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    client = TestClient(create_app())
+    response = client.post("/api/report", data={"path": str(tmp_path)})
+    assert response.status_code == 200
+    assert 'data-codexray-summary="cards"' in response.text
+
+
 def test_review_endpoint_is_opt_in(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())

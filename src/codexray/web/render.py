@@ -24,6 +24,7 @@ from ..metrics.types import MetricsResult
 from ..quality import to_json as quality_to_json
 from ..quality.types import QualityReport
 from ..report.types import ReportData
+from ..summary.types import SummaryResult
 from ..vibe import to_json as vibe_to_json
 from ..vibe.types import VibeCodingReport, VibeFinding
 from .folder_picker import FolderPickerResult
@@ -387,6 +388,7 @@ def render_report(data: ReportData, markdown: str) -> str:
     )
     body = "".join(
         [
+            render_summary_cards(data.summary),
             _summary_grid(cards),
             _insight(
                 "This report combines structure, quality, entrypoints, and hotspots into "
@@ -465,6 +467,7 @@ def render_overview(
     quality: QualityReport,
     hotspots: HotspotsReport,
     graph: Graph,
+    summary: SummaryResult | None = None,
 ) -> str:
     overall = quality.overall
     grade = overall.grade or "N/A"
@@ -481,7 +484,8 @@ def render_overview(
         if top_hotspot is not None
         else "N/A"
     )
-    body = "\n".join(
+    cards_html = render_summary_cards(summary) if summary is not None else ""
+    metrics_grid = "\n".join(
         [
             '<div class="overview-grid">',
             _metric("Path", str(root)),
@@ -493,7 +497,40 @@ def render_overview(
             "</div>",
         ]
     )
+    body = cards_html + metrics_grid
     return _panel("Overview", body)
+
+
+def render_summary_cards(summary: SummaryResult) -> str:
+    return (
+        '<div class="summary-cards" data-codexray-summary="cards">'
+        + _summary_card_html("강점", summary.strengths, "card-strength")
+        + _summary_card_html("약점", summary.weaknesses, "card-weakness")
+        + _summary_card_html("다음 행동", summary.actions, "card-action")
+        + "</div>"
+    )
+
+
+def _summary_card_html(title: str, items, css_class: str) -> str:
+    if not items:
+        body = '<p class="muted">특이사항 없음</p>'
+    else:
+        rendered: list[str] = []
+        for item in items:
+            evidence_pairs = ", ".join(
+                f"{k}={v}" for k, v in sorted(item.evidence.items())
+            )
+            rendered.append(
+                '<li class="summary-item">'
+                f'<strong>{html.escape(item.text)}</strong>'
+                f'<span class="summary-evidence">{html.escape(evidence_pairs)}</span>'
+                "</li>"
+            )
+        body = f'<ul class="summary-items">{"".join(rendered)}</ul>'
+    return (
+        f'<section class="summary-card {css_class}">'
+        f"<h3>{html.escape(title)}</h3>{body}</section>"
+    )
 
 
 def _briefing_section(title: str, cards: tuple[BriefingCard, ...]) -> str:

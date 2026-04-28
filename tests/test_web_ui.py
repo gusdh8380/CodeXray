@@ -23,6 +23,7 @@ def test_main_page_contains_path_and_tabs() -> None:
     assert response.status_code == 200
     assert 'id="path-input"' in response.text
     assert 'id="status-text"' in response.text
+    assert 'id="theme-toggle"' in response.text
     assert 'id="result-panel"' in response.text
     assert 'class="tab-button is-active"' in response.text
     assert 'hx-post="/api/inventory"' in response.text
@@ -62,6 +63,11 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
         response = client.post(endpoint, data={"path": str(tmp_path)})
         assert response.status_code == 200, endpoint
         assert 'data-codexray-result="' in response.text
+        assert (
+            "Raw JSON" in response.text
+            or endpoint in {"/api/overview", "/api/report"}
+        )
+        assert "json-output" not in response.text or "Raw JSON" in response.text
 
 
 def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
@@ -70,6 +76,7 @@ def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
     response = client.post("/api/dashboard", data={"path": str(tmp_path)})
     assert response.status_code == 200
     assert "dashboard-frame" in response.text
+    assert "dashboard-workspace" in response.text
     assert "codexray-dashboard-v1" in response.text
 
 
@@ -98,7 +105,18 @@ def test_review_run_starts_background_job(tmp_path: Path, monkeypatch) -> None:
     assert calls == [tmp_path.resolve()]
     assert "AI review is running" in response.text
     assert "polling every 2 seconds" in response.text
+    assert "Cancel Review" in response.text
     assert 'hx-get="/api/review/status/job123"' in response.text
+
+
+def test_review_cancel_route(monkeypatch) -> None:
+    job = ReviewJob(id="job123", root=Path("."), status="cancelled")
+
+    monkeypatch.setattr(routes, "cancel_review_job", lambda job_id: job)
+    client = TestClient(create_app())
+    response = client.post("/api/review/cancel/job123")
+    assert response.status_code == 200
+    assert "AI review cancelled" in response.text
 
 
 def test_review_status_unknown_job_returns_error() -> None:

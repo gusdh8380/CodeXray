@@ -16,7 +16,7 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 from ..report import build_report, to_markdown
-from .jobs import get_review_job, start_review_job
+from .jobs import cancel_review_job, get_review_job, start_review_job
 from .render import (
     render_dashboard,
     render_entrypoints,
@@ -29,6 +29,7 @@ from .render import (
     render_quality,
     render_report,
     render_review,
+    render_review_cancelled,
     render_review_failed,
     render_review_prompt,
     render_review_running,
@@ -109,11 +110,20 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
             return _error_response("review job not found")
         if job.status == "running":
             return HTMLResponse(render_review_running(job))
+        if job.status == "cancelled":
+            return HTMLResponse(render_review_cancelled(job))
         if job.status == "failed":
             return HTMLResponse(render_review_failed(job), status_code=500)
         if job.result is None:
             return _error_response("review job completed without a result")
         return HTMLResponse(render_review(job.result))
+
+    @router.post("/api/review/cancel/{job_id}", response_class=HTMLResponse)
+    async def review_cancel(job_id: str) -> Response:
+        job = cancel_review_job(job_id)
+        if job is None:
+            return _error_response("review job not found")
+        return HTMLResponse(render_review_cancelled(job))
 
     return router
 

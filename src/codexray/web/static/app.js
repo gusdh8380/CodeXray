@@ -1,12 +1,28 @@
 (function () {
   const key = "codexray.recentPaths.v1";
+  const themeKey = "codexray.theme.v1";
   const form = document.getElementById("analysis-form");
   const input = document.getElementById("path-input");
   const select = document.getElementById("recent-paths");
   const resultPanel = document.getElementById("result-panel");
   const statusText = document.getElementById("status-text");
+  const themeToggle = document.getElementById("theme-toggle");
   const tabs = Array.from(document.querySelectorAll(".tab-button"));
   let activeTab = tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0];
+
+  function preferredTheme() {
+    const stored = localStorage.getItem(themeKey);
+    if (stored === "light" || stored === "dark") {
+      return stored;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    themeToggle.textContent = theme === "dark" ? "Light" : "Dark";
+    themeToggle.setAttribute("aria-label", "Switch to " + (theme === "dark" ? "light" : "dark") + " mode");
+  }
 
   function readPaths() {
     try {
@@ -109,6 +125,13 @@
     rerunActiveTab();
   });
 
+  themeToggle.addEventListener("click", function () {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem(themeKey, next);
+    applyTheme(next);
+  });
+
+  applyTheme(preferredTheme());
   renderOptions();
   setActiveTab(activeTab);
   window.setTimeout(function () {

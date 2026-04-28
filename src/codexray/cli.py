@@ -5,8 +5,11 @@ from pathlib import Path
 
 import typer
 
-from .graph import build_graph, to_json
+from .graph import build_graph
+from .graph import to_json as graph_to_json
 from .inventory import aggregate
+from .metrics import build_metrics
+from .metrics import to_json as metrics_to_json
 from .render import render
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="CodeXray CLI")
@@ -45,7 +48,16 @@ def graph_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     """Emit the file-level dependency graph of ``PATH`` as JSON."""
     target = _validate_dir(path)
     graph = build_graph(target)
-    typer.echo(to_json(graph))
+    typer.echo(graph_to_json(graph))
+
+
+@app.command("metrics")
+def metrics_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit fan-in/fan-out/SCC metrics for ``PATH`` as JSON."""
+    target = _validate_dir(path)
+    graph = build_graph(target)
+    result = build_metrics(graph)
+    typer.echo(metrics_to_json(result))
 
 
 def main() -> None:

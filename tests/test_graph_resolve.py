@@ -14,7 +14,7 @@ def test_python_absolute_to_module(tmp_path: Path) -> None:
     internal = {(pkg / "__init__.py").resolve(), (pkg / "x.py").resolve(), src.resolve()}
 
     raw = RawImport(source=src.resolve(), raw="pkg.x", level=0, language="Python")
-    assert resolve(raw, tmp_path.resolve(), internal) == (pkg / "x.py").resolve()
+    assert resolve(raw, tmp_path.resolve(), internal, None) == [(pkg / "x.py").resolve()]
 
 
 def test_python_absolute_unresolved(tmp_path: Path) -> None:
@@ -22,7 +22,7 @@ def test_python_absolute_unresolved(tmp_path: Path) -> None:
     src.write_text("")
     internal = {src.resolve()}
     raw = RawImport(source=src.resolve(), raw="os", level=0, language="Python")
-    assert resolve(raw, tmp_path.resolve(), internal) is None
+    assert resolve(raw, tmp_path.resolve(), internal, None) == []
 
 
 def test_python_relative_sibling(tmp_path: Path) -> None:
@@ -34,10 +34,10 @@ def test_python_relative_sibling(tmp_path: Path) -> None:
     src.write_text("from .sib import x\n")
     internal = {(pkg / "__init__.py").resolve(), (pkg / "sib.py").resolve(), src.resolve()}
     raw = RawImport(source=src.resolve(), raw="sib", level=1, language="Python")
-    assert resolve(raw, tmp_path.resolve(), internal) == (pkg / "sib.py").resolve()
+    assert resolve(raw, tmp_path.resolve(), internal, None) == [(pkg / "sib.py").resolve()]
 
 
-def test_python_relative_to_init(tmp_path: Path) -> None:
+def test_python_relative_no_match(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
     pkg.mkdir()
     init = pkg / "__init__.py"
@@ -45,10 +45,8 @@ def test_python_relative_to_init(tmp_path: Path) -> None:
     src = pkg / "main.py"
     src.write_text("from . import xs\n")
     internal = {init.resolve(), src.resolve()}
-    # `from . import xs` with no submodule file falls back to package __init__.py
     raw = RawImport(source=src.resolve(), raw="xs", level=1, language="Python")
-    # No xs.py, no xs/ — unresolved
-    assert resolve(raw, tmp_path.resolve(), internal) is None
+    assert resolve(raw, tmp_path.resolve(), internal, None) == []
 
 
 def test_js_relative_extension_omitted(tmp_path: Path) -> None:
@@ -58,7 +56,7 @@ def test_js_relative_extension_omitted(tmp_path: Path) -> None:
     src.write_text("")
     internal = {util.resolve(), src.resolve()}
     raw = RawImport(source=src.resolve(), raw="./util", level=0, language="TypeScript")
-    assert resolve(raw, tmp_path.resolve(), internal) == util.resolve()
+    assert resolve(raw, tmp_path.resolve(), internal, None) == [util.resolve()]
 
 
 def test_js_relative_index(tmp_path: Path) -> None:
@@ -70,7 +68,7 @@ def test_js_relative_index(tmp_path: Path) -> None:
     src.write_text("")
     internal = {idx.resolve(), src.resolve()}
     raw = RawImport(source=src.resolve(), raw="./mod", level=0, language="TypeScript")
-    assert resolve(raw, tmp_path.resolve(), internal) == idx.resolve()
+    assert resolve(raw, tmp_path.resolve(), internal, None) == [idx.resolve()]
 
 
 def test_js_bare_specifier_unresolved(tmp_path: Path) -> None:
@@ -78,16 +76,48 @@ def test_js_bare_specifier_unresolved(tmp_path: Path) -> None:
     src.write_text("")
     internal = {src.resolve()}
     raw = RawImport(source=src.resolve(), raw="react", level=0, language="TypeScript")
-    assert resolve(raw, tmp_path.resolve(), internal) is None
+    assert resolve(raw, tmp_path.resolve(), internal, None) == []
 
 
-def test_resolved_to_ignored_dir_returns_none(tmp_path: Path) -> None:
+def test_resolved_to_ignored_dir_returns_empty(tmp_path: Path) -> None:
     nm = tmp_path / "node_modules" / "lib.js"
     nm.parent.mkdir()
     nm.write_text("")
     src = tmp_path / "a.js"
     src.write_text("")
-    # node_modules content is NOT in internal_paths (walk would skip it)
     internal = {src.resolve()}
     raw = RawImport(source=src.resolve(), raw="./node_modules/lib", level=0, language="JavaScript")
-    assert resolve(raw, tmp_path.resolve(), internal) is None
+    assert resolve(raw, tmp_path.resolve(), internal, None) == []
+
+
+def test_csharp_namespace_one_to_one(tmp_path: Path) -> None:
+    foo = tmp_path / "Foo.cs"
+    foo.write_text("namespace App.Core { class X {} }\n")
+    bar = tmp_path / "Bar.cs"
+    bar.write_text("using App.Core;\n")
+    internal = {foo.resolve(), bar.resolve()}
+    index = {"App.Core": {foo.resolve()}}
+    raw = RawImport(source=bar.resolve(), raw="App.Core", level=0, language="C#")
+    assert resolve(raw, tmp_path.resolve(), internal, index) == [foo.resolve()]
+
+
+def test_csharp_namespace_one_to_many(tmp_path: Path) -> None:
+    a = tmp_path / "A.cs"
+    a.write_text("namespace App.Core { class X {} }\n")
+    b = tmp_path / "B.cs"
+    b.write_text("namespace App.Core { class Y {} }\n")
+    main = tmp_path / "Main.cs"
+    main.write_text("using App.Core;\n")
+    internal = {a.resolve(), b.resolve(), main.resolve()}
+    index = {"App.Core": {a.resolve(), b.resolve()}}
+    raw = RawImport(source=main.resolve(), raw="App.Core", level=0, language="C#")
+    assert resolve(raw, tmp_path.resolve(), internal, index) == sorted(
+        [a.resolve(), b.resolve()]
+    )
+
+
+def test_csharp_namespace_unresolved(tmp_path: Path) -> None:
+    src = tmp_path / "Bar.cs"
+    src.write_text("using UnityEngine;\n")
+    raw = RawImport(source=src.resolve(), raw="UnityEngine", level=0, language="C#")
+    assert resolve(raw, tmp_path.resolve(), {src.resolve()}, {}) == []

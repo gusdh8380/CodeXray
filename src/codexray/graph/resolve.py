@@ -7,10 +7,25 @@ from .types import RawImport
 _JS_EXT_CANDIDATES: tuple[str, ...] = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs")
 
 
-def resolve(raw: RawImport, root: Path, internal_paths: set[Path]) -> Path | None:
+def resolve(
+    raw: RawImport,
+    root: Path,
+    internal_paths: set[Path],
+    namespace_index: dict[str, set[Path]] | None = None,
+) -> list[Path]:
+    """Return the list of internal files that ``raw`` resolves to.
+
+    Empty list means external. Python and JS/TS resolve 1:1 (list length ≤ 1).
+    C# may resolve 1:N when a `using X.Y;` matches a namespace declared by
+    multiple files.
+    """
     if raw.language == "Python":
-        return _resolve_python(raw, root, internal_paths)
-    return _resolve_js(raw, internal_paths)
+        single = _resolve_python(raw, root, internal_paths)
+        return [single] if single is not None else []
+    if raw.language == "C#":
+        return _resolve_csharp(raw, namespace_index or {})
+    single = _resolve_js(raw, internal_paths)
+    return [single] if single is not None else []
 
 
 def _resolve_python(raw: RawImport, root: Path, internal_paths: set[Path]) -> Path | None:
@@ -60,3 +75,10 @@ def _resolve_js(raw: RawImport, internal_paths: set[Path]) -> Path | None:
         if candidate in internal_paths:
             return candidate
     return None
+
+
+def _resolve_csharp(raw: RawImport, namespace_index: dict[str, set[Path]]) -> list[Path]:
+    files = namespace_index.get(raw.raw)
+    if not files:
+        return []
+    return sorted(files)

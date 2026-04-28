@@ -38,12 +38,12 @@ def test_typescript_mix(tmp_path: Path) -> None:
     assert ("main.ts", "react", "external") in edges
 
 
-def test_only_target_languages_become_nodes(tmp_path: Path) -> None:
+def test_java_excluded_other_targets_included(tmp_path: Path) -> None:
     _make(tmp_path, "Main.java", "package x; class Main {}\n")
     _make(tmp_path, "Foo.cs", "namespace X { class Foo {} }\n")
     _make(tmp_path, "main.py", "import os\n")
     graph = build_graph(tmp_path)
-    assert [n.path for n in graph.nodes] == ["main.py"]
+    assert [n.path for n in graph.nodes] == ["Foo.cs", "main.py"]
 
 
 def test_deterministic_output(tmp_path: Path) -> None:

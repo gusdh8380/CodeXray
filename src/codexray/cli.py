@@ -5,6 +5,8 @@ from pathlib import Path
 
 import typer
 
+from .entrypoints import build_entrypoints
+from .entrypoints import to_json as entrypoints_to_json
 from .graph import build_graph
 from .graph import to_json as graph_to_json
 from .inventory import aggregate
@@ -58,6 +60,14 @@ def metrics_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     graph = build_graph(target)
     result = build_metrics(graph)
     typer.echo(metrics_to_json(result))
+
+
+@app.command("entrypoints")
+def entrypoints_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit detected entrypoints for ``PATH`` as JSON."""
+    target = _validate_dir(path)
+    result = build_entrypoints(target)
+    typer.echo(entrypoints_to_json(result))
 
 
 def main() -> None:

@@ -98,7 +98,7 @@ select {
 
 .path-form {
   display: grid;
-  grid-template-columns: auto minmax(220px, 1fr) minmax(120px, 180px) minmax(90px, auto);
+  grid-template-columns: auto minmax(220px, 1fr) auto minmax(120px, 180px) minmax(90px, auto);
   gap: 10px;
   align-items: center;
 }
@@ -109,13 +109,18 @@ select {
 }
 
 .path-form input,
-.path-form select {
+.path-form select,
+.browse-button {
   height: 38px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: var(--surface-raised);
   color: var(--text);
   padding: 0 10px;
+}
+
+.browse-button {
+  cursor: pointer;
 }
 
 .status-text {
@@ -156,6 +161,7 @@ select {
 .tabs button:hover,
 .primary-action:hover,
 .secondary-action:hover,
+.browse-button:hover,
 .theme-toggle:hover {
   background: var(--accent-soft);
   border-color: var(--accent);
@@ -320,6 +326,37 @@ select {
   line-height: 1.55;
 }
 
+.analysis-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 22px;
+  align-items: start;
+}
+
+.analysis-main {
+  min-width: 0;
+}
+
+.analysis-explainer {
+  position: sticky;
+  top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  line-height: 1.62;
+}
+
+.analysis-explainer h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.analysis-explainer p {
+  margin: 0 0 12px;
+}
+
 .muted {
   color: var(--text-muted);
 }
@@ -423,5 +460,13 @@ select {
   .tabs button {
     min-width: 118px;
     text-align: center;
+  }
+
+  .analysis-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-explainer {
+    position: static;
   }
 }

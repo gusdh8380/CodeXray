@@ -16,11 +16,13 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 from ..report import build_report, to_markdown
+from .folder_picker import choose_folder
 from .jobs import cancel_review_job, get_review_job, start_review_job
 from .render import (
     render_dashboard,
     render_entrypoints,
     render_error,
+    render_folder_picker_result,
     render_graph,
     render_hotspots,
     render_inventory,
@@ -124,6 +126,10 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
         if job is None:
             return _error_response("review job not found")
         return HTMLResponse(render_review_cancelled(job))
+
+    @router.post("/api/browse-folder", response_class=HTMLResponse)
+    async def browse_folder() -> Response:
+        return HTMLResponse(render_folder_picker_result(choose_folder()))
 
     return router
 

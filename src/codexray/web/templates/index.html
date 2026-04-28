@@ -19,6 +19,7 @@
         <form id="analysis-form" class="path-form">
           <label for="path-input">Path</label>
           <input id="path-input" name="path" type="text" value="{{ default_path }}" autocomplete="off">
+          <button class="browse-button" type="button" hx-post="/api/browse-folder" hx-target="#status-text" hx-swap="outerHTML">Browse</button>
           <select id="recent-paths" aria-label="Recent paths">
             <option value="">Recent</option>
           </select>

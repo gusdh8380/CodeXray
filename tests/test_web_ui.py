@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 import codexray.cli as cli
 import codexray.web.routes as routes
 from codexray.web import create_app
+from codexray.web.folder_picker import FolderPickerResult
 from codexray.web.jobs import ReviewJob
 
 
@@ -24,6 +25,7 @@ def test_main_page_contains_path_and_tabs() -> None:
     assert 'id="path-input"' in response.text
     assert 'id="status-text"' in response.text
     assert 'id="theme-toggle"' in response.text
+    assert 'hx-post="/api/browse-folder"' in response.text
     assert 'id="result-panel"' in response.text
     assert 'class="tab-button is-active"' in response.text
     assert 'hx-post="/api/inventory"' in response.text
@@ -68,6 +70,25 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
             or endpoint in {"/api/overview", "/api/report"}
         )
         assert "json-output" not in response.text or "Raw JSON" in response.text
+
+
+def test_analysis_panels_include_korean_explainer(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    client = TestClient(create_app())
+    endpoints = [
+        "/api/inventory",
+        "/api/graph",
+        "/api/metrics",
+        "/api/entrypoints",
+        "/api/quality",
+        "/api/hotspots",
+        "/api/report",
+    ]
+    for endpoint in endpoints:
+        response = client.post(endpoint, data={"path": str(tmp_path)})
+        assert response.status_code == 200, endpoint
+        assert "analysis-explainer" in response.text
+        assert "시니어 개발자 관점" in response.text
 
 
 def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
@@ -124,6 +145,32 @@ def test_review_status_unknown_job_returns_error() -> None:
     response = client.get("/api/review/status/unknown")
     assert response.status_code == 400
     assert "review job not found" in response.text
+
+
+def test_browse_folder_updates_path_input(monkeypatch) -> None:
+    monkeypatch.setattr(
+        routes,
+        "choose_folder",
+        lambda: FolderPickerResult("/tmp/example"),
+    )
+    client = TestClient(create_app())
+    response = client.post("/api/browse-folder")
+    assert response.status_code == 200
+    assert 'hx-swap-oob="true"' in response.text
+    assert 'value="/tmp/example"' in response.text
+
+
+def test_browse_folder_cancel_keeps_input(monkeypatch) -> None:
+    monkeypatch.setattr(
+        routes,
+        "choose_folder",
+        lambda: FolderPickerResult(None, cancelled=True),
+    )
+    client = TestClient(create_app())
+    response = client.post("/api/browse-folder")
+    assert response.status_code == 200
+    assert "Folder selection cancelled" in response.text
+    assert "path-input" not in response.text
 
 
 def test_cli_serve_wires_options(monkeypatch) -> None:

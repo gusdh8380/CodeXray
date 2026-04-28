@@ -22,6 +22,7 @@ from ..metrics.types import MetricsResult
 from ..quality import to_json as quality_to_json
 from ..quality.types import QualityReport
 from ..report.types import ReportData
+from .folder_picker import FolderPickerResult
 from .jobs import ReviewJob
 
 
@@ -94,7 +95,7 @@ def render_inventory(rows: Iterable[Row]) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Inventory", body)
+    return _panel("Inventory", _analysis_layout(body, _explanation("inventory")))
 
 
 def render_graph(graph: Graph) -> str:
@@ -136,7 +137,7 @@ def render_graph(graph: Graph) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Dependency Graph", body)
+    return _panel("Dependency Graph", _analysis_layout(body, _explanation("graph")))
 
 
 def render_metrics(metrics: MetricsResult) -> str:
@@ -176,7 +177,7 @@ def render_metrics(metrics: MetricsResult) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Metrics", body)
+    return _panel("Metrics", _analysis_layout(body, _explanation("metrics")))
 
 
 def render_entrypoints(result: EntrypointResult) -> str:
@@ -207,7 +208,7 @@ def render_entrypoints(result: EntrypointResult) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Entrypoints", body)
+    return _panel("Entrypoints", _analysis_layout(body, _explanation("entrypoints")))
 
 
 def render_quality(report: QualityReport) -> str:
@@ -235,7 +236,7 @@ def render_quality(report: QualityReport) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Quality", body)
+    return _panel("Quality", _analysis_layout(body, _explanation("quality")))
 
 
 def render_hotspots(report: HotspotsReport) -> str:
@@ -272,7 +273,7 @@ def render_hotspots(report: HotspotsReport) -> str:
             _raw_details(payload),
         ]
     )
-    return _panel("Hotspots", body)
+    return _panel("Hotspots", _analysis_layout(body, _explanation("hotspots")))
 
 
 def render_review(result: Any) -> str:
@@ -358,7 +359,7 @@ def render_report(data: ReportData, markdown: str) -> str:
             f'<pre class="markdown-output">{html.escape(markdown)}</pre>',
         ]
     )
-    return _panel("Report", body)
+    return _panel("Report", _analysis_layout(body, _explanation("report")))
 
 
 def render_dashboard(data: DashboardData) -> str:
@@ -468,6 +469,24 @@ def render_review_cancelled(job: ReviewJob) -> str:
     return _panel("AI Review", body)
 
 
+def render_folder_picker_result(result: FolderPickerResult) -> str:
+    if result.path is not None:
+        escaped = html.escape(result.path)
+        return (
+            f'<input id="path-input" name="path" type="text" value="{escaped}" '
+            'autocomplete="off" hx-swap-oob="true">'
+            '<span id="status-text" class="status-text" role="status">'
+            "Folder selected"
+            "</span>"
+        )
+    message = "Folder selection cancelled" if result.cancelled else result.error
+    return (
+        '<span id="status-text" class="status-text" role="status">'
+        f"{html.escape(message or 'Folder picker failed')}"
+        "</span>"
+    )
+
+
 def _panel(title: str, body: str) -> str:
     return (
         f'<section class="result-panel" data-codexray-result="{html.escape(title.lower())}">'
@@ -477,12 +496,115 @@ def _panel(title: str, body: str) -> str:
     )
 
 
+def _analysis_layout(main: str, aside: str) -> str:
+    return (
+        '<div class="analysis-layout">'
+        f'<div class="analysis-main">{main}</div>'
+        f'<aside class="analysis-explainer">{aside}</aside>'
+        "</div>"
+    )
+
+
 def _metric(label: str, value: str) -> str:
     return (
         '<div class="metric">'
         f"<span>{html.escape(label)}</span>"
         f"<strong>{html.escape(value)}</strong>"
         "</div>"
+    )
+
+
+def _explanation(name: str) -> str:
+    explanations: dict[str, tuple[str, tuple[str, ...]]] = {
+        "inventory": (
+            "이 화면은 코드베이스의 규모와 언어 구성을 보는 출발점입니다.",
+            (
+                "시니어 관점에서는 LoC가 큰 언어와 파일 수가 많은 영역을 먼저 봅니다. "
+                "그곳이 테스트 비용, 리팩터링 비용, 온보딩 비용을 대부분 결정합니다.",
+                "언어가 여러 개라면 경계면을 확인해야 합니다. Python, C#, TypeScript처럼 "
+                "런타임이 다른 코드가 섞이면 빌드·배포·테스트 책임도 나뉠 가능성이 큽니다.",
+                "다음 행동은 가장 큰 언어의 entrypoint와 hotspot을 이어서 확인하는 것입니다.",
+            ),
+        ),
+        "graph": (
+            "이 화면은 파일 사이의 의존 방향을 보여줍니다.",
+            (
+                "fan-in이 높은 파일은 많은 코드가 의존하는 중심축입니다. 변경 전 회귀 테스트와 "
+                "호출자 영향 범위를 먼저 확인해야 합니다.",
+                "fan-out이 높은 파일은 많은 것을 알고 있는 조정자일 가능성이 큽니다. 비즈니스 "
+                "규칙이 한 파일에 몰렸는지, adapter나 service 분리가 필요한지 봅니다.",
+                "좋은 그래프는 모든 의존이 없는 그래프가 아니라, 중요한 의존이 "
+                "설명 가능한 그래프입니다.",
+            ),
+        ),
+        "metrics": (
+            "이 화면은 구조 리스크를 숫자로 압축한 것입니다.",
+            (
+                "coupling이 높은 파일은 작업 전후 검증 범위가 넓습니다. 작은 수정도 주변 기능에 "
+                "영향을 줄 수 있으므로 테스트 보강 우선순위가 높습니다.",
+                "largest SCC가 크면 순환 의존이 있다는 뜻입니다. 순환은 변경 순서와 "
+                "모듈 분리를 어렵게 만듭니다.",
+                "시니어는 점수를 절대값으로만 보지 않고, hotspot과 겹치는 파일을 "
+                "우선순위로 잡습니다.",
+            ),
+        ),
+        "hotspots": (
+            "이 화면은 자주 바뀌면서 구조적으로도 복잡한 파일을 찾습니다.",
+            (
+                "hotspot은 '나쁜 파일'이라기보다 투자 우선순위입니다. 자주 바뀌는 곳에 테스트와 "
+                "명확한 소유권이 없으면 개발 속도가 계속 느려집니다.",
+                "priority가 높은 파일은 바로 대규모 리팩터링하기보다, 먼저 characterization test와 "
+                "작은 추출을 반복하는 편이 안전합니다.",
+                "active stable은 많이 바뀌지만 결합은 낮은 영역이고, neglected "
+                "complex는 안 바뀌지만 "
+                "구조적으로 위험한 영역입니다. 둘은 대응 전략이 다릅니다.",
+            ),
+        ),
+        "quality": (
+            "이 화면은 코드베이스 품질을 결합도, 응집도, 문서화, 테스트 관점으로 나눠 봅니다.",
+            (
+                "전체 등급보다 중요한 것은 어떤 dimension이 발목을 잡는지입니다. "
+                "테스트 점수가 낮으면 "
+                "리팩터링보다 검증 기반을 먼저 깔아야 합니다.",
+                "coupling과 cohesion이 동시에 낮으면 설계 경계가 흐릴 가능성이 "
+                "큽니다. 이 경우 기능 추가 전에 "
+                "모듈 책임을 다시 정리하는 것이 장기적으로 싸게 먹힙니다.",
+                "품질 점수는 의사결정 신호입니다. PR 차단 기준이 아니라 다음 개선 "
+                "순서를 정하는 데 사용합니다.",
+            ),
+        ),
+        "entrypoints": (
+            "이 화면은 프로그램이 어디서 시작되는지 보여줍니다.",
+            (
+                "entrypoint는 코드 읽기의 시작점입니다. 신규 개발자는 여기서 런타임 "
+                "흐름을 따라가면 "
+                "전체 구조를 더 빨리 이해합니다.",
+                "entrypoint가 너무 많으면 실행 경로가 분산되어 테스트 전략이 "
+                "어려워질 수 있습니다. 반대로 "
+                "감지되지 않으면 빌드 설정이나 framework convention을 별도로 확인해야 합니다.",
+                "시니어는 entrypoint와 hotspot이 가까운지 봅니다. 시작점 근처 "
+                "hotspot은 사용자 영향도가 높을 수 있습니다.",
+            ),
+        ),
+        "report": (
+            "이 화면은 앞선 분석을 다음 행동 중심으로 묶은 요약 리포트입니다.",
+            (
+                "Report는 세부 수치보다 의사결정 순서를 잡는 용도입니다. grade, "
+                "top risk, recommendation을 "
+                "먼저 보고 필요한 탭으로 내려가 근거를 확인합니다.",
+                "추천은 자동 생성된 규칙 기반 제안입니다. 그대로 실행하기보다 현재 "
+                "제품 일정, 장애 이력, "
+                "팀 소유권과 맞춰 우선순위를 조정해야 합니다.",
+                "시니어 리뷰에서는 이 리포트를 작업 계획의 초안으로 쓰고, hotspot "
+                "파일을 실제 코드 리뷰로 검증합니다.",
+            ),
+        ),
+    }
+    title, paragraphs = explanations[name]
+    return (
+        "<h3>시니어 개발자 관점</h3>"
+        f"<p><strong>{html.escape(title)}</strong></p>"
+        + "".join(f"<p>{html.escape(paragraph)}</p>" for paragraph in paragraphs)
     )
 
 

@@ -1,7 +1,8 @@
 # ai-review Specification
 
 ## Purpose
-TBD - created by archiving change add-ai-review. Update Purpose after archive.
+The ai-review capability provides the `codexray review <path>` CLI: it selects the top hotspot files and runs qualitative review through a shell-out adapter (codex or claude CLI), enforcing safety filters (empty `evidence_lines`, out-of-range line numbers, missing `comment` / `suggestion` / `limitations`, invalid `confidence`) before emitting a deterministic JSON review report. The CLI never imports an SDK directly — adapters keep the AI dependency at the process boundary.
+
 ## Requirements
 ### Requirement: Review CLI 진입점
 The system SHALL expose a `codexray review <path>` command that runs AI qualitative review on the top N hotspot files and prints a JSON review report to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

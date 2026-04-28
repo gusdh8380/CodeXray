@@ -1,7 +1,8 @@
 # dependency-graph Specification
 
 ## Purpose
-TBD - created by archiving change add-dependency-graph. Update Purpose after archive.
+The dependency-graph capability provides the `codexray graph <path>` CLI: it extracts file-to-file import dependencies (Python AST, JS/TS regex, C# type-resolution) and emits a deterministic JSON graph with nodes and directed edges. It is the shared input for code-metrics, hotspots, report, and dashboard.
+
 ## Requirements
 ### Requirement: 그래프 CLI 진입점
 The system SHALL expose a `codexray graph <path>` command that prints a JSON graph to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

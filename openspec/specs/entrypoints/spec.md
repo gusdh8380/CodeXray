@@ -1,7 +1,8 @@
 # entrypoints Specification
 
 ## Purpose
-TBD - created by archiving change add-entrypoints. Update Purpose after archive.
+The entrypoints capability provides the `codexray entrypoints <path>` CLI: it detects program entry points across languages (Python `__main__`, Java/C# `Main`, Unity `MonoBehaviour`, `pyproject` scripts, `package.json` bin) and emits a deterministic JSON list grouped by entrypoint kind.
+
 ## Requirements
 ### Requirement: Entrypoints CLI 진입점
 The system SHALL expose a `codexray entrypoints <path>` command that prints a JSON object listing detected entrypoints to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

@@ -1,7 +1,8 @@
 # inventory Specification
 
 ## Purpose
-TBD - created by archiving change add-inventory-cli. Update Purpose after archive.
+The inventory capability provides the `codexray inventory <path>` CLI: it walks an input directory, classifies source files by language extension, counts non-empty lines, and emits a deterministic JSON inventory keyed by language with file counts, total LoC, and most-recent mtime. It is the foundational analysis used as the entry point for every other CodeXray capability.
+
 ## Requirements
 ### Requirement: 인벤토리 CLI 진입점
 The system SHALL expose a `codexray inventory <path>` command. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

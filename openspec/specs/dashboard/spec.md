@@ -1,7 +1,8 @@
 # dashboard Specification
 
 ## Purpose
-TBD - created by archiving change add-dashboard. Update Purpose after archive.
+The dashboard capability provides the `codexray dashboard <path>` CLI: it composes the outputs of the six analysis builders into a single self-contained HTML document with a D3 force-directed graph and inline tables, written deterministically to stdout. It uses no build pipeline — only D3 v7 from CDN — to stay aligned with the project's local-first constraint.
+
 ## Requirements
 ### Requirement: Dashboard CLI 진입점
 The system SHALL expose a `codexray dashboard <path>` command that prints a single self-contained HTML document to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

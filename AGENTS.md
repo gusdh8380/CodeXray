@@ -51,7 +51,8 @@
 7. 구현 + tasks.md 체크오프
 8. 검증 (아래 4 게이트)
 9. openspec archive <name> -y  ← delta spec을 main spec으로 동기화
-10. git commit -m "feat: ..." (구체 수치 포함, 예: "CivilSim D(40), top hotspot GameManager.cs(15×45)")
+10. archive된 `openspec/specs/<capability>/spec.md`의 `## Purpose`가 `TBD - created by archiving change ...` placeholder면 한 단락으로 채우기 (capability 한 줄 정의 + CLI 명령 + 다른 capability와의 입출력 관계)
+11. git commit -m "feat: ..." (구체 수치 포함, 예: "CivilSim D(40), top hotspot GameManager.cs(15×45)")
 ```
 
 ### 4개 게이트 (모두 통과해야 archive·commit)

@@ -1,7 +1,8 @@
 # code-quality Specification
 
 ## Purpose
-TBD - created by archiving change add-quality-quant. Update Purpose after archive.
+The code-quality capability provides the `codexray quality <path>` CLI: it scores a codebase across four dimensions — coupling, cohesion, documentation, and test — and maps each to an A–F letter grade, producing a deterministic JSON quality report consumed by report and dashboard.
+
 ## Requirements
 ### Requirement: Quality CLI 진입점
 The system SHALL expose a `codexray quality <path>` command that prints a JSON quality report to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

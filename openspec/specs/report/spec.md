@@ -1,7 +1,8 @@
 # report Specification
 
 ## Purpose
-TBD - created by archiving change add-report. Update Purpose after archive.
+The report capability provides the `codexray report <path>` CLI: it composes the outputs of the six analysis builders (inventory, graph, metrics, entrypoints, quality, hotspots) into a single one-page Markdown report with rule-based recommendations, written deterministically to stdout.
+
 ## Requirements
 ### Requirement: Report CLI 진입점
 The system SHALL expose a `codexray report <path>` command that prints a Markdown report to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

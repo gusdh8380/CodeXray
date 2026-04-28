@@ -1,7 +1,8 @@
 # hotspots Specification
 
 ## Purpose
-TBD - created by archiving change add-hotspots. Update Purpose after archive.
+The hotspots capability provides the `codexray hotspots <path>` CLI: it combines git-log change frequency with the dependency-graph coupling matrix to rank files into four hotspot categories (high-churn × high-coupling and the three other quadrants) and emits a deterministic JSON hotspots report. It is the priority input for ai-review.
+
 ## Requirements
 ### Requirement: Hotspots CLI 진입점
 The system SHALL expose a `codexray hotspots <path>` command that prints a JSON hotspots report to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

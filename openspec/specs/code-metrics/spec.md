@@ -1,7 +1,8 @@
 # code-metrics Specification
 
 ## Purpose
-TBD - created by archiving change add-graph-metrics. Update Purpose after archive.
+The code-metrics capability provides the `codexray metrics <path>` CLI: it consumes the dependency graph and emits a deterministic JSON metrics object with per-node fan-in / fan-out, Tarjan strongly-connected components, and an `is_dag` flag for the whole graph.
+
 ## Requirements
 ### Requirement: 메트릭 CLI 진입점
 The system SHALL expose a `codexray metrics <path>` command that prints a JSON metrics object to stdout. `<path>`는 위치 인수 1개로 필수이며, 추가 옵션 플래그는 받지 않는다.

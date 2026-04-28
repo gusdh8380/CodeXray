@@ -1,7 +1,8 @@
 # web-ui Specification
 
 ## Purpose
-TBD - created by archiving change add-web-ui. Update Purpose after archive.
+The web-ui capability provides the `codexray serve` CLI: it runs a localhost FastAPI server (default `127.0.0.1:8080`) that exposes every CodeXray analysis builder and the AI review through a single htmx + Jinja2 page. Results render inline as decision-oriented HTML with a Korean senior-developer commentary sidebar, and AI review is an explicit opt-in background job with cancel and status polling. The capability ships without a JavaScript build pipeline to stay aligned with the project's local-first constraint.
+
 ## Requirements
 ### Requirement: Web UI CLI 진입점
 The system SHALL expose a `codexray serve` command that starts a localhost web UI server for controlling CodeXray analysis commands.

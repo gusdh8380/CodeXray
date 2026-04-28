@@ -29,7 +29,13 @@
 
       <section class="workspace">
         <nav class="tabs" aria-label="Analysis tabs">
-          <button class="tab-button is-active" data-tab="Overview" type="button" hx-post="/api/overview" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Overview</button>
+          <button class="tab-button is-active" data-tab="Briefing" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Briefing</button>
+          <button class="tab-button" data-tab="Architecture" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Architecture</button>
+          <button class="tab-button" data-tab="Quality & Risk" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Quality & Risk</button>
+          <button class="tab-button" data-tab="How It Was Built" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">How It Was Built</button>
+          <button class="tab-button" data-tab="Explain" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Explain</button>
+          <button class="tab-button deep-dive-tab" data-tab="Deep Dive" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Deep Dive</button>
+          <button class="tab-button" data-tab="Overview" type="button" hx-post="/api/overview" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Overview</button>
           <button class="tab-button" data-tab="Inventory" type="button" hx-post="/api/inventory" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Inventory</button>
           <button class="tab-button" data-tab="Graph" type="button" hx-post="/api/graph" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Graph</button>
           <button class="tab-button" data-tab="Metrics" type="button" hx-post="/api/metrics" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Metrics</button>

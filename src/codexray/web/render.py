@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from ..ai import to_json as review_to_json
+from ..briefing import to_json as briefing_to_json
+from ..briefing.types import BriefingCard, CodebaseBriefing
 from ..dashboard import to_html as dashboard_to_html
 from ..dashboard.types import DashboardData
 from ..entrypoints import to_json as entrypoints_to_json
@@ -98,6 +100,45 @@ def render_inventory(rows: Iterable[Row]) -> str:
         ]
     )
     return _panel("Inventory", _analysis_layout(body, _explanation("inventory")))
+
+
+def render_codebase_briefing(briefing: CodebaseBriefing) -> str:
+    payload = json.loads(briefing_to_json(briefing))
+    history = briefing.git_history
+    history_rows = [
+        (
+            commit.hash,
+            commit.commit_type,
+            commit.subject,
+            ", ".join(commit.process_categories) or "일반 commit",
+        )
+        for commit in history.process_commits[:8]
+    ]
+    if not history_rows and history.recent_commits:
+        history_rows = [
+            (commit.hash, commit.commit_type, commit.subject, "최근 commit")
+            for commit in history.recent_commits[:5]
+        ]
+    body = "".join(
+        [
+            '<article class="briefing-deck" data-codexray-briefing="deck">',
+            f'<header class="briefing-hero"><h2>{html.escape(briefing.title)}</h2>'
+            "<p>소스파일/레포를 팀에 설명할 수 있는 발표자료형 분석입니다.</p></header>",
+            _briefing_section("Briefing", briefing.executive),
+            _briefing_section("Architecture", briefing.architecture),
+            _briefing_section("Quality & Risk", briefing.quality_risk),
+            _briefing_section("How It Was Built", briefing.build_process),
+            (
+                "<h3>Git 제작 과정 근거</h3>"
+                + _table(("hash", "type", "message", "process evidence"), history_rows)
+            ),
+            _briefing_section("Explain", briefing.explain),
+            _briefing_section("Deep Dive", briefing.deep_dive),
+            _raw_details(payload),
+            "</article>",
+        ]
+    )
+    return _panel("Briefing", body)
 
 
 def render_graph(graph: Graph) -> str:
@@ -453,6 +494,32 @@ def render_overview(
         ]
     )
     return _panel("Overview", body)
+
+
+def _briefing_section(title: str, cards: tuple[BriefingCard, ...]) -> str:
+    return (
+        f'<section class="briefing-section" data-briefing-section="{html.escape(title)}">'
+        f"<h3>{html.escape(title)}</h3>"
+        '<div class="briefing-card-grid">'
+        + "".join(_briefing_card(card) for card in cards)
+        + "</div></section>"
+    )
+
+
+def _briefing_card(card: BriefingCard) -> str:
+    evidence = "".join(
+        '<span class="briefing-evidence">'
+        f"<strong>{html.escape(item.label)}</strong>: {html.escape(item.value)}"
+        "</span>"
+        for item in card.evidence
+    )
+    return (
+        '<article class="briefing-card">'
+        f"<h4>{html.escape(card.title)}</h4>"
+        f"<p>{html.escape(card.text)}</p>"
+        f'<div class="briefing-evidence-list">{evidence}</div>'
+        "</article>"
+    )
 
 
 def _finding_card(

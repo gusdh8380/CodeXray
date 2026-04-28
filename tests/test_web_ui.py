@@ -28,6 +28,9 @@ def test_main_page_contains_path_and_tabs() -> None:
     assert 'hx-post="/api/browse-folder"' in response.text
     assert 'id="result-panel"' in response.text
     assert 'class="tab-button is-active"' in response.text
+    assert 'hx-post="/api/briefing"' in response.text
+    assert "How It Was Built" in response.text
+    assert "Deep Dive" in response.text
     assert 'hx-post="/api/inventory"' in response.text
     assert 'hx-post="/api/vibe-coding"' in response.text
     assert "https://unpkg.com/htmx.org" in response.text
@@ -54,6 +57,7 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
     client = TestClient(create_app())
     endpoints = [
         "/api/overview",
+        "/api/briefing",
         "/api/inventory",
         "/api/graph",
         "/api/metrics",
@@ -101,6 +105,25 @@ def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
     assert "dashboard-frame" in response.text
     assert "dashboard-workspace" in response.text
     assert "codexray-dashboard-v1" in response.text
+
+
+def test_briefing_endpoint_renders_deck_sections(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    (tmp_path / "AGENTS.md").write_text("# agent rules\n")
+    (tmp_path / "docs" / "validation").mkdir(parents=True)
+    (tmp_path / "openspec" / "changes").mkdir(parents=True)
+
+    client = TestClient(create_app())
+    response = client.post("/api/briefing", data={"path": str(tmp_path)})
+
+    assert response.status_code == 200
+    assert 'data-codexray-briefing="deck"' in response.text
+    assert "Briefing" in response.text
+    assert "Architecture" in response.text
+    assert "Quality &amp; Risk" in response.text
+    assert "How It Was Built" in response.text
+    assert "Git 제작 과정 근거" in response.text
+    assert "비개발자 설명" in response.text
 
 
 def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> None:

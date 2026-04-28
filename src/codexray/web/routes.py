@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from ..briefing import build_codebase_briefing
 from ..dashboard import build_dashboard
 from ..entrypoints import build_entrypoints
 from ..graph import build_graph
@@ -21,6 +22,7 @@ from .folder_picker import choose_folder
 from .jobs import cancel_review_job, get_review_job, start_review_job
 from .render import (
     render_dashboard,
+    render_codebase_briefing,
     render_entrypoints,
     render_error,
     render_folder_picker_result,
@@ -55,6 +57,13 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
     @router.post("/api/overview", response_class=HTMLResponse)
     async def overview(request: Request) -> Response:
         return await _with_root(request, _overview)
+
+    @router.post("/api/briefing", response_class=HTMLResponse)
+    async def briefing(request: Request) -> Response:
+        return await _with_root(
+            request,
+            lambda root: render_codebase_briefing(build_codebase_briefing(root)),
+        )
 
     @router.post("/api/inventory", response_class=HTMLResponse)
     async def inventory(request: Request) -> Response:

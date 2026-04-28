@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 import typer
 
+from .ai import AIAdapterError, build_review, select_adapter
+from .ai import to_json as review_to_json
 from .entrypoints import build_entrypoints
 from .entrypoints import to_json as entrypoints_to_json
 from .graph import build_graph
@@ -97,6 +100,29 @@ def report_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     target = _validate_dir(path)
     data = build_report(target)
     typer.echo(to_markdown(data))
+
+
+@app.command("review")
+def review_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Run AI qualitative review on the top hotspot files for ``PATH``."""
+    target = _validate_dir(path)
+    try:
+        adapter = select_adapter(os.environ)
+    except AIAdapterError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
+    typer.echo(f"using AI backend: {adapter.name}", err=True)
+    top_n_env = os.environ.get("CODEXRAY_AI_TOP_N", "5").strip()
+    try:
+        top_n = max(0, int(top_n_env))
+    except ValueError as exc:
+        typer.echo(
+            f"error: invalid CODEXRAY_AI_TOP_N value: {top_n_env!r}",
+            err=True,
+        )
+        raise typer.Exit(code=2) from exc
+    result = build_review(target, top_n=top_n, adapter=adapter)
+    typer.echo(review_to_json(result))
 
 
 def main() -> None:

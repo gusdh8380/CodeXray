@@ -32,6 +32,32 @@
 - D3 v7 (대시보드, CDN)
 - AI 호출: codex / claude CLI 셸아웃 어댑터 (직접 SDK 호출 X)
 
+## 매 세션 시작 절차 (Step 0/1/2/3)
+
+새 세션 시작 또는 다른 에이전트로 이어가는 시점에 OpenSpec 사이클 진입 *전* 다음을 의무로 수행. 이 절차를 건너뛰면 Intent drift / 환경 미활용이 반복됩니다 (`docs/vibe-coding/retro-2026-04-29-roboco-underuse.md` 참고).
+
+### Step 0 — 환경 inventory
+- `ls -la` 프로젝트 root
+- `ls .claude/commands` `ls .claude/skills` `ls .omc/`
+- 주요 자산 인지: `openspec/`, `.claude/skills/openspec-{propose,explore,apply,archive}`, `.claude/commands/opsx`, `.omc/project-memory.json`, `.roboco/config.json`, `.husky/pre-commit`
+
+### Step 1 — 메타 문서 reread
+다음을 한 번에 읽습니다:
+- `INTENT.md` (root) — 한 페이지 프로젝트 인덱스
+- `docs/vision.md` — 비전·대상 사용자·핵심 문제
+- `docs/intent.md` — MVP 기능·비목표·성공 기준
+- `docs/constraints.md` — 원칙·Top risk·검증 대상
+- `AGENTS.md` (이 문서)
+- `.omc/project-memory.json` (이전 세션 결정·학습)
+
+### Step 2 — 사용자 표명 → Intent 매핑
+사용자가 새 기능·개선 표명 시: 그것이 `docs/intent.md` 또는 `docs/vision.md`의 어느 항목과 매핑되는지 명시적으로 짚는다. proposal.md `## Why`에 "이 변경은 Intent.md X번/Vision.md Y와 정렬됩니다"를 한 줄 의무 포함. 매핑 불가하면 Intent/Vision 자체 변경을 별도 결정으로 분리.
+
+### Step 3 — 자동화 도구 우선
+- 새 변경 작성: `.claude/skills/openspec-propose` skill 또는 `/opsx:propose` 슬래시 명령 우선
+- 적용·archive: `openspec-apply-change`, `openspec-archive-change` skill
+- OMC 메모리 사이클: 세션 종료 전 새 결정·학습을 `.omc/project-memory.json`에 누적
+
 ## 워크플로 — OpenSpec 4박자
 
 이 프로젝트는 **OpenSpec change cycle**을 엄격히 따릅니다. **새 기능은 코드 전에 4개 artifact 작성·검증 후 구현**.

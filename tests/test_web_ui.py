@@ -29,6 +29,7 @@ def test_main_page_contains_path_and_tabs() -> None:
     assert 'id="result-panel"' in response.text
     assert 'class="tab-button is-active"' in response.text
     assert 'hx-post="/api/inventory"' in response.text
+    assert 'hx-post="/api/vibe-coding"' in response.text
     assert "https://unpkg.com/htmx.org" in response.text
 
 
@@ -60,6 +61,7 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
         "/api/quality",
         "/api/hotspots",
         "/api/report",
+        "/api/vibe-coding",
     ]
     for endpoint in endpoints:
         response = client.post(endpoint, data={"path": str(tmp_path)})
@@ -99,6 +101,27 @@ def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
     assert "dashboard-frame" in response.text
     assert "dashboard-workspace" in response.text
     assert "codexray-dashboard-v1" in response.text
+
+
+def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    (tmp_path / "AGENTS.md").write_text("# agent rules\n")
+    (tmp_path / ".claude" / "skills").mkdir(parents=True)
+    (tmp_path / "openspec" / "changes").mkdir(parents=True)
+    (tmp_path / ".omc").mkdir()
+    (tmp_path / ".omc" / "project-memory.json").write_text("{}\n")
+
+    client = TestClient(create_app())
+    response = client.post("/api/vibe-coding", data={"path": str(tmp_path)})
+
+    assert response.status_code == 200
+    assert 'data-codexray-vibe="report"' in response.text
+    assert "Vibe Coding" in response.text
+    assert "잘한 점" in response.text
+    assert "주의할 점" in response.text
+    assert "다음 행동" in response.text
+    assert "에이전트 지침" in response.text
+    assert "AGENTS.md" in response.text
 
 
 def test_review_endpoint_is_opt_in(tmp_path: Path) -> None:

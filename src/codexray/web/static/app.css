@@ -267,6 +267,62 @@ select {
   gap: 12px;
 }
 
+.summary-cards,
+.vibe-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.summary-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  padding: 14px;
+}
+
+.summary-card h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.summary-items {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.52;
+}
+
+.summary-item,
+.vibe-finding {
+  margin: 0 0 10px;
+}
+
+.summary-evidence {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.vibe-report h3 {
+  margin: 18px 0 10px;
+  font-size: 16px;
+}
+
+.vibe-strength {
+  border-left: 4px solid var(--accent);
+}
+
+.vibe-risk {
+  border-left: 4px solid var(--danger);
+}
+
+.vibe-action {
+  border-left: 4px solid var(--warn-border);
+}
+
 .metric,
 .summary-row,
 .warning-box {

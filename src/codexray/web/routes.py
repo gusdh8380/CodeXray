@@ -16,6 +16,7 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 from ..report import build_report, to_markdown
+from ..vibe import build_vibe_coding_report
 from .folder_picker import choose_folder
 from .jobs import cancel_review_job, get_review_job, start_review_job
 from .render import (
@@ -35,6 +36,7 @@ from .render import (
     render_review_failed,
     render_review_prompt,
     render_review_running,
+    render_vibe_coding_report,
     validate_root,
 )
 
@@ -93,6 +95,13 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
         return await _with_root(
             request,
             lambda root: render_dashboard(build_dashboard(root)),
+        )
+
+    @router.post("/api/vibe-coding", response_class=HTMLResponse)
+    async def vibe_coding(request: Request) -> Response:
+        return await _with_root(
+            request,
+            lambda root: render_vibe_coding_report(build_vibe_coding_report(root)),
         )
 
     @router.post("/api/review", response_class=HTMLResponse)

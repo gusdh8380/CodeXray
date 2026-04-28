@@ -22,6 +22,8 @@ from ..metrics.types import MetricsResult
 from ..quality import to_json as quality_to_json
 from ..quality.types import QualityReport
 from ..report.types import ReportData
+from ..vibe import to_json as vibe_to_json
+from ..vibe.types import VibeCodingReport, VibeFinding
 from .folder_picker import FolderPickerResult
 from .jobs import ReviewJob
 
@@ -373,6 +375,49 @@ def render_dashboard(data: DashboardData) -> str:
     return _panel("Dashboard", body)
 
 
+def render_vibe_coding_report(report: VibeCodingReport) -> str:
+    payload = json.loads(vibe_to_json(report))
+    area_rows = [
+        (
+            _area_label(area),
+            str(sum(1 for item in report.evidence if item.area == area)),
+        )
+        for area in report.process_areas
+    ]
+    evidence_rows = [
+        (_area_label(item.area), item.path, item.kind, item.detail)
+        for item in report.evidence
+    ]
+    body = "".join(
+        [
+            '<div class="vibe-report" data-codexray-vibe="report">',
+            _summary_grid(
+                [
+                    ("신뢰도", f"{report.confidence} ({report.confidence_score})"),
+                    ("근거 영역", str(len(report.process_areas))),
+                    ("근거 파일", str(len(report.evidence))),
+                ]
+            ),
+            _insight(
+                "이 탭은 코드가 아니라 에이전트와 사람이 어떤 방식으로 협업했는지 "
+                "레포 안의 흔적으로 해석합니다. 관찰된 사실과 추론을 분리해서 보세요."
+            ),
+            '<div class="vibe-card-grid">',
+            _finding_card("잘한 점", report.strengths, "vibe-strength"),
+            _finding_card("주의할 점", report.risks, "vibe-risk"),
+            _finding_card("다음 행동", report.actions, "vibe-action"),
+            "</div>",
+            "<h3>프로세스 영역</h3>",
+            _table(("area", "evidence count"), area_rows),
+            "<h3>관찰된 근거</h3>",
+            _table(("area", "path", "kind", "detail"), evidence_rows),
+            _raw_details(payload),
+            "</div>",
+        ]
+    )
+    return _panel("Vibe Coding", body)
+
+
 def render_overview(
     root: Path,
     inventory: Iterable[Row],
@@ -408,6 +453,42 @@ def render_overview(
         ]
     )
     return _panel("Overview", body)
+
+
+def _finding_card(
+    title: str,
+    items: tuple[VibeFinding, ...],
+    css_class: str,
+) -> str:
+    if not items:
+        body = '<p class="muted">표시할 항목 없음</p>'
+    else:
+        rendered = []
+        for item in items:
+            evidence = ", ".join(item.evidence_paths)
+            rendered.append(
+                '<li class="vibe-finding">'
+                f"<strong>{html.escape(item.text)}</strong>"
+                f'<span class="summary-evidence">{html.escape(evidence)}</span>'
+                "</li>"
+            )
+        body = f'<ul class="summary-items">{"".join(rendered)}</ul>'
+    return (
+        f'<section class="summary-card {css_class}">'
+        f"<h3>{html.escape(title)}</h3>{body}</section>"
+    )
+
+
+def _area_label(area: str) -> str:
+    labels = {
+        "agent_instructions": "에이전트 지침",
+        "spec_workflow": "명세 워크플로",
+        "memory_handoff": "메모리/인수인계",
+        "validation": "검증",
+        "retrospectives": "회고",
+        "automation": "자동화",
+    }
+    return labels.get(area, area)
 
 
 def render_error(message: str) -> str:

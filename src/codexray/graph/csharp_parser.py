@@ -10,6 +10,12 @@ _USING_PATTERN = re.compile(
     re.MULTILINE,
 )
 
+_STRING_OR_COMMENT = re.compile(
+    r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|//[^\n]*|/\*.*?\*/',
+    re.DOTALL,
+)
+_TYPE_TOKEN = re.compile(r"\b([A-Z]\w*)\b")
+
 
 def extract_imports(source_code: str, source_path: Path) -> list[RawImport]:
     seen: set[str] = set()
@@ -21,3 +27,12 @@ def extract_imports(source_code: str, source_path: Path) -> list[RawImport]:
         seen.add(raw)
         out.append(RawImport(source=source_path, raw=raw, level=0, language="C#"))
     return out
+
+
+def extract_type_usages(source_code: str) -> set[str]:
+    """Return PascalCase tokens used as potential type names.
+
+    Strips string literals and comments first to avoid false positives.
+    """
+    cleaned = _STRING_OR_COMMENT.sub("", source_code)
+    return {m.group(1) for m in _TYPE_TOKEN.finditer(cleaned)}

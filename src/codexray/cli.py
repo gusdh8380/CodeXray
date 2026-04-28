@@ -22,6 +22,7 @@ from .quality import build_quality
 from .quality import to_json as quality_to_json
 from .render import render
 from .report import build_report, to_markdown
+from .web import serve as serve_web
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="CodeXray CLI")
 
@@ -132,6 +133,20 @@ def review_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
         raise typer.Exit(code=2) from exc
     result = build_review(target, top_n=top_n, adapter=adapter)
     typer.echo(review_to_json(result))
+
+
+@app.command("serve")
+def serve_cmd(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host interface to bind."),
+    port: int = typer.Option(8080, "--port", help="Port to bind."),
+    no_browser: bool = typer.Option(
+        False,
+        "--no-browser",
+        help="Do not open the browser automatically.",
+    ),
+) -> None:
+    """Start the localhost web UI."""
+    serve_web(host=host, port=port, open_browser=not no_browser)
 
 
 def main() -> None:

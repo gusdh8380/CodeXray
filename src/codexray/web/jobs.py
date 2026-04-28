@@ -9,6 +9,7 @@ from pathlib import Path
 from ..ai import AIAdapterError, build_review, select_adapter
 from ..ai.adapters import AIAdapter
 from ..ai.types import ReviewResult
+from .ai_briefing import AIBriefingResult, build_ai_briefing, build_evidence_bundle
 from .insights import InsightResult, build_insights, cache_put
 
 
@@ -198,3 +199,85 @@ def _is_insights_cancelled(job_id: str) -> bool:
     with _INSIGHTS_LOCK:
         job = _INSIGHTS_JOBS.get(job_id)
         return job is not None and job.status == "cancelled"
+
+
+@dataclass(frozen=True, slots=True)
+class AIBriefingJob:
+    id: str
+    root: Path
+    status: str  # "running" | "done" | "cancelled" | "failed"
+    step: str = "시작 중..."
+    result: AIBriefingResult | None = None
+    fallback_briefing: str | None = None
+    error: str | None = None
+
+
+_AI_BRIEFING_JOBS: dict[str, AIBriefingJob] = {}
+_AI_BRIEFING_LOCK = threading.Lock()
+
+
+def start_ai_briefing_job(root: Path) -> AIBriefingJob:
+    job_id = uuid.uuid4().hex
+    job = AIBriefingJob(id=job_id, root=root, status="running", step="Python 분석 중...")
+    with _AI_BRIEFING_LOCK:
+        _AI_BRIEFING_JOBS[job_id] = job
+    thread = threading.Thread(target=_run_ai_briefing, args=(job_id, root), daemon=True)
+    thread.start()
+    return job
+
+
+def get_ai_briefing_job(job_id: str) -> AIBriefingJob | None:
+    with _AI_BRIEFING_LOCK:
+        return _AI_BRIEFING_JOBS.get(job_id)
+
+
+def cancel_ai_briefing_job(job_id: str) -> AIBriefingJob | None:
+    with _AI_BRIEFING_LOCK:
+        job = _AI_BRIEFING_JOBS.get(job_id)
+        if job is None:
+            return None
+        cancelled = AIBriefingJob(id=job.id, root=job.root, status="cancelled", step="취소됨")
+        _AI_BRIEFING_JOBS[job_id] = cancelled
+        return cancelled
+
+
+def _run_ai_briefing(job_id: str, root: Path) -> None:
+    def update_step(step: str) -> bool:
+        with _AI_BRIEFING_LOCK:
+            job = _AI_BRIEFING_JOBS.get(job_id)
+            if job is None or job.status == "cancelled":
+                return False
+            _AI_BRIEFING_JOBS[job_id] = AIBriefingJob(
+                id=job.id, root=job.root, status="running", step=step
+            )
+        return True
+
+    try:
+        if not update_step("Python 분석 중..."):
+            return
+        evidence_json, _ = build_evidence_bundle(root)
+
+        if not update_step("AI 해석 중..."):
+            return
+        result, error = build_ai_briefing(root, evidence_json)
+    except Exception as exc:  # noqa: BLE001
+        with _AI_BRIEFING_LOCK:
+            job = _AI_BRIEFING_JOBS.get(job_id)
+            if job and job.status != "cancelled":
+                _AI_BRIEFING_JOBS[job_id] = AIBriefingJob(
+                    id=job_id, root=root, status="failed", step="실패", error=str(exc)
+                )
+        return
+
+    with _AI_BRIEFING_LOCK:
+        job = _AI_BRIEFING_JOBS.get(job_id)
+        if job is None or job.status == "cancelled":
+            return
+        _AI_BRIEFING_JOBS[job_id] = AIBriefingJob(
+            id=job_id,
+            root=root,
+            status="done",
+            step="완료",
+            result=result,
+            error=error,
+        )

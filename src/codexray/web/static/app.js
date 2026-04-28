@@ -7,6 +7,7 @@
   const resultPanel = document.getElementById("result-panel");
   const statusText = document.getElementById("status-text");
   const themeToggle = document.getElementById("theme-toggle");
+  const analyzeButton = document.getElementById("analyze-button");
   const tabs = Array.from(document.querySelectorAll(".tab-button"));
   let activeTab = tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0];
 
@@ -149,7 +150,11 @@
   select.addEventListener("change", function () {
     if (select.value) {
       input.value = select.value;
-      rerunActiveTab();
+      if (analyzeButton) {
+        analyzeButton.click();
+      } else {
+        rerunActiveTab();
+      }
     }
   });
 
@@ -159,6 +164,12 @@
     if (tab) {
       setActiveTab(tab);
       setStatus("Running " + tab.dataset.tab + "...");
+    } else if (event.detail.elt.id === "analyze-button") {
+      const briefingTab = tabs.find(function (t) { return t.dataset.tab === "Briefing"; });
+      if (briefingTab) {
+        setActiveTab(briefingTab);
+      }
+      setStatus("분석 중...");
     } else if (event.detail.elt.matches(".review-run-form")) {
       const button = event.detail.elt.querySelector(".primary-action");
       if (button) {
@@ -189,7 +200,11 @@
 
   form.addEventListener("submit", function (event) {
     event.preventDefault();
-    rerunActiveTab();
+    if (analyzeButton) {
+      analyzeButton.click();
+    } else {
+      rerunActiveTab();
+    }
   });
 
   themeToggle.addEventListener("click", function () {
@@ -203,6 +218,10 @@
   setActiveTab(activeTab);
   setupBriefingPresentation(document);
   window.setTimeout(function () {
-    rerunActiveTab();
+    if (analyzeButton) {
+      analyzeButton.click();
+    } else {
+      rerunActiveTab();
+    }
   }, 0);
 })();

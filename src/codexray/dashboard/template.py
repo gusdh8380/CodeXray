@@ -47,6 +47,7 @@ HTML_TEMPLATE = Template(
   .node.neglected_complex { fill: #eab308; }
   .node.stable { fill: #9ca3af; }
   .node.selected { stroke: #111827; stroke-width: 3px; }
+  .node.high-coupling { stroke: #f59e0b; stroke-width: 3px; }
   .node.dim { opacity: 0.15; }
   .edge { stroke: #cbd5e1; stroke-width: 1.2px; opacity: 0.6; }
   .edge.dim { opacity: 0.05; }
@@ -132,6 +133,13 @@ HTML_TEMPLATE = Template(
       entrypoint_kinds: entrypointKindsByPath[n.path] || []
     };
   });
+  var sortedCouplings = nodes.map(function(d) { return d.coupling; }).slice().sort(function(a,b){return a-b;});
+  var p90Coupling = sortedCouplings.length > 1 ? sortedCouplings[Math.floor(sortedCouplings.length * 0.9)] : 0;
+  nodes.forEach(function(d) {
+    var base = Math.log(d.coupling + 1) * 4 + 4;
+    d.highlight = d.coupling >= p90Coupling && p90Coupling > 0;
+    d.r = d.highlight ? base * 1.5 : base;
+  });
   var nodeById = {};
   nodes.forEach(function (n) { nodeById[n.id] = n; });
   var edges = (graphData.edges || [])
@@ -164,8 +172,8 @@ HTML_TEMPLATE = Template(
   var node = svg.append('g').selectAll('circle')
     .data(nodes)
     .enter().append('circle')
-    .attr('class', function (d) { return 'node ' + d.category; })
-    .attr('r', function (d) { return Math.log(d.coupling + 1) * 4 + 4; })
+    .attr('class', function (d) { return 'node ' + d.category + (d.highlight ? ' high-coupling' : ''); })
+    .attr('r', function (d) { return d.r; })
     .on('click', function (event, d) { selectNode(d); event.stopPropagation(); })
     .call(d3.drag()
       .on('start', function (event, d) {
@@ -184,7 +192,9 @@ HTML_TEMPLATE = Template(
     .force('link', d3.forceLink(edges).id(function (d) { return d.id; }).distance(50))
     .force('charge', d3.forceManyBody().strength(-160))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collide', d3.forceCollide().radius(function (d) { return Math.log(d.coupling + 1) * 4 + 6; }))
+    .force('x', d3.forceX(width / 2).strength(0.08))
+    .force('y', d3.forceY(height / 2).strength(0.08))
+    .force('collide', d3.forceCollide().radius(function (d) { return d.r + 2; }))
     .on('tick', tick);
 
   function tick() {
@@ -194,8 +204,8 @@ HTML_TEMPLATE = Template(
       .attr('x2', function (d) { return d.target.x; })
       .attr('y2', function (d) { return d.target.y; });
     node
-      .attr('cx', function (d) { return d.x; })
-      .attr('cy', function (d) { return d.y; });
+      .attr('cx', function (d) { return Math.max(d.r, Math.min(width - d.r, d.x)); })
+      .attr('cy', function (d) { return Math.max(d.r, Math.min(height - d.r, d.y)); });
   }
 
   var detail = document.getElementById('detail');

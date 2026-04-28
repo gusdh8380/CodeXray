@@ -23,6 +23,8 @@
           <select id="recent-paths" aria-label="Recent paths">
             <option value="">Recent</option>
           </select>
+          <button id="analyze-button" class="analyze-button" type="button" data-tab="Briefing"
+            hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">분석하기</button>
           <span id="status-text" class="status-text" role="status">Ready</span>
         </form>
       </header>
@@ -30,24 +32,29 @@
       <section class="workspace">
         <nav class="tabs" aria-label="Analysis tabs">
           <button class="tab-button is-active" data-tab="Briefing" type="button" hx-post="/api/briefing" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Briefing</button>
-          <button class="tab-button" data-tab="Overview" type="button" hx-post="/api/overview" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Overview</button>
-          <button class="tab-button" data-tab="Inventory" type="button" hx-post="/api/inventory" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Inventory</button>
-          <button class="tab-button" data-tab="Metrics" type="button" hx-post="/api/metrics" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Metrics</button>
-          <button class="tab-button" data-tab="Quality" type="button" hx-post="/api/quality" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Quality</button>
-          <button class="tab-button" data-tab="Hotspots" type="button" hx-post="/api/hotspots" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Hotspots</button>
-          <button class="tab-button" data-tab="Report" type="button" hx-post="/api/report" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Report</button>
-          <button class="tab-button" data-tab="Review" type="button" hx-post="/api/review" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Review</button>
-          <span class="tab-divider" aria-hidden="true"></span>
-          <button class="tab-button tab-detail" data-tab="Graph" type="button" hx-post="/api/graph" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Graph</button>
-          <button class="tab-button tab-detail" data-tab="Entrypoints" type="button" hx-post="/api/entrypoints" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Entrypoints</button>
-          <button class="tab-button tab-detail" data-tab="Dashboard" type="button" hx-post="/api/dashboard" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Dashboard</button>
-          <button class="tab-button tab-detail" data-tab="Vibe Coding" type="button" hx-post="/api/vibe-coding" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Vibe Coding</button>
+          <details class="detail-tabs">
+            <summary class="detail-tabs-summary">상세 분석</summary>
+            <div class="detail-tabs-inner">
+              <button class="tab-button" data-tab="Overview" type="button" hx-post="/api/overview" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Overview</button>
+              <button class="tab-button" data-tab="Inventory" type="button" hx-post="/api/inventory" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Inventory</button>
+              <button class="tab-button" data-tab="Metrics" type="button" hx-post="/api/metrics" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Metrics</button>
+              <button class="tab-button" data-tab="Quality" type="button" hx-post="/api/quality" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Quality</button>
+              <button class="tab-button" data-tab="Hotspots" type="button" hx-post="/api/hotspots" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Hotspots</button>
+              <button class="tab-button" data-tab="Report" type="button" hx-post="/api/report" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Report</button>
+              <button class="tab-button" data-tab="Review" type="button" hx-post="/api/review" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Review</button>
+              <span class="tab-divider" aria-hidden="true"></span>
+              <button class="tab-button tab-detail" data-tab="Graph" type="button" hx-post="/api/graph" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Graph</button>
+              <button class="tab-button tab-detail" data-tab="Entrypoints" type="button" hx-post="/api/entrypoints" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Entrypoints</button>
+              <button class="tab-button tab-detail" data-tab="Dashboard" type="button" hx-post="/api/dashboard" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Dashboard</button>
+              <button class="tab-button tab-detail" data-tab="Vibe Coding" type="button" hx-post="/api/vibe-coding" hx-include="#analysis-form" hx-target="#result-panel" hx-swap="innerHTML">Vibe Coding</button>
+            </div>
+          </details>
         </nav>
 
         <section id="result-panel" class="result-host" aria-live="polite">
           <section class="empty-state">
-            <h2>Overview</h2>
-            <p>Select a tab to run analysis for the current path.</p>
+            <h2>CodeXray</h2>
+            <p>경로를 입력하고 <strong>분석하기</strong>를 눌러 시작하세요.</p>
           </section>
         </section>
       </section>

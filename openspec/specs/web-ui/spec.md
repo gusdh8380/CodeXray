@@ -213,11 +213,19 @@ The system SHALL organize the web UI around one top-level Briefing tab before lo
 - **THEN** the UI still exposes the existing detailed analysis views for overview, inventory, graph, metrics, hotspots, quality, entrypoints, report, dashboard, vibe-coding evidence, and review
 
 ### Requirement: Briefing endpoint
-The system SHALL provide a web endpoint that renders the codebase briefing for the selected repository.
+The system SHALL provide a web endpoint that renders the codebase briefing for the selected repository, using AI interpretation as the primary output when AI is available.
 
 #### Scenario: Valid path briefing request
 - **WHEN** a valid repository path is submitted to the briefing endpoint
-- **THEN** the web UI returns an HTTP 200 fragment containing a presentation-like briefing with executive, architecture, risk, build-process, explanation, and deep-dive sections
+- **THEN** the web UI starts a background job and immediately returns a polling fragment with step progress
+
+#### Scenario: Briefing job completion with AI
+- **WHEN** the briefing background job completes and AI interpretation is available
+- **THEN** the system returns an HTTP 200 fragment containing AI-generated comprehensive analysis covering executive summary, architecture, quality risk, and next actions
+
+#### Scenario: Briefing job completion without AI
+- **WHEN** the briefing background job completes and AI interpretation is unavailable
+- **THEN** the system returns an HTTP 200 fragment with the deterministic briefing and an "AI 해석 없이 표시 중" notice
 
 #### Scenario: Briefing includes git-history build process
 - **WHEN** git history is available for the selected repository
@@ -415,4 +423,61 @@ The system SHALL visually separate summary tabs from detail tabs using a divider
 #### Scenario: 탭 구분선 표시
 - **WHEN** 메인 페이지가 로드되면
 - **THEN** 주요 탭(Briefing~Review) 과 상세 탭(Graph/Entrypoints/Dashboard/Vibe Coding) 사이에 시각적 구분선이 표시된다
+
+### Requirement: LoC 규모 레이블
+The system SHALL display LoC values with a human-readable size label.
+
+#### Scenario: LoC 표시
+- **WHEN** Inventory 또는 Overview에서 LoC 수치가 표시되면
+- **THEN** 숫자 옆에 규모 레이블(소규모/중규모/대규모/초대형)이 함께 표시된다
+
+### Requirement: Coupling 위험도 표시
+The system SHALL display coupling values with a risk level label.
+
+#### Scenario: Coupling 수치 표시
+- **WHEN** Metrics 또는 Hotspots 탭에서 coupling 수치가 표시되면
+- **THEN** 수치 옆에 위험도 레이블(낮음/보통/높음/매우높음)이 함께 표시된다
+
+### Requirement: 전문 용어 설명
+The system SHALL display explanatory context next to technical terms.
+
+#### Scenario: fan-in/fan-out 용어 표시
+- **WHEN** Metrics 탭 컬럼 헤더에 fan-in/fan-out이 표시되면
+- **THEN** 괄호 안에 짧은 설명(이 파일에 의존하는 수/이 파일이 의존하는 수)이 함께 표시된다
+
+### Requirement: Hotspot 카테고리 한국어화
+The system SHALL display hotspot category labels in Korean with descriptions.
+
+#### Scenario: Hotspot 카테고리 표시
+- **WHEN** Hotspots 탭에서 카테고리가 표시되면
+- **THEN** 영어 코드(hotspot/active_stable/neglected_complex/stable) 대신 한국어 설명이 표시된다
+
+### Requirement: Quality 등급 해석
+The system SHALL display a one-line interpretation alongside each quality grade.
+
+#### Scenario: Quality 등급 표시
+- **WHEN** Quality 탭 또는 Overview에서 A~F 등급이 표시되면
+- **THEN** 등급 옆에 한 줄 해석이 함께 표시된다
+
+### Requirement: AI-first briefing loading UX
+The system SHALL show step-by-step progress while briefing analysis runs, so the user knows what is happening during the 30-90 second wait.
+
+#### Scenario: 단계별 진행 메시지 표시
+- **WHEN** /api/briefing background job이 실행 중이면
+- **THEN** 결과 패널은 현재 단계("Python 분석 중...", "증거 수집 완료", "AI 해석 중...", "완료")를 polling 응답마다 갱신해서 표시한다
+
+#### Scenario: 빈 화면 없음
+- **WHEN** 분석이 시작된 후 결과가 나오기 전까지
+- **THEN** 결과 패널은 빈 화면 대신 진행 상태를 항상 표시한다
+
+### Requirement: AI 해석 결과 폴백
+The system SHALL display deterministic briefing content with a notice when AI interpretation is unavailable.
+
+#### Scenario: AI 어댑터 미설정 시 폴백
+- **WHEN** claude 또는 codex CLI 어댑터가 모두 사용 불가능한 상태에서 Briefing을 실행하면
+- **THEN** 시스템은 기존 결정론적 Briefing을 표시하고 상단에 "AI 해석 없이 표시 중" 배너를 보여준다
+
+#### Scenario: AI 호출 실패 시 폴백
+- **WHEN** AI 호출이 실패하면
+- **THEN** 시스템은 기존 결정론적 Briefing을 표시하고 오류 배너를 표시한다
 

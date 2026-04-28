@@ -49,10 +49,10 @@ def test_briefing_composes_sections_and_serializes(tmp_path: Path) -> None:
     assert briefing.explain
     assert briefing.deep_dive
     assert briefing.presenter_summary
-    assert len(briefing.presentation_slides) == 6
+    assert len(briefing.presentation_slides) == 7
     assert payload["schema_version"] == 1
     assert payload["presenter_summary"] == briefing.presenter_summary
-    assert len(payload["presentation_slides"]) == 6
+    assert len(payload["presentation_slides"]) == 7
     assert to_json(briefing) == to_json(build_codebase_briefing(tmp_path))
 
 

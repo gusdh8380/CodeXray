@@ -31,14 +31,22 @@ from .folder_picker import choose_folder
 from .insights import cache_get
 from .insights import cache_key as _insights_cache_key
 from .jobs import (
+    cancel_ai_briefing_job,
     cancel_insights_job,
     cancel_review_job,
+    get_ai_briefing_job,
     get_insights_job,
     get_review_job,
+    start_ai_briefing_job,
     start_insights_job,
     start_review_job,
 )
 from .render import (
+    render_ai_briefing_cancelled,
+    render_ai_briefing_failed,
+    render_ai_briefing_fallback,
+    render_ai_briefing_result,
+    render_ai_briefing_running,
     render_codebase_briefing,
     render_dashboard,
     render_entrypoints,
@@ -90,10 +98,27 @@ def create_router(templates: Jinja2Templates) -> APIRouter:
 
     @router.post("/api/briefing", response_class=HTMLResponse)
     async def briefing(request: Request) -> Response:
-        return await _with_root(
-            request,
-            lambda root: render_codebase_briefing(build_codebase_briefing(root)),
-        )
+        form = await _parse_form(request)
+        validation = validate_root(form.get("path", ""))
+        if validation.error is not None or validation.root is None:
+            return _error_response(validation.error or "invalid path")
+        return HTMLResponse(render_ai_briefing_running(start_ai_briefing_job(validation.root)))
+
+    @router.get("/api/briefing/status/{job_id}", response_class=HTMLResponse)
+    async def briefing_status(job_id: str) -> Response:
+        job = get_ai_briefing_job(job_id)
+        if job is None:
+            return _error_response("briefing job not found")
+        if job.status == "running":
+            return HTMLResponse(render_ai_briefing_running(job))
+        if job.status == "cancelled":
+            return HTMLResponse(render_ai_briefing_cancelled(job))
+        if job.status == "failed":
+            return HTMLResponse(render_ai_briefing_failed(job), status_code=500)
+        if job.result is not None:
+            return HTMLResponse(render_ai_briefing_result(job.result))
+        fallback = build_codebase_briefing(job.root)
+        return HTMLResponse(render_ai_briefing_fallback(fallback, job.error or "AI 해석 실패"))
 
     @router.post("/api/inventory", response_class=HTMLResponse)
     async def inventory(request: Request) -> Response:

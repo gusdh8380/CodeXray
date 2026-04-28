@@ -158,7 +158,7 @@ def build_codebase_briefing(root: Path) -> CodebaseBriefing:
         top_hotspot=top_hotspot_text,
         history_available=history.available,
     )
-    presentation_slides = _presentation_slides(
+    _base_slides = _presentation_slides(
         name=resolved.name,
         languages=languages,
         total_files=total_files,
@@ -184,6 +184,10 @@ def build_codebase_briefing(root: Path) -> CodebaseBriefing:
         explain=explain,
         deep_dive=deep_dive,
     )
+    _vibe_slide = _build_vibe_insights(
+        vibe=vibe, quality=quality, hotspots=hotspots, history=history
+    )
+    presentation_slides = _base_slides[:4] + (_vibe_slide,) + _base_slides[4:]
 
     return CodebaseBriefing(
         schema_version=SCHEMA_VERSION,
@@ -498,3 +502,78 @@ def _process_risk(
     if vibe_confidence == "low" and process_commit_count == 0:
         return "AI/에이전트 기반 제작 흔적이 약해 바이브코딩 관점의 재현성 판단은 제한됩니다."
     return "프로세스 증거가 있더라도 실제 품질은 validation과 hotspot 결과로 다시 확인해야 합니다."
+
+
+def _build_vibe_insights(vibe, quality, hotspots, history) -> BriefingSlide:
+    strengths: list[str] = []
+    for item in vibe.evidence:
+        strengths.append(f"{item.area}: {item.path}")
+    seen_categories: set[str] = set()
+    for commit in history.process_commits:
+        for cat in commit.process_categories:
+            if cat not in seen_categories:
+                seen_categories.add(cat)
+                strengths.append(f"Git 기록: {cat}")
+    for name, dim in quality.dimensions.items():
+        if dim.grade in {"A", "B"}:
+            strengths.append(f"{name} {dim.grade}")
+
+    weaknesses: list[str] = []
+    for name, dim in quality.dimensions.items():
+        if dim.grade in {"D", "F"}:
+            weaknesses.append(f"{name} 품질 낮음 ({dim.grade})")
+        elif dim.grade == "C":
+            weaknesses.append(f"{name} 개선 필요 ({dim.grade})")
+    if hotspots.summary.hotspot > 0:
+        weaknesses.append(f"Hotspot {hotspots.summary.hotspot}개")
+    test_weakness = "테스트 보강 필요"
+    for name in quality.dimensions:
+        if "test" in name.lower() and quality.dimensions[name].grade in {"C", "D", "F"}:
+            if test_weakness not in weaknesses:
+                weaknesses.append(test_weakness)
+
+    no_process = not history.process_commits and vibe.confidence == "low"
+    if no_process and not strengths:
+        narrative = (
+            "바이브코딩 프로세스 증거를 감지하지 못했습니다. "
+            f"품질 등급은 {quality.overall.grade or 'N/A'}이며 "
+            f"hotspot은 {hotspots.summary.hotspot}개입니다."
+        )
+        summary = "프로세스 아티팩트 없음. 품질 지표 기반 기본 평가."
+    else:
+        well_done = ", ".join(strengths[:4]) if strengths else "프로세스 증거 미감지"
+        to_improve = ", ".join(weaknesses[:4]) if weaknesses else "특이 사항 없음"
+        narrative = f"잘한 것: {well_done}. 개선 필요: {to_improve}."
+        summary = f"프로세스 증거 {len(strengths)}개 감지, 개선 항목 {len(weaknesses)}개."
+
+    evidence_items: list[BriefingEvidence] = []
+    for s in strengths[:4]:
+        evidence_items.append(BriefingEvidence("strength", s))
+    for w in weaknesses[:4]:
+        evidence_items.append(BriefingEvidence("weakness", w))
+    if not evidence_items:
+        evidence_items.append(BriefingEvidence("evidence", "프로세스 정보 없음"))
+
+    return BriefingSlide(
+        id="vibe_insights",
+        title="바이브코딩 인사이트",
+        eyebrow="Vibe Coding",
+        narrative=narrative,
+        summary=summary,
+        meaning=(
+            "AI 에이전트와 함께 만든 코드는 명세, 검증, 회고 아티팩트가 "
+            "실제 품질 재현성을 결정합니다."
+        ),
+        risk=_vibe_insight_risk(vibe.confidence, weaknesses),
+        action="OpenSpec 명세와 validation 문서를 확인하고 hotspot 파일부터 리뷰하세요.",
+        evidence=tuple(evidence_items),
+        deep_links=("Vibe Coding", "Report"),
+    )
+
+
+def _vibe_insight_risk(confidence: str, weaknesses: list[str]) -> str:
+    if confidence == "low" and not weaknesses:
+        return "AI 지원 프로세스 흔적이 적어 재현성 판단이 어렵습니다."
+    if weaknesses:
+        return f"개선 항목 {len(weaknesses)}개 감지: {weaknesses[0]}."
+    return "프로세스 증거가 충분하지만 실제 품질은 테스트와 검증으로 확인해야 합니다."

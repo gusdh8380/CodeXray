@@ -27,6 +27,7 @@ from ..report.types import ReportData
 from ..summary.types import SummaryResult
 from ..vibe import to_json as vibe_to_json
 from ..vibe.types import VibeCodingReport, VibeFinding
+from .ai_briefing import AIBriefingResult
 from .folder_picker import FolderPickerResult
 from .insights import InsightResult
 
@@ -76,7 +77,7 @@ def render_inventory(rows: Iterable[Row]) -> str:
         (
             row["language"],
             str(row["file_count"]),
-            f"{row['loc']:,}",
+            f"{row['loc']:,} ({_loc_label(row['loc'])})",
             row["last_modified_at"],
         )
         for row in payload["rows"]
@@ -193,7 +194,7 @@ def render_metrics(metrics: MetricsResult) -> str:
             str(node.fan_in),
             str(node.fan_out),
             str(node.external_fan_out),
-            str(node.fan_in + node.fan_out + node.external_fan_out),
+            f"{node.fan_in + node.fan_out + node.external_fan_out} ({_coupling_level(node.fan_in + node.fan_out + node.external_fan_out)})",
         )
         for node in ranked
     ]
@@ -208,7 +209,7 @@ def render_metrics(metrics: MetricsResult) -> str:
             ),
             _insight("결합도는 실질적인 위험 신호입니다. fan-in이 높으면 많은 파일이 이 파일에 의존하고, fan-out이 높으면 이 파일이 많은 곳에 의존합니다."),
             _table(
-                ("path", "language", "fan in", "fan out", "external", "coupling"),
+                ("path", "language", "fan-in (의존받는 수)", "fan-out (의존하는 수)", "external", "coupling (합계)"),
                 rows,
             ),
         ]
@@ -251,10 +252,11 @@ def render_quality(report: QualityReport) -> str:
     ]
     rows = []
     for name, dim in sorted(report.dimensions.items()):
-        cards.append((name.title(), _grade_text(dim.grade, dim.score)))
+        dim_kr = _DIMENSION_KR.get(name, name)
+        cards.append((dim_kr, _grade_text(dim.grade, dim.score)))
         rows.append(
             (
-                name,
+                dim_kr,
                 dim.grade or "N/A",
                 "N/A" if dim.score is None else str(dim.score),
                 _detail_text(dim.detail),
@@ -279,7 +281,7 @@ def render_hotspots(report: HotspotsReport) -> str:
     rows = [
         (
             item.path,
-            item.category,
+            _hotspot_category_kr(item.category),
             str(item.change_count),
             str(item.coupling),
             str(item.change_count * item.coupling),
@@ -290,10 +292,10 @@ def render_hotspots(report: HotspotsReport) -> str:
         [
             _summary_grid(
                 [
-                    ("Hotspots", str(report.summary.hotspot)),
-                    ("Active stable", str(report.summary.active_stable)),
-                    ("Neglected complex", str(report.summary.neglected_complex)),
-                    ("Stable", str(report.summary.stable)),
+                    ("위험", str(report.summary.hotspot)),
+                    ("안정 활성", str(report.summary.active_stable)),
+                    ("방치 복잡", str(report.summary.neglected_complex)),
+                    ("안정", str(report.summary.stable)),
                 ]
             ),
             _insight("변경 빈도 × 결합도로 위험 우선순위를 계산합니다. 점수 높은 파일부터 테스트 추가·책임 분리를 진행하세요."),
@@ -472,7 +474,7 @@ def render_overview(
             _metric("Path", str(root)),
             _metric("Grade", f"{grade} ({score})"),
             _metric("Source files", str(total_files)),
-            _metric("LoC", str(total_loc)),
+            _metric("LoC", f"{total_loc:,} ({_loc_label(total_loc)})"),
             _metric("Graph", f"{len(graph.nodes)} nodes / {len(graph.edges)} edges"),
             _metric("Top hotspot", hotspot_text),
             "</div>",
@@ -1015,23 +1017,132 @@ def _grade_text(grade: str | None, score: int | None) -> str:
 def _detail_text(detail: dict[str, Any]) -> str:
     if not detail:
         return "N/A"
-    return ", ".join(f"{key}={value}" for key, value in sorted(detail.items()))
+    parts = []
+    for key, value in sorted(detail.items()):
+        if isinstance(value, float):
+            parts.append(f"{key}: {value:.2f}")
+        elif isinstance(value, int) and value >= 1000:
+            parts.append(f"{key}: {value:,}")
+        else:
+            parts.append(f"{key}: {value}")
+    return " · ".join(parts)
 
 
 def _quality_interpretation(grade: str | None) -> str:
     if grade in {"A", "B"}:
-        return (
-            "Quality signals are healthy. Use hotspots to decide where targeted "
-            "cleanup still matters."
-        )
+        return "품질 지표가 양호합니다. Hotspots에서 남은 개선 우선순위를 확인하세요."
     if grade in {"C", "D"}:
-        return (
-            "Quality is workable but risky. Focus on the weakest dimensions before "
-            "large feature work."
-        )
+        return "동작은 하지만 위험 신호가 있습니다. 큰 기능 작업 전에 취약한 영역부터 개선하세요."
     if grade == "F":
-        return (
-            "Quality risk is high. Add tests and reduce coupling around top hotspots "
-            "before broad changes."
-        )
-    return "Quality could not be fully measured for this tree."
+        return "품질 위험이 높습니다. 상위 Hotspot 주변에 테스트를 추가하고 결합도를 줄이세요."
+    return "이 코드베이스에서 품질을 완전히 측정하지 못했습니다."
+
+
+def _loc_label(loc: int) -> str:
+    if loc < 1_000:
+        return "소규모"
+    if loc < 10_000:
+        return "중규모"
+    if loc < 50_000:
+        return "대규모"
+    return "초대형"
+
+
+def _coupling_level(coupling: int) -> str:
+    if coupling <= 5:
+        return "낮음"
+    if coupling <= 15:
+        return "보통"
+    if coupling <= 30:
+        return "높음"
+    return "매우 높음"
+
+
+def _hotspot_category_kr(category: str) -> str:
+    mapping = {
+        "hotspot": "위험 (변경 잦고 결합도 높음)",
+        "active_stable": "안정 활성 (변경 잦지만 결합도 낮음)",
+        "neglected_complex": "방치 복잡 (변경 적지만 결합도 높음)",
+        "stable": "안정",
+    }
+    return mapping.get(category, category)
+
+
+_DIMENSION_KR: dict[str, str] = {
+    "coupling": "결합도",
+    "cohesion": "응집도",
+    "documentation": "문서화",
+    "test": "테스트",
+}
+
+
+# --- AI Briefing render functions --------------------------------------------
+
+
+def render_ai_briefing_running(job: Any) -> str:
+    step = html.escape(getattr(job, "step", "분석 중..."))
+    job_id = html.escape(job.id)
+    body = (
+        '<div class="ai-briefing-loading">'
+        f'<p class="ai-briefing-step"><strong>{step}</strong></p>'
+        '<p class="muted">AI가 코드베이스를 해석하고 있습니다. 잠시 기다려 주세요.</p>'
+        '<div class="loading-bar"><div class="loading-bar-fill"></div></div>'
+        "</div>"
+        f'<div hx-get="/api/briefing/status/{job_id}" '
+        'hx-trigger="load delay:3s" hx-target="#result-panel" hx-swap="innerHTML"></div>'
+    )
+    return _panel("Briefing", body)
+
+
+def render_ai_briefing_result(result: AIBriefingResult) -> str:
+    actions_html = "".join(
+        f"<li>{html.escape(action)}</li>" for action in result.next_actions
+    )
+    body = "".join(
+        [
+            '<article class="ai-briefing-result">',
+            f'<div class="ai-briefing-section ai-briefing-executive">'
+            f"<h3>요약</h3><p>{html.escape(result.executive)}</p></div>",
+            f'<div class="ai-briefing-section">'
+            f"<h3>아키텍처</h3><p>{html.escape(result.architecture)}</p></div>",
+            f'<div class="ai-briefing-section">'
+            f"<h3>품질 및 위험</h3><p>{html.escape(result.quality_risk)}</p></div>",
+            f'<div class="ai-briefing-section ai-briefing-actions">'
+            f"<h3>다음 행동</h3><ul>{actions_html}</ul></div>",
+            (
+                f'<div class="ai-briefing-insight">'
+                f'<strong>핵심 인사이트:</strong> {html.escape(result.key_insight)}</div>'
+                if result.key_insight
+                else ""
+            ),
+            f'<p class="muted ai-briefing-meta">AI 해석 — {html.escape(result.backend)}</p>',
+            "</article>",
+        ]
+    )
+    return _panel("Briefing", body)
+
+
+def render_ai_briefing_fallback(briefing: CodebaseBriefing, reason: str) -> str:
+    banner = (
+        '<div class="warning-box">'
+        f"<strong>AI 해석 없이 표시 중.</strong> {html.escape(reason)}"
+        "</div>"
+    )
+    deterministic = render_codebase_briefing(briefing)
+    inner_start = deterministic.find('<article')
+    inner = deterministic[inner_start:] if inner_start != -1 else deterministic
+    return _panel("Briefing", banner + inner)
+
+
+def render_ai_briefing_cancelled(job: Any) -> str:
+    body = (
+        '<div class="warning-box cancelled-box">'
+        "<strong>Briefing 분석이 취소되었습니다.</strong>"
+        "</div>"
+    )
+    return _panel("Briefing", body)
+
+
+def render_ai_briefing_failed(job: Any) -> str:
+    message = getattr(job, "error", None) or "briefing analysis failed"
+    return render_error(message)

@@ -98,7 +98,7 @@ select {
 
 .path-form {
   display: grid;
-  grid-template-columns: auto minmax(220px, 1fr) auto minmax(120px, 180px) minmax(90px, auto);
+  grid-template-columns: auto minmax(220px, 1fr) auto minmax(120px, 180px) auto minmax(90px, auto);
   gap: 10px;
   align-items: center;
 }
@@ -123,11 +123,79 @@ select {
   cursor: pointer;
 }
 
+.analyze-button {
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.analyze-button:hover {
+  opacity: 0.85;
+}
+
 .status-text {
   min-height: 24px;
   color: var(--text-muted);
   font-size: 13px;
   text-align: right;
+}
+
+.detail-tabs {
+  margin-top: 4px;
+}
+
+.detail-tabs-summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: 13px;
+  user-select: none;
+}
+
+.detail-tabs-summary::-webkit-details-marker {
+  display: none;
+}
+
+.detail-tabs-summary::marker {
+  content: none;
+}
+
+.detail-tabs-summary::before {
+  content: "▸";
+  font-size: 10px;
+}
+
+.detail-tabs[open] .detail-tabs-summary::before {
+  content: "▾";
+}
+
+.detail-tabs-summary:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.detail-tabs-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
 }
 
 .workspace {
@@ -791,6 +859,150 @@ select {
 
 .htmx-request {
   opacity: 0.65;
+}
+
+/* ── AI Briefing loading ─────────────────────────────────────────────────── */
+
+.ai-briefing-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 72px 32px;
+  text-align: center;
+}
+
+.ai-briefing-step {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.loading-bar {
+  width: 280px;
+  height: 4px;
+  background: var(--surface-muted);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+@keyframes loading-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(360%); }
+}
+
+.loading-bar-fill {
+  height: 100%;
+  width: 40%;
+  background: var(--accent);
+  border-radius: 4px;
+  animation: loading-sweep 1.6s ease-in-out infinite;
+}
+
+/* ── AI Briefing result ──────────────────────────────────────────────────── */
+
+.ai-briefing-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.ai-briefing-executive {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.ai-briefing-executive h3 {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.ai-briefing-executive p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--text-strong);
+  font-weight: 500;
+}
+
+.ai-briefing-section {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-briefing-section:last-of-type {
+  border-bottom: none;
+}
+
+.ai-briefing-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ai-briefing-section p {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.ai-briefing-actions h3 {
+  color: var(--text-muted);
+}
+
+.ai-briefing-actions ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-briefing-actions li {
+  position: relative;
+  padding: 10px 14px 10px 36px;
+  background: var(--surface-muted);
+  border-radius: 6px;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.ai-briefing-actions li::before {
+  content: "→";
+  position: absolute;
+  left: 14px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.ai-briefing-insight {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.ai-briefing-meta {
+  margin-top: 16px;
+  font-size: 0.78rem;
+  text-align: right;
 }
 
 @media (max-width: 760px) {

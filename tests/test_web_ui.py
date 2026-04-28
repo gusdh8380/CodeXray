@@ -18,25 +18,36 @@ def _make_tree(root: Path) -> None:
     (root / "README.md").write_text("# example\n")
 
 
-def test_main_page_contains_path_and_tabs() -> None:
+def test_main_page_serves_react_spa_when_dist_exists() -> None:
     client = TestClient(create_app())
     response = client.get("/")
     assert response.status_code == 200
-    assert 'id="path-input"' in response.text
-    assert 'id="status-text"' in response.text
-    assert 'id="theme-toggle"' in response.text
-    assert 'hx-post="/api/browse-folder"' in response.text
-    assert 'id="result-panel"' in response.text
-    assert 'class="tab-button is-active"' in response.text
-    assert response.text.count('hx-post="/api/briefing"') == 1
-    assert 'data-tab="Architecture"' not in response.text
-    assert 'data-tab="Quality & Risk"' not in response.text
-    assert 'data-tab="How It Was Built"' not in response.text
-    assert 'data-tab="Explain"' not in response.text
-    assert 'data-tab="Deep Dive"' not in response.text
-    assert 'hx-post="/api/inventory"' in response.text
-    assert 'hx-post="/api/vibe-coding"' in response.text
-    assert "https://unpkg.com/htmx.org" in response.text
+    assert '<div id="root"></div>' in response.text
+    assert "<title>CodeXray</title>" in response.text
+
+
+def test_default_path_endpoint_returns_json() -> None:
+    client = TestClient(create_app())
+    response = client.get("/api/default-path")
+    assert response.status_code == 200
+    payload = response.json()
+    assert isinstance(payload.get("path"), str) and payload["path"]
+
+
+def test_briefing_endpoint_starts_job_and_returns_job_id(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    client = TestClient(create_app())
+    response = client.post("/api/briefing", json={"path": str(tmp_path)})
+    assert response.status_code == 200
+    payload = response.json()
+    assert isinstance(payload.get("job_id"), str) and payload["job_id"]
+
+
+def test_briefing_endpoint_rejects_missing_path() -> None:
+    client = TestClient(create_app())
+    response = client.post("/api/briefing", json={"path": "/nonexistent/path/zzz"})
+    assert response.status_code == 400
+    assert "error" in response.json()
 
 
 def test_path_validation_rejects_missing_path(tmp_path: Path) -> None:
@@ -60,7 +71,6 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
     client = TestClient(create_app())
     endpoints = [
         "/api/overview",
-        "/api/briefing",
         "/api/inventory",
         "/api/graph",
         "/api/metrics",
@@ -111,47 +121,18 @@ def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
     assert "codexray-dashboard-v1" in response.text
 
 
-def test_briefing_endpoint_renders_deck_sections(tmp_path: Path) -> None:
+def test_briefing_endpoint_returns_job_id_json(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     (tmp_path / "AGENTS.md").write_text("# agent rules\n")
     (tmp_path / "docs" / "validation").mkdir(parents=True)
     (tmp_path / "openspec" / "changes").mkdir(parents=True)
 
     client = TestClient(create_app())
-    response = client.post("/api/briefing", data={"path": str(tmp_path)})
+    response = client.post("/api/briefing", json={"path": str(tmp_path)})
 
     assert response.status_code == 200
-    assert 'data-codexray-briefing="deck"' in response.text
-    assert 'data-briefing-presentation="true"' in response.text
-    assert 'data-briefing-slide-count="6"' in response.text
-    assert 'data-briefing-current' in response.text
-    assert 'data-briefing-prev' in response.text
-    assert 'data-briefing-next' in response.text
-    assert 'data-briefing-target="0"' in response.text
-    assert 'data-briefing-slide="0"' in response.text
-    assert "presenter-summary" in response.text
-    assert "briefing-interpretation" in response.text
-    assert "Summary" in response.text
-    assert "Meaning" in response.text
-    assert "Risk" in response.text
-    assert "Action" in response.text
-    assert "오늘 이 레포를 어떻게 볼 것인가" in response.text
-    assert "Briefing" in response.text
-    assert "Architecture" in response.text
-    assert "Quality &amp; Risk" in response.text
-    assert "How It Was Built" in response.text
-    assert "Git 제작 과정 근거" in response.text
-    assert "비개발자 설명" in response.text
-
-
-def test_static_app_contains_briefing_navigation_hooks() -> None:
-    script = Path("src/codexray/web/static/app.js").read_text()
-
-    assert "setupBriefingPresentation" in script
-    assert "data-briefing-next" in script
-    assert "data-briefing-prev" in script
-    assert "ArrowRight" in script
-    assert "ArrowLeft" in script
+    payload = response.json()
+    assert isinstance(payload.get("job_id"), str) and payload["job_id"]
 
 
 def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> None:

@@ -66,8 +66,29 @@ def test_briefing_presentation_slides_have_evidence_and_links(tmp_path: Path) ->
         assert slide.title
         assert slide.eyebrow
         assert slide.narrative
+        assert slide.summary
+        assert slide.meaning
+        assert slide.risk
+        assert slide.action
         assert slide.evidence
         assert slide.deep_links
+
+
+def test_briefing_process_slide_explains_creation_story(tmp_path: Path) -> None:
+    _git(tmp_path, "init")
+    (tmp_path / "AGENTS.md").write_text("# agent\n")
+    _commit(tmp_path, "docs: add agent handbook")
+    (tmp_path / ".claude" / "skills").mkdir(parents=True)
+    (tmp_path / ".claude" / "skills" / "demo.md").write_text("x\n")
+    _commit(tmp_path, "chore: add agent skill")
+
+    briefing = build_codebase_briefing(tmp_path)
+    process = next(slide for slide in briefing.presentation_slides if slide.id == "process")
+
+    assert "commit" in process.summary
+    assert "프로세스" in process.meaning or "process" in process.meaning
+    assert process.risk
+    assert process.action
 
 
 def test_git_history_detects_vibe_process_commits(tmp_path: Path) -> None:

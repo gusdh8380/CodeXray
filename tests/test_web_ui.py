@@ -133,6 +133,11 @@ def test_briefing_endpoint_renders_deck_sections(tmp_path: Path) -> None:
     assert 'data-briefing-target="0"' in response.text
     assert 'data-briefing-slide="0"' in response.text
     assert "presenter-summary" in response.text
+    assert "briefing-interpretation" in response.text
+    assert "Summary" in response.text
+    assert "Meaning" in response.text
+    assert "Risk" in response.text
+    assert "Action" in response.text
     assert "오늘 이 레포를 어떻게 볼 것인가" in response.text
     assert "Briefing" in response.text
     assert "Architecture" in response.text

@@ -53,6 +53,10 @@ def _slide(slide: BriefingSlide) -> dict[str, object]:
         "title": slide.title,
         "eyebrow": slide.eyebrow,
         "narrative": slide.narrative,
+        "summary": slide.summary,
+        "meaning": slide.meaning,
+        "risk": slide.risk,
+        "action": slide.action,
         "evidence": [
             {"label": item.label, "value": item.value} for item in slide.evidence
         ],

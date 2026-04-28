@@ -22,6 +22,10 @@ class BriefingSlide:
     title: str
     eyebrow: str
     narrative: str
+    summary: str
+    meaning: str
+    risk: str
+    action: str
     evidence: tuple[BriefingEvidence, ...]
     deep_links: tuple[str, ...]
 

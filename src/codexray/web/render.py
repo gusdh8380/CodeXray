@@ -562,6 +562,14 @@ def _briefing_slide(slide, *, index: int, total: int) -> str:
     links = "".join(
         f'<span class="deep-link-chip">{html.escape(link)}</span>' for link in slide.deep_links
     )
+    interpretation = "".join(
+        [
+            _slide_interpretation("Summary", slide.summary),
+            _slide_interpretation("Meaning", slide.meaning),
+            _slide_interpretation("Risk", slide.risk),
+            _slide_interpretation("Action", slide.action),
+        ]
+    )
     return (
         f'<section class="briefing-slide{active}" data-briefing-slide="{index}" '
         f'data-briefing-slide-id="{html.escape(slide.id)}" '
@@ -569,9 +577,21 @@ def _briefing_slide(slide, *, index: int, total: int) -> str:
         f'<p class="briefing-eyebrow">{html.escape(slide.eyebrow)}</p>'
         f"<h3>{html.escape(slide.title)}</h3>"
         f'<p class="briefing-narrative">{html.escape(slide.narrative)}</p>'
+        f'<div class="briefing-interpretation">{interpretation}</div>'
         f'<div class="briefing-evidence-list">{evidence}</div>'
         f'<div class="deep-link-list" aria-label="Deep dive references">{links}</div>'
         "</section>"
+    )
+
+
+def _slide_interpretation(label: str, text: str) -> str:
+    if not text:
+        return ""
+    return (
+        '<div class="slide-interpretation-item">'
+        f"<strong>{html.escape(label)}</strong>"
+        f"<span>{html.escape(text)}</span>"
+        "</div>"
     )
 
 

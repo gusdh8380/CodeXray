@@ -159,6 +159,24 @@ def build_codebase_briefing(root: Path) -> CodebaseBriefing:
         history_available=history.available,
     )
     presentation_slides = _presentation_slides(
+        name=resolved.name,
+        languages=languages,
+        total_files=total_files,
+        total_loc=total_loc,
+        node_count=len(graph.nodes),
+        edge_count=len(graph.edges),
+        largest_scc=metrics.graph.largest_scc_size,
+        entrypoint_count=len(entrypoints.entrypoints),
+        grade=grade,
+        score=score,
+        hotspot_count=hotspots.summary.hotspot,
+        top_hotspot=top_hotspot_text,
+        vibe_confidence=vibe.confidence,
+        vibe_evidence_count=len(vibe.evidence),
+        vibe_area_count=len(vibe.process_areas),
+        history_available=history.available,
+        commit_count=history.commit_count,
+        process_commit_count=len(history.process_commits),
         executive=executive,
         architecture=architecture,
         quality_risk=quality_risk,
@@ -244,6 +262,24 @@ def _presenter_summary(
 
 def _presentation_slides(
     *,
+    name: str,
+    languages: str,
+    total_files: int,
+    total_loc: int,
+    node_count: int,
+    edge_count: int,
+    largest_scc: int,
+    entrypoint_count: int,
+    grade: str,
+    score: str,
+    hotspot_count: int,
+    top_hotspot: str,
+    vibe_confidence: str,
+    vibe_evidence_count: int,
+    vibe_area_count: int,
+    history_available: bool,
+    commit_count: int,
+    process_commit_count: int,
     executive: tuple[BriefingCard, ...],
     architecture: tuple[BriefingCard, ...],
     quality_risk: tuple[BriefingCard, ...],
@@ -258,6 +294,16 @@ def _presentation_slides(
             "Opening",
             executive,
             ("Overview", "Report"),
+            summary=(
+                f"{name}은 {languages} 기반의 {total_files}개 파일, "
+                f"{total_loc} LoC 규모입니다."
+            ),
+            meaning=(
+                f"현재 등급 {grade}({score})는 팀 공유 전에 상태와 리스크를 함께 설명해야 "
+                "한다는 신호입니다."
+            ),
+            risk=_grade_risk(grade, top_hotspot),
+            action="먼저 이 브리핑으로 전체 상태를 맞춘 뒤 Report와 Quality에서 근거를 확인하세요.",
         ),
         _slide(
             "shape",
@@ -265,6 +311,16 @@ def _presentation_slides(
             "Architecture",
             architecture,
             ("Inventory", "Graph", "Entrypoints"),
+            summary=(
+                f"의존성 그래프는 {node_count}개 노드와 {edge_count}개 연결, "
+                f"{entrypoint_count}개 실행 시작점을 보여줍니다."
+            ),
+            meaning=_architecture_meaning(node_count, edge_count, largest_scc),
+            risk=_architecture_risk(largest_scc, entrypoint_count),
+            action=(
+                "Graph에서 중심 노드와 SCC를 확인하고, "
+                "Entrypoints에서 실제 시작 경로를 맞추세요."
+            ),
         ),
         _slide(
             "health",
@@ -272,6 +328,10 @@ def _presentation_slides(
             "Quality & Risk",
             quality_risk,
             ("Quality", "Hotspots", "Metrics"),
+            summary=f"품질 등급은 {grade}({score})이고 hotspot은 {hotspot_count}개입니다.",
+            meaning=_quality_meaning(grade, hotspot_count),
+            risk=f"가장 먼저 볼 위험 위치는 {top_hotspot}입니다.",
+            action="Quality의 낮은 dimension과 Hotspots의 상위 파일을 같은 회의 안건으로 묶으세요.",
         ),
         _slide(
             "process",
@@ -279,14 +339,59 @@ def _presentation_slides(
             "How It Was Built",
             build_process,
             ("Vibe Coding", "Git History"),
+            summary=_process_summary(
+                history_available=history_available,
+                commit_count=commit_count,
+                vibe_confidence=vibe_confidence,
+            ),
+            meaning=_process_meaning(
+                vibe_area_count=vibe_area_count,
+                vibe_evidence_count=vibe_evidence_count,
+                process_commit_count=process_commit_count,
+            ),
+            risk=_process_risk(
+                history_available=history_available,
+                vibe_confidence=vibe_confidence,
+                process_commit_count=process_commit_count,
+            ),
+            action="How It Was Built 근거를 보고 명세, 검증, 회고가 실제로 누적됐는지 확인하세요.",
         ),
-        _slide("plain", "비개발자에게 설명하기", "Explain", explain, ("Briefing", "Report")),
+        _slide(
+            "plain",
+            "비개발자에게 설명하기",
+            "Explain",
+            explain,
+            ("Briefing", "Report"),
+            summary=(
+                "이 레포는 파일 묶음이 아니라 구조, 품질, 제작 과정이 함께 있는 "
+                "프로젝트 자산입니다."
+            ),
+            meaning=(
+                "좋은 설명은 기술 용어를 줄이고 '무엇을 하는지, 믿어도 되는지, "
+                "어디를 먼저 봐야 하는지'로 바꾸는 것입니다."
+            ),
+            risk=(
+                "등급이나 그래프만 보여주면 비개발자는 현재 의사결정에 필요한 "
+                "위험을 놓치기 쉽습니다."
+            ),
+            action=(
+                "회의에서는 Opening, Health, Process slide만 먼저 읽고 "
+                "세부 질문 때 Deep Dive로 가세요."
+            ),
+        ),
         _slide(
             "next",
             "다음 행동과 상세 확인",
             "Deep Dive",
             deep_dive,
             ("Deep Dive", "Review", "Dashboard"),
+            summary="브리핑은 방향을 정하고, 상세 탭은 그 판단을 검증하는 역할입니다.",
+            meaning=(
+                "다음 행동은 top hotspot, 낮은 품질 dimension, 제작 과정 공백을 "
+                "순서대로 확인하는 것입니다."
+            ),
+            risk="상세 근거 없이 바로 수정하면 실제 병목이 아닌 파일을 먼저 고칠 수 있습니다.",
+            action="Dashboard로 구조를 보고, Review는 명시적으로 실행해 정성 의견을 추가하세요.",
         ),
     )
 
@@ -297,6 +402,10 @@ def _slide(
     eyebrow: str,
     cards: tuple[BriefingCard, ...],
     deep_links: tuple[str, ...],
+    summary: str,
+    meaning: str,
+    risk: str,
+    action: str,
 ) -> BriefingSlide:
     first = cards[0]
     evidence = tuple(item for card in cards for item in card.evidence)[:8]
@@ -308,6 +417,84 @@ def _slide(
         title=title,
         eyebrow=eyebrow,
         narrative=narrative,
+        summary=summary,
+        meaning=meaning,
+        risk=risk,
+        action=action,
         evidence=evidence,
         deep_links=deep_links,
     )
+
+
+def _grade_risk(grade: str, top_hotspot: str) -> str:
+    if grade in {"D", "F"}:
+        return f"낮은 등급이므로 {top_hotspot} 같은 핵심 위험 파일을 설명 없이 넘기면 안 됩니다."
+    if grade == "C":
+        return "중간 등급이므로 확장 전 품질 편차와 테스트 공백을 확인해야 합니다."
+    return (
+        "현재 등급만으로는 큰 위험 신호가 적지만, "
+        "변경 빈도가 높은 파일은 별도로 확인해야 합니다."
+    )
+
+
+def _architecture_meaning(node_count: int, edge_count: int, largest_scc: int) -> str:
+    if node_count == 0:
+        return "분석 가능한 소스 노드가 거의 없어 구조 설명은 제한적입니다."
+    density = edge_count / node_count
+    if largest_scc >= 10:
+        return (
+            "서로 얽힌 파일 묶음이 커서 한 부분을 바꾸면 "
+            "여러 파일을 함께 이해해야 하는 구조입니다."
+        )
+    if density >= 4:
+        return "파일 수 대비 연결이 많아 중심 파일과 의존 방향을 먼저 잡아야 합니다."
+    return "구조는 비교적 분리되어 보이며, 시작점과 핵심 모듈을 따라가며 설명하기 좋습니다."
+
+
+def _architecture_risk(largest_scc: int, entrypoint_count: int) -> str:
+    if largest_scc >= 10:
+        return f"largest SCC가 {largest_scc}라 순환 의존 또는 강한 결합을 우선 의심해야 합니다."
+    if entrypoint_count == 0:
+        return "명확한 실행 시작점이 없으면 팀원이 프로젝트를 실행하거나 검증하기 어렵습니다."
+    return (
+        "큰 구조 위험은 제한적이지만 중심 노드에 변경이 몰리는지는 "
+        "Dashboard에서 확인해야 합니다."
+    )
+
+
+def _quality_meaning(grade: str, hotspot_count: int) -> str:
+    if grade in {"D", "F"}:
+        return "현재 상태는 기능 설명보다 유지보수 위험 설명이 먼저 필요한 코드베이스입니다."
+    if hotspot_count > 0:
+        return "전체 등급과 별개로 자주 바뀌고 결합도 높은 파일이 있어 우선순위를 분리해야 합니다."
+    return "품질 신호가 비교적 안정적이어서 기능 이해와 계획 수립에 집중할 수 있습니다."
+
+
+def _process_summary(*, history_available: bool, commit_count: int, vibe_confidence: str) -> str:
+    if history_available:
+        return (
+            f"git history {commit_count}개 commit과 vibe-coding 증거 "
+            f"{vibe_confidence} 신뢰도를 함께 봅니다."
+        )
+    return f"git history는 제한적이며, 레포 안 vibe-coding 증거는 {vibe_confidence} 신뢰도입니다."
+
+
+def _process_meaning(
+    *, vibe_area_count: int, vibe_evidence_count: int, process_commit_count: int
+) -> str:
+    if vibe_evidence_count == 0 and process_commit_count == 0:
+        return "에이전트 지침, 명세, 검증, 회고 흔적이 적어 제작 방식을 코드만으로 추정해야 합니다."
+    return (
+        f"{vibe_area_count}개 프로세스 영역, {vibe_evidence_count}개 파일 증거, "
+        f"{process_commit_count}개 process commit이 제작 습관을 설명합니다."
+    )
+
+
+def _process_risk(
+    *, history_available: bool, vibe_confidence: str, process_commit_count: int
+) -> str:
+    if not history_available:
+        return "history가 없으면 어떤 의사결정으로 현재 구조가 되었는지 검증하기 어렵습니다."
+    if vibe_confidence == "low" and process_commit_count == 0:
+        return "AI/에이전트 기반 제작 흔적이 약해 바이브코딩 관점의 재현성 판단은 제한됩니다."
+    return "프로세스 증거가 있더라도 실제 품질은 validation과 hotspot 결과로 다시 확인해야 합니다."

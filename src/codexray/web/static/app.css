@@ -397,6 +397,34 @@ select {
   line-height: 1.65;
 }
 
+.briefing-interpretation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.slide-interpretation-item {
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+}
+
+.slide-interpretation-item strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-strong);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.slide-interpretation-item span {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .deep-link-list {
   display: flex;
   flex-wrap: wrap;

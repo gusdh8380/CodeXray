@@ -9,6 +9,8 @@ from .entrypoints import build_entrypoints
 from .entrypoints import to_json as entrypoints_to_json
 from .graph import build_graph
 from .graph import to_json as graph_to_json
+from .hotspots import build_hotspots
+from .hotspots import to_json as hotspots_to_json
 from .inventory import aggregate
 from .metrics import build_metrics
 from .metrics import to_json as metrics_to_json
@@ -78,6 +80,14 @@ def quality_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
     target = _validate_dir(path)
     report = build_quality(target)
     typer.echo(quality_to_json(report))
+
+
+@app.command("hotspots")
+def hotspots_cmd(path: str = typer.Argument(..., metavar="PATH")) -> None:
+    """Emit change-frequency × coupling hotspots JSON for ``PATH``."""
+    target = _validate_dir(path)
+    report = build_hotspots(target)
+    typer.echo(hotspots_to_json(report))
 
 
 def main() -> None:

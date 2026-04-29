@@ -50,11 +50,19 @@ export interface BriefingSection {
   deep_link?: { label: string; tab: string }
 }
 
+export interface AxisBreakdownItem {
+  label: string
+  delta: number
+  satisfied: boolean
+  hint: string
+}
+
 export interface VibeAxis {
   name: string
   score: number
   label: string
   weaknesses: string[]
+  breakdown?: AxisBreakdownItem[]
 }
 
 export interface TimelineEntry {
@@ -64,18 +72,25 @@ export interface TimelineEntry {
   evidence?: string
 }
 
+export interface IntentAlignment {
+  narrative: string
+  intent_present: boolean
+}
+
 export interface VibeInsights {
   detected: boolean
   axes?: VibeAxis[]
   timeline?: TimelineEntry[]
   ai_narrative?: string
   starter_guide?: { action: string; reason: string }[]
+  intent_alignment?: IntentAlignment
 }
 
 export interface NextAction {
   action: string
   reason: string
   evidence: string
+  ai_prompt?: string
 }
 
 export interface BriefingPayload {

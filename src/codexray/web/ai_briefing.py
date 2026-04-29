@@ -25,8 +25,8 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 
-PROMPT_VERSION = "v3-action-reason-evidence"
-SCHEMA_VERSION = 3
+PROMPT_VERSION = "v4-plain-lang-intent-prompt"
+SCHEMA_VERSION = 4
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
@@ -52,6 +52,7 @@ class AINextAction:
     action: str
     reason: str
     evidence: str
+    ai_prompt: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +65,7 @@ class AIBriefingResult:
     quality_risk: str
     next_actions: tuple[AINextAction, ...]
     key_insight: str
+    intent_alignment: str = ""
     fallback: bool = False
 
 
@@ -234,34 +236,36 @@ def _enforce_budget(text: str, limit: int) -> str:
 
 
 def build_ai_briefing_prompt(bundle_markdown: str) -> str:
-    return f"""당신은 시니어 개발자이자 바이브코딩 코치입니다. 아래에 레포의 메타데이터, 구조 요약, 핵심 소스 파일이 직접 첨부되어 있습니다. 직접 코드를 읽고 한국어로 종합 브리핑을 작성하십시오.
+    return f"""당신은 시니어 개발자이자 바이브코딩 코치입니다. **독자는 코드를 모르는 비개발자(바이브코더)**입니다. 아래에 레포의 메타데이터, 구조 요약, 핵심 소스 파일이 직접 첨부되어 있습니다. 직접 코드를 읽고 한국어로 종합 브리핑을 작성하십시오.
 
 다음 JSON 형식으로만 답하십시오. 다른 설명 없이 JSON 블록만:
 
 ```json
 {{
   "executive": "이 코드베이스가 무엇을 하는 프로젝트인지, 도메인·역할·주요 기능을 한두 문장으로",
-  "architecture": "구조적 특징 (규모, 결합도, DAG 여부, 핵심 의존 흐름, 진입점) 2~3문장",
-  "quality_risk": "품질 등급 해석과 상위 위험 파일을 근거로 실질적 위험 2~3문장",
+  "architecture": "구조적 특징을 평어로 — '한 파일이 너무 많은 일을 함', '흐름이 한 방향으로 흐름' 같은 표현. 메트릭 용어 자체는 쓰지 말고 의미만 전달",
+  "quality_risk": "품질 등급의 실질적 의미와 상위 위험 파일이 사용자에게 미칠 영향 2~3문장. 등급 자체는 인용하되 '의미는 ~이다' 형태로 풀어 설명",
   "next_actions": [
     {{
       "action": "구체적이고 실행 가능한 행동 한 줄",
-      "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에' 같은 인과 연결",
-      "evidence": "분석 자료에서 인용한 근거 (등급/파일명/수치/커밋 등)"
+      "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에'로 인과 연결",
+      "evidence": "분석에서 인용한 근거 (등급/파일명/수치/커밋)",
+      "ai_prompt": "비개발자가 Claude/Codex CLI에 그대로 복사·붙여넣기 할 수 있는 자연어 명령. 예: 'src/foo.py를 두 부분으로 나누세요. 1) 데이터 가져오기 2) 화면 그리기. 변경 후 기존 동작이 그대로 유지되어야 합니다.'"
     }},
-    {{ "action": "...", "reason": "...", "evidence": "..." }},
-    {{ "action": "...", "reason": "...", "evidence": "..." }}
+    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "..." }},
+    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "..." }}
   ],
-  "key_insight": "코드를 읽고 발견한 가장 중요한 한 가지 통찰 (수치보다 의도/구조 차원)"
+  "key_insight": "코드를 읽고 발견한 가장 중요한 한 가지 통찰 (의도/구조 차원)",
+  "intent_alignment": "docs/intent.md 또는 README가 있다면 그 내용과 현재 코드의 일치/불일치를 한 문단으로 짚어라. 의도와 결과 사이의 갭을 구체적으로. 의도 문서가 없으면 빈 문자열을 반환"
 }}
 ```
 
-요구사항:
-- 첨부된 코드를 실제로 읽고 의도를 파악하여 작성할 것
-- 수치(등급, 파일명, 결합도, hotspot count 등)를 반드시 인용할 것
-- 비개발자도 이해 가능하도록 메트릭 용어는 풀어 쓸 것
-- next_actions는 정확히 3개, 각 항목은 action / reason / evidence 세 필드를 모두 채울 것
-- evidence 필드는 "Hotspot 23개", "GameManager.cs coupling 45", "테스트 등급 F" 같은 구체적 인용
+**중요한 작성 규칙 (비개발자가 독자):**
+1. 메트릭 용어 (DAG, SCC, fan-in, fan-out, coupling, hotspot priority, p90 등) **직접 사용 금지**. 대신 '순환 없는 흐름', '한 파일에 의존이 몰림', '자주 바뀌고 위험한 파일' 같은 평어 사용
+2. 등급 (A/B/C/D/F)과 파일 경로는 그대로 인용 OK
+3. 수치 (예: 'Hotspot 23개', '테스트 0점')는 인용하되 의미를 함께 풀어줄 것
+4. next_actions의 ai_prompt 필드는 비개발자가 그대로 AI에게 복사해서 보낼 수 있는 자연어 작업 지시여야 함 (코드 작성 지침)
+5. intent_alignment는 의도 문서가 있을 때만 채우고, 의도와 코드 사이의 구체적 갭을 짚을 것
 
 레포 자료:
 
@@ -288,6 +292,7 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
     architecture = str(data.get("architecture", "")).strip()
     quality_risk = str(data.get("quality_risk", "")).strip()
     key_insight = str(data.get("key_insight", "")).strip()
+    intent_alignment = str(data.get("intent_alignment", "")).strip()
     next_actions = _parse_next_actions(data.get("next_actions", []))
 
     if not executive or not quality_risk or not next_actions:
@@ -302,6 +307,7 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
         quality_risk=quality_risk,
         next_actions=next_actions,
         key_insight=key_insight,
+        intent_alignment=intent_alignment,
     )
 
 
@@ -314,6 +320,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
             action = str(item.get("action", "")).strip()
             reason = str(item.get("reason", "")).strip()
             evidence = str(item.get("evidence", "")).strip()
+            ai_prompt = str(item.get("ai_prompt", "")).strip()
             if not action:
                 continue
             actions.append(
@@ -321,6 +328,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
                     action=action,
                     reason=reason or "AI 해석에서 도출된 우선 행동입니다.",
                     evidence=evidence or "근거 인용 없음",
+                    ai_prompt=ai_prompt,
                 )
             )
         elif isinstance(item, str):
@@ -331,6 +339,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
                         action=text,
                         reason="AI 해석에서 도출된 우선 행동입니다.",
                         evidence="근거 인용 없음",
+                        ai_prompt="",
                     )
                 )
     return tuple(actions)
@@ -372,10 +381,12 @@ def cache_get(key: str) -> AIBriefingResult | None:
                     action=str(a["action"]),
                     reason=str(a["reason"]),
                     evidence=str(a["evidence"]),
+                    ai_prompt=str(a.get("ai_prompt", "")),
                 )
                 for a in data["next_actions"]
             ),
             key_insight=str(data["key_insight"]),
+            intent_alignment=str(data.get("intent_alignment", "")),
         )
     except (OSError, json.JSONDecodeError, KeyError, TypeError):
         return None
@@ -393,10 +404,16 @@ def cache_put(key: str, result: AIBriefingResult) -> None:
                 "architecture": result.architecture,
                 "quality_risk": result.quality_risk,
                 "next_actions": [
-                    {"action": a.action, "reason": a.reason, "evidence": a.evidence}
+                    {
+                        "action": a.action,
+                        "reason": a.reason,
+                        "evidence": a.evidence,
+                        "ai_prompt": a.ai_prompt,
+                    }
                     for a in result.next_actions
                 ],
                 "key_insight": result.key_insight,
+                "intent_alignment": result.intent_alignment,
             },
             ensure_ascii=False,
             indent=2,

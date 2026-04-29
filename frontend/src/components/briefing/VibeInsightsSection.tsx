@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Lightbulb } from "lucide-react"
+import { AxisBreakdown } from "@/components/briefing/AxisBreakdown"
 import type { VibeInsights } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
@@ -71,9 +73,38 @@ function DetectedView({ data }: { data: VibeInsights }) {
         </div>
       )}
 
+      {data.intent_alignment && data.intent_alignment.narrative && (
+        <IntentAlignmentCard alignment={data.intent_alignment} />
+      )}
+
       {data.timeline && data.timeline.length > 0 && (
         <Timeline entries={data.timeline} />
       )}
+    </div>
+  )
+}
+
+function IntentAlignmentCard({
+  alignment,
+}: {
+  alignment: NonNullable<VibeInsights["intent_alignment"]>
+}) {
+  return (
+    <div className="rounded-lg border-2 border-blue-500/30 bg-blue-500/5 p-4">
+      <div className="flex items-start gap-3">
+        <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              의도 정렬
+            </span>
+            <Badge variant="outline" className="text-[10px]">
+              {alignment.intent_present ? "intent.md 기반" : "README 기반"}
+            </Badge>
+          </div>
+          <p className="text-sm leading-relaxed">{alignment.narrative}</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -82,7 +113,7 @@ function AxisCard({
   axis,
   isWeakest,
 }: {
-  axis: { name: string; score: number; label: string; weaknesses: string[] }
+  axis: import("@/lib/api").VibeAxis
   isWeakest: boolean
 }) {
   const scoreColor =
@@ -107,12 +138,16 @@ function AxisCard({
         <div className="text-[10px] text-muted-foreground uppercase">/ 100</div>
       </div>
       <Progress value={axis.score} />
-      {axis.weaknesses.length > 0 && (
-        <ul className="text-xs text-muted-foreground space-y-0.5 mt-2">
-          {axis.weaknesses.slice(0, 3).map((w, i) => (
-            <li key={i}>• {w}</li>
-          ))}
-        </ul>
+      {axis.breakdown && axis.breakdown.length > 0 ? (
+        <AxisBreakdown items={axis.breakdown} />
+      ) : (
+        axis.weaknesses.length > 0 && (
+          <ul className="text-xs text-muted-foreground space-y-0.5 mt-2">
+            {axis.weaknesses.slice(0, 3).map((w, i) => (
+              <li key={i}>• {w}</li>
+            ))}
+          </ul>
+        )
       )}
     </div>
   )

@@ -88,6 +88,13 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         vibe_detected=vibe_insights["detected"],
     )
 
+    intent_alignment = (ai.intent_alignment if ai else "").strip()
+    if intent_alignment:
+        vibe_insights["intent_alignment"] = {
+            "narrative": intent_alignment,
+            "intent_present": (resolved / "docs" / "intent.md").exists(),
+        }
+
     return {
         "schema_version": SCHEMA_VERSION,
         "path": str(resolved),
@@ -259,6 +266,7 @@ def _build_next_actions(
                 "action": a.action,
                 "reason": a.reason,
                 "evidence": a.evidence,
+                "ai_prompt": a.ai_prompt,
             }
             for a in structured[:3]
         ]

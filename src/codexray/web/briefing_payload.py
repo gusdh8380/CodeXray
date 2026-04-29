@@ -11,14 +11,17 @@ from typing import Any
 
 from ..briefing import build_codebase_briefing
 from ..briefing.git_history import build_git_history
+from ..entrypoints import build_entrypoints
+from ..graph import build_graph
 from ..hotspots import build_hotspots
 from ..inventory import aggregate
+from ..metrics import build_metrics
 from ..quality import build_quality
 from ..vibe import build_vibe_coding_report
 from .ai_briefing import AIBriefingResult
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 _PROCESS_FILE_SIGNALS = {
@@ -38,13 +41,16 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
     """Build the JSON payload consumed by the React Briefing screen."""
     resolved = root.resolve()
     inventory = list(aggregate(resolved))
+    graph = build_graph(resolved)
+    metrics = build_metrics(graph)
+    entrypoints = build_entrypoints(resolved)
     quality = build_quality(resolved)
     hotspots = build_hotspots(resolved)
     vibe = build_vibe_coding_report(resolved)
     history = build_git_history(resolved)
     deterministic = build_codebase_briefing(resolved)
 
-    languages = ", ".join(row.language for row in inventory) or "감지된 언어 없음"
+    languages_text = ", ".join(row.language for row in inventory) or "감지된 언어 없음"
     total_files = sum(row.file_count for row in inventory)
     total_loc = sum(row.loc for row in inventory)
     grade = quality.overall.grade or "N/A"
@@ -55,7 +61,8 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
 
     what = _build_what(
         repo_name=repo_name,
-        languages=languages,
+        languages=languages_text,
+        inventory=inventory,
         total_files=total_files,
         total_loc=total_loc,
         grade=grade,
@@ -63,6 +70,9 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
     )
     how_built = _build_how_built(
         deterministic=deterministic,
+        graph=graph,
+        metrics=metrics,
+        entrypoints=entrypoints,
         ai_architecture=ai.architecture if ai else None,
     )
     current_state = _build_current_state(
@@ -70,6 +80,8 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         score=score,
         hotspot_count=hotspots.summary.hotspot,
         top_hotspot=top_hotspot_path,
+        quality=quality,
+        hotspots=hotspots,
         ai_quality=ai.quality_risk if ai else None,
     )
     vibe_insights = _build_vibe_insights(
@@ -104,6 +116,7 @@ def _build_what(
     *,
     repo_name: str,
     languages: str,
+    inventory: list[Any],
     total_files: int,
     total_loc: int,
     grade: str,
@@ -114,6 +127,15 @@ def _build_what(
         f"총 {total_files}개 파일·{total_loc:,} LoC 규모입니다. "
         f"현재 종합 품질 등급은 {grade}입니다."
     )
+    language_rows = [
+        {
+            "language": row.language,
+            "files": row.file_count,
+            "loc": row.loc,
+            "share": round(row.loc * 100 / total_loc, 1) if total_loc else 0.0,
+        }
+        for row in sorted(inventory, key=lambda r: -r.loc)[:5]
+    ]
     return {
         "id": "what",
         "title": "이게 뭐야",
@@ -123,20 +145,55 @@ def _build_what(
             {"label": "LoC", "value": f"{total_loc:,}"},
             {"label": "품질 등급", "value": grade},
         ],
+        "details": {"languages": language_rows},
     }
 
 
-def _build_how_built(*, deterministic: Any, ai_architecture: str | None) -> dict[str, Any]:
+def _build_how_built(
+    *,
+    deterministic: Any,
+    graph: Any,
+    metrics: Any,
+    entrypoints: Any,
+    ai_architecture: str | None,
+) -> dict[str, Any]:
     arch_card = deterministic.architecture[0] if deterministic.architecture else None
     fallback = arch_card.text if arch_card else "구조 분석 데이터를 가져오지 못했습니다."
+
+    top_coupled = sorted(
+        metrics.nodes,
+        key=lambda n: -(n.fan_in + n.fan_out + n.external_fan_out),
+    )[:5]
+    coupled_rows = [
+        {
+            "path": n.path,
+            "fan_in": n.fan_in,
+            "fan_out": n.fan_out,
+            "external_fan_out": n.external_fan_out,
+            "coupling": n.fan_in + n.fan_out + n.external_fan_out,
+        }
+        for n in top_coupled
+    ]
+
+    entrypoint_rows = [
+        {"path": ep.path, "kind": ep.kind}
+        for ep in list(entrypoints.entrypoints)[:5]
+    ]
+
     return {
         "id": "how_built",
         "title": "어떻게 만들어졌나",
         "narrative": ai_architecture or fallback,
         "metrics": [
-            {"label": e.label, "value": e.value}
-            for e in (arch_card.evidence[:3] if arch_card else [])
+            {"label": "Nodes", "value": str(len(graph.nodes))},
+            {"label": "Edges", "value": str(len(graph.edges))},
+            {"label": "Largest SCC", "value": str(metrics.graph.largest_scc_size)},
         ],
+        "details": {
+            "top_coupled": coupled_rows,
+            "entrypoints": entrypoint_rows,
+            "is_dag": metrics.graph.is_dag,
+        },
         "deep_link": {"label": "구조 그래프 보기", "tab": "graph"},
     }
 
@@ -147,6 +204,8 @@ def _build_current_state(
     score: int,
     hotspot_count: int,
     top_hotspot: str,
+    quality: Any,
+    hotspots: Any,
     ai_quality: str | None,
 ) -> dict[str, Any]:
     if ai_quality:
@@ -156,14 +215,43 @@ def _build_current_state(
             f"품질 등급은 {grade}({score})이고 hotspot은 {hotspot_count}개입니다. "
             f"가장 먼저 살펴볼 파일은 {top_hotspot}입니다."
         )
+
+    dimension_rows = [
+        {
+            "name": name,
+            "grade": dim.grade or "N/A",
+            "score": dim.score if dim.score is not None else None,
+        }
+        for name, dim in sorted(quality.dimensions.items())
+    ]
+
+    top_hotspots = sorted(
+        hotspots.files, key=lambda f: -(f.change_count * f.coupling)
+    )[:5]
+    hotspot_rows = [
+        {
+            "path": f.path,
+            "priority": f.change_count * f.coupling,
+            "changes": f.change_count,
+            "coupling": f.coupling,
+            "category": f.category,
+        }
+        for f in top_hotspots
+    ]
+
     return {
         "id": "current_state",
         "title": "지금 상태",
         "narrative": narrative,
         "metrics": [
             {"label": "등급", "value": grade},
+            {"label": "점수", "value": str(score)},
             {"label": "Hotspot", "value": str(hotspot_count)},
         ],
+        "details": {
+            "dimensions": dimension_rows,
+            "hotspots": hotspot_rows,
+        },
         "deep_link": {"label": "Quality 탭에서 자세히", "tab": "quality"},
     }
 

@@ -24,6 +24,7 @@ export function BriefingScreen({ data }: Props) {
         title={data.what.title}
         narrative={data.what.narrative}
         metrics={data.what.metrics}
+        details={data.what.details}
         variant="hero"
       />
 
@@ -32,6 +33,7 @@ export function BriefingScreen({ data }: Props) {
         title={data.how_built.title}
         narrative={data.how_built.narrative}
         metrics={data.how_built.metrics}
+        details={data.how_built.details}
         deepLink={data.how_built.deep_link}
       />
 
@@ -40,6 +42,7 @@ export function BriefingScreen({ data }: Props) {
         title={data.current_state.title}
         narrative={data.current_state.narrative}
         metrics={data.current_state.metrics}
+        details={data.current_state.details}
         deepLink={data.current_state.deep_link}
       />
 

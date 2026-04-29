@@ -1,8 +1,52 @@
+export interface LanguageRow {
+  language: string
+  files: number
+  loc: number
+  share: number
+}
+
+export interface CoupledRow {
+  path: string
+  fan_in: number
+  fan_out: number
+  external_fan_out: number
+  coupling: number
+}
+
+export interface EntrypointRow {
+  path: string
+  kind: string
+}
+
+export interface QualityDimensionRow {
+  name: string
+  grade: string
+  score: number | null
+}
+
+export interface HotspotRow {
+  path: string
+  priority: number
+  changes: number
+  coupling: number
+  category: string
+}
+
+export interface SectionDetails {
+  languages?: LanguageRow[]
+  top_coupled?: CoupledRow[]
+  entrypoints?: EntrypointRow[]
+  is_dag?: boolean
+  dimensions?: QualityDimensionRow[]
+  hotspots?: HotspotRow[]
+}
+
 export interface BriefingSection {
   id: string
   title: string
   narrative: string
   metrics?: { label: string; value: string }[]
+  details?: SectionDetails
   deep_link?: { label: string; tab: string }
 }
 

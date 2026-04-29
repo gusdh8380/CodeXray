@@ -1,12 +1,15 @@
 import { ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { SectionDetailsView } from "@/components/briefing/SectionDetailsView"
 import { cn } from "@/lib/utils"
+import type { SectionDetails } from "@/lib/api"
 
 interface Props {
   eyebrow: string
   title: string
   narrative: string
   metrics?: { label: string; value: string }[]
+  details?: SectionDetails
   deepLink?: { label: string; tab: string }
   variant?: "hero" | "default" | "highlight"
   children?: React.ReactNode
@@ -17,6 +20,7 @@ export function SectionShell({
   title,
   narrative,
   metrics,
+  details,
   deepLink,
   variant = "default",
   children,
@@ -61,6 +65,7 @@ export function SectionShell({
             ))}
           </div>
         )}
+        {details && <SectionDetailsView details={details} />}
         {children}
         {deepLink && (
           <button

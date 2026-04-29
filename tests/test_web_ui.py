@@ -116,14 +116,14 @@ def test_analysis_panels_include_split_sidebar(tmp_path: Path) -> None:
         assert "Generate insights" in response.text, endpoint
 
 
-def test_dashboard_endpoint_returns_iframe(tmp_path: Path) -> None:
+def test_dashboard_endpoint_returns_html_payload(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())
-    response = client.post("/api/dashboard", data={"path": str(tmp_path)})
+    response = client.post("/api/dashboard", json={"path": str(tmp_path)})
     assert response.status_code == 200
-    assert "dashboard-frame" in response.text
-    assert "dashboard-workspace" in response.text
-    assert "codexray-dashboard-v1" in response.text
+    payload = response.json()
+    assert "codexray-dashboard-v1" in payload["html"]
+    assert "<!DOCTYPE html>" in payload["html"]
 
 
 def test_briefing_endpoint_returns_job_id_json(tmp_path: Path) -> None:

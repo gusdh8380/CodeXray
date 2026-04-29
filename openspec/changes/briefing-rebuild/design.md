@@ -191,7 +191,7 @@ AI 해석이 30-90초 걸리는 동안 "지금 뭐 하는 중"을 항상 표시:
 5. 미시 분석 탭들을 점진적으로 React로 포팅
 6. 기존 htmx 코드(`templates/`, `static/`, `render.py`의 HTML 부분) 제거
 7. 기존 active 변경들(briefing-as-product, humanize-analysis-output)을 archive
-8. CivilSim/CodeXray 자체 분석으로 검증
+8. aquaview / CodeXray 자체 분석으로 검증
 
 **Rollback:** 본 변경은 BREAKING이므로 롤백은 git revert. 중간 커밋들은 호환성을 깨지 않도록 점진적으로 만들지만, 최종 상태는 React-only.
 

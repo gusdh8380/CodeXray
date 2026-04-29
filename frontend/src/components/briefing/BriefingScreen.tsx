@@ -1,6 +1,7 @@
 import { SectionShell } from "./SectionShell"
 import { VibeInsightsSection } from "./VibeInsightsSection"
 import { NextActionsSection } from "./NextActionsSection"
+import { MicroAnalysisArea } from "@/components/micro/MicroAnalysisArea"
 import type { BriefingPayload } from "@/lib/api"
 
 interface Props {
@@ -49,6 +50,8 @@ export function BriefingScreen({ data }: Props) {
       <VibeInsightsSection data={data.vibe_insights} />
 
       <NextActionsSection actions={data.next_actions} />
+
+      <MicroAnalysisArea path={data.path} />
     </div>
   )
 }

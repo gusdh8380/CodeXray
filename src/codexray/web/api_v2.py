@@ -7,15 +7,28 @@ the React SPA only uses the routes defined here.
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from .ai_briefing import build_evidence_bundle
+from ..entrypoints import build_entrypoints
+from ..entrypoints import to_json as entrypoints_to_json
+from ..graph import build_graph
+from ..graph import to_json as graph_to_json
+from ..hotspots import build_hotspots
+from ..hotspots import to_json as hotspots_to_json
+from dataclasses import asdict
+
+from ..inventory import aggregate
+from ..metrics import build_metrics
+from ..metrics import to_json as metrics_to_json
+from ..quality import build_quality
+from ..quality import to_json as quality_to_json
 from .briefing_payload import build_briefing_payload
 from .jobs import (
     AIBriefingJob,
@@ -48,19 +61,7 @@ def create_v2_router() -> APIRouter:
 
     @router.post("/api/briefing")
     async def start_briefing(req: PathRequest) -> JSONResponse:
-        candidate = Path(req.path).expanduser()
-        if not candidate.exists():
-            return JSONResponse(
-                {"error": f"경로를 찾을 수 없습니다: {candidate}"},
-                status_code=400,
-            )
-        if not candidate.is_dir():
-            return JSONResponse(
-                {"error": f"디렉토리가 아닙니다: {candidate}"},
-                status_code=400,
-            )
-        job = start_ai_briefing_job(candidate)
-        return JSONResponse({"job_id": job.id})
+        return _validate_path_or_run(req, lambda p: {"job_id": start_ai_briefing_job(p).id})
 
     @router.get("/api/briefing/status/{job_id}")
     async def briefing_status(job_id: str) -> JSONResponse:
@@ -76,7 +77,66 @@ def create_v2_router() -> APIRouter:
             return JSONResponse({"error": "job not found"}, status_code=404)
         return JSONResponse(_serialize_job(job))
 
+    @router.post("/api/inventory")
+    async def inventory_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(
+            req,
+            lambda p: {
+                "schema_version": 1,
+                "rows": [asdict(row) for row in aggregate(p)],
+            },
+        )
+
+    @router.post("/api/graph")
+    async def graph_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(req, lambda p: _decode(graph_to_json(build_graph(p))))
+
+    @router.post("/api/metrics")
+    async def metrics_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(
+            req, lambda p: _decode(metrics_to_json(build_metrics(build_graph(p))))
+        )
+
+    @router.post("/api/entrypoints")
+    async def entrypoints_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(
+            req, lambda p: _decode(entrypoints_to_json(build_entrypoints(p)))
+        )
+
+    @router.post("/api/quality")
+    async def quality_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(req, lambda p: _decode(quality_to_json(build_quality(p))))
+
+    @router.post("/api/hotspots")
+    async def hotspots_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(req, lambda p: _decode(hotspots_to_json(build_hotspots(p))))
+
     return router
+
+
+def _validate_path_or_run(
+    req: PathRequest,
+    runner: Callable[[Path], dict[str, Any]],
+) -> JSONResponse:
+    candidate = Path(req.path).expanduser()
+    if not candidate.exists():
+        return JSONResponse(
+            {"error": f"경로를 찾을 수 없습니다: {candidate}"},
+            status_code=400,
+        )
+    if not candidate.is_dir():
+        return JSONResponse(
+            {"error": f"디렉토리가 아닙니다: {candidate}"},
+            status_code=400,
+        )
+    try:
+        return JSONResponse(runner(candidate))
+    except Exception as exc:  # noqa: BLE001 — surface analyzer errors to the SPA
+        return JSONResponse({"error": f"분석 실패: {exc}"}, status_code=500)
+
+
+def _decode(json_text: str) -> dict[str, Any]:
+    return json.loads(json_text)
 
 
 def _serialize_job(job: AIBriefingJob) -> dict[str, Any]:

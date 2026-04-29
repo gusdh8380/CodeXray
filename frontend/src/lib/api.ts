@@ -116,6 +116,25 @@ export async function getBriefingStatus(jobId: string): Promise<BriefingJobStatu
   return res.json()
 }
 
+export async function fetchTab<T = unknown>(tab: string, path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}/api/${tab}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path }),
+  })
+  if (!res.ok) {
+    let message = `${tab} 분석 실패: ${res.status}`
+    try {
+      const body = await res.json()
+      if (body?.error) message = body.error
+    } catch {
+      /* keep default */
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
 export async function pollBriefing(
   path: string,
   onProgress: (status: BriefingJobStatus) => void,

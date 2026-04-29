@@ -86,7 +86,7 @@ The system SHALL serialize briefing data with `schema_version: 2`, deterministic
 The system SHALL complete the deterministic portion of briefing analysis within 5 seconds on the validation codebases. AI interpretation MAY take up to 90 seconds and SHALL stream progress updates.
 
 #### Scenario: 결정론적 분석 시간
-- **WHEN** CodeXray 또는 CivilSim 레포를 분석하면
+- **WHEN** CodeXray 또는 aquaview 레포를 분석하면
 - **THEN** 결정론적 분석 단계(파일 수집, 메트릭, 타임라인 데이터)는 5초 내 완료되고 진행 상태가 사용자에게 보고된다
 
 #### Scenario: AI 단계 진행 보고

@@ -52,35 +52,47 @@ def test_briefing_endpoint_rejects_missing_path() -> None:
 
 def test_path_validation_rejects_missing_path(tmp_path: Path) -> None:
     client = TestClient(create_app())
-    response = client.post("/api/inventory", data={"path": str(tmp_path / "missing")})
+    response = client.post("/api/inventory", json={"path": str(tmp_path / "missing")})
     assert response.status_code == 400
-    assert "path does not exist" in response.text
+    assert "찾을 수 없습니다" in response.text
 
 
 def test_path_validation_rejects_file_path(tmp_path: Path) -> None:
     file_path = tmp_path / "file.py"
     file_path.write_text("x = 1\n")
     client = TestClient(create_app())
-    response = client.post("/api/inventory", data={"path": str(file_path)})
+    response = client.post("/api/inventory", json={"path": str(file_path)})
     assert response.status_code == 400
-    assert "path is not a directory" in response.text
+    assert "디렉토리가 아닙니다" in response.text
 
 
-def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
+def test_json_analysis_endpoints_return_data(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())
-    endpoints = [
-        "/api/overview",
+    json_endpoints = [
         "/api/inventory",
         "/api/graph",
         "/api/metrics",
         "/api/entrypoints",
         "/api/quality",
         "/api/hotspots",
+    ]
+    for endpoint in json_endpoints:
+        response = client.post(endpoint, json={"path": str(tmp_path)})
+        assert response.status_code == 200, endpoint
+        body = response.json()
+        assert isinstance(body, dict), endpoint
+
+
+def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+    client = TestClient(create_app())
+    htmx_only_endpoints = [
+        "/api/overview",
         "/api/report",
         "/api/vibe-coding",
     ]
-    for endpoint in endpoints:
+    for endpoint in htmx_only_endpoints:
         response = client.post(endpoint, data={"path": str(tmp_path)})
         assert response.status_code == 200, endpoint
         assert 'data-codexray-result="' in response.text
@@ -91,17 +103,11 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
 def test_analysis_panels_include_split_sidebar(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())
-    endpoints = [
-        "/api/inventory",
-        "/api/graph",
-        "/api/metrics",
-        "/api/entrypoints",
-        "/api/quality",
-        "/api/hotspots",
+    htmx_only_endpoints = [
         "/api/report",
         "/api/overview",
     ]
-    for endpoint in endpoints:
+    for endpoint in htmx_only_endpoints:
         response = client.post(endpoint, data={"path": str(tmp_path)})
         assert response.status_code == 200, endpoint
         assert "analysis-explainer" in response.text, endpoint

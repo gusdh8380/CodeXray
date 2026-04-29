@@ -75,8 +75,8 @@ The system SHALL return JSON results within 5 seconds for deterministic endpoint
 - **WHEN** CodeXray repository path로 deterministic endpoint smoke를 실행하면
 - **THEN** 각 endpoint는 5초 내 HTTP 200과 의미 있는 JSON 결과를 반환한다
 
-#### Scenario: CivilSim validation
-- **WHEN** CivilSim repository path로 deterministic endpoint smoke를 실행하면
+#### Scenario: aquaview validation
+- **WHEN** aquaview repository path로 deterministic endpoint smoke를 실행하면
 - **THEN** 각 endpoint는 5초 내 HTTP 200과 의미 있는 JSON 결과를 반환한다
 
 ### Requirement: Folder picker

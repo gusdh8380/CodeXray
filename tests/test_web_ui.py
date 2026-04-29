@@ -89,7 +89,6 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
     client = TestClient(create_app())
     htmx_only_endpoints = [
         "/api/overview",
-        "/api/report",
     ]
     for endpoint in htmx_only_endpoints:
         response = client.post(endpoint, data={"path": str(tmp_path)})
@@ -103,7 +102,6 @@ def test_analysis_panels_include_split_sidebar(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())
     htmx_only_endpoints = [
-        "/api/report",
         "/api/overview",
     ]
     for endpoint in htmx_only_endpoints:
@@ -548,9 +546,12 @@ def test_overview_renders_summary_cards(tmp_path: Path) -> None:
 def test_report_renders_summary_cards(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     client = TestClient(create_app())
-    response = client.post("/api/report", data={"path": str(tmp_path)})
+    response = client.post("/api/report", json={"path": str(tmp_path)})
     assert response.status_code == 200
-    assert 'data-codexray-summary="cards"' in response.text
+    payload = response.json()
+    assert "summary" in payload
+    assert "markdown" in payload
+    assert isinstance(payload["recommendations"], list)
 
 
 def test_overview_does_not_call_ai(tmp_path: Path, monkeypatch) -> None:

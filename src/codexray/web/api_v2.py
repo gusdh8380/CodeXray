@@ -31,6 +31,9 @@ from ..quality import build_quality
 from ..quality import to_json as quality_to_json
 from ..dashboard import build_dashboard
 from ..dashboard import to_html as dashboard_to_html
+from ..report import build_report
+from ..report import to_markdown as report_to_markdown
+from ..summary import to_json as summary_to_json
 from ..vibe import build_vibe_coding_report
 from ..vibe import to_json as vibe_to_json
 from .briefing_payload import build_briefing_payload
@@ -131,7 +134,26 @@ def create_v2_router() -> APIRouter:
             },
         )
 
+    @router.post("/api/report")
+    async def report_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(req, _build_report_payload)
+
     return router
+
+
+def _build_report_payload(root: Path) -> dict[str, Any]:
+    report = build_report(root)
+    summary = json.loads(summary_to_json(report.summary))
+    return {
+        "schema_version": 1,
+        "path": report.path,
+        "generated_date": report.generated_date,
+        "summary": summary,
+        "recommendations": [
+            {"priority": r.priority, "text": r.text} for r in report.recommendations
+        ],
+        "markdown": report_to_markdown(report),
+    }
 
 
 def _validate_path_or_run(

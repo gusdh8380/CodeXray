@@ -1096,7 +1096,7 @@ def render_ai_briefing_running(job: Any) -> str:
 
 def render_ai_briefing_result(result: AIBriefingResult) -> str:
     actions_html = "".join(
-        f"<li>{html.escape(action)}</li>" for action in result.next_actions
+        f"<li>{html.escape(action.action)}</li>" for action in result.next_actions
     )
     body = "".join(
         [

@@ -25,8 +25,8 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 
-PROMPT_VERSION = "v2-raw-code"
-SCHEMA_VERSION = 2
+PROMPT_VERSION = "v3-action-reason-evidence"
+SCHEMA_VERSION = 3
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
@@ -48,6 +48,13 @@ _KEY_DOC_PATHS = [
 
 
 @dataclass(frozen=True, slots=True)
+class AINextAction:
+    action: str
+    reason: str
+    evidence: str
+
+
+@dataclass(frozen=True, slots=True)
 class AIBriefingResult:
     schema_version: int
     backend: str
@@ -55,7 +62,7 @@ class AIBriefingResult:
     executive: str
     architecture: str
     quality_risk: str
-    next_actions: tuple[str, ...]
+    next_actions: tuple[AINextAction, ...]
     key_insight: str
     fallback: bool = False
 
@@ -236,7 +243,15 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
   "executive": "이 코드베이스가 무엇을 하는 프로젝트인지, 도메인·역할·주요 기능을 한두 문장으로",
   "architecture": "구조적 특징 (규모, 결합도, DAG 여부, 핵심 의존 흐름, 진입점) 2~3문장",
   "quality_risk": "품질 등급 해석과 상위 위험 파일을 근거로 실질적 위험 2~3문장",
-  "next_actions": ["우선순위 높은 다음 행동 1", "다음 행동 2", "다음 행동 3"],
+  "next_actions": [
+    {{
+      "action": "구체적이고 실행 가능한 행동 한 줄",
+      "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에' 같은 인과 연결",
+      "evidence": "분석 자료에서 인용한 근거 (등급/파일명/수치/커밋 등)"
+    }},
+    {{ "action": "...", "reason": "...", "evidence": "..." }},
+    {{ "action": "...", "reason": "...", "evidence": "..." }}
+  ],
   "key_insight": "코드를 읽고 발견한 가장 중요한 한 가지 통찰 (수치보다 의도/구조 차원)"
 }}
 ```
@@ -245,7 +260,8 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
 - 첨부된 코드를 실제로 읽고 의도를 파악하여 작성할 것
 - 수치(등급, 파일명, 결합도, hotspot count 등)를 반드시 인용할 것
 - 비개발자도 이해 가능하도록 메트릭 용어는 풀어 쓸 것
-- next_actions는 구체적이고 실행 가능해야 함
+- next_actions는 정확히 3개, 각 항목은 action / reason / evidence 세 필드를 모두 채울 것
+- evidence 필드는 "Hotspot 23개", "GameManager.cs coupling 45", "테스트 등급 F" 같은 구체적 인용
 
 레포 자료:
 
@@ -272,8 +288,7 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
     architecture = str(data.get("architecture", "")).strip()
     quality_risk = str(data.get("quality_risk", "")).strip()
     key_insight = str(data.get("key_insight", "")).strip()
-    actions_raw = data.get("next_actions", [])
-    next_actions = tuple(str(a).strip() for a in actions_raw if str(a).strip())
+    next_actions = _parse_next_actions(data.get("next_actions", []))
 
     if not executive or not quality_risk or not next_actions:
         return None
@@ -288,6 +303,37 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
         next_actions=next_actions,
         key_insight=key_insight,
     )
+
+
+def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
+    if not isinstance(raw, list):
+        return ()
+    actions: list[AINextAction] = []
+    for item in raw:
+        if isinstance(item, dict):
+            action = str(item.get("action", "")).strip()
+            reason = str(item.get("reason", "")).strip()
+            evidence = str(item.get("evidence", "")).strip()
+            if not action:
+                continue
+            actions.append(
+                AINextAction(
+                    action=action,
+                    reason=reason or "AI 해석에서 도출된 우선 행동입니다.",
+                    evidence=evidence or "근거 인용 없음",
+                )
+            )
+        elif isinstance(item, str):
+            text = item.strip()
+            if text:
+                actions.append(
+                    AINextAction(
+                        action=text,
+                        reason="AI 해석에서 도출된 우선 행동입니다.",
+                        evidence="근거 인용 없음",
+                    )
+                )
+    return tuple(actions)
 
 
 def make_cache_key(root: Path, evidence_json: str, adapter_id: str) -> str:
@@ -322,7 +368,14 @@ def cache_get(key: str) -> AIBriefingResult | None:
             executive=str(data["executive"]),
             architecture=str(data["architecture"]),
             quality_risk=str(data["quality_risk"]),
-            next_actions=tuple(str(a) for a in data["next_actions"]),
+            next_actions=tuple(
+                AINextAction(
+                    action=str(a["action"]),
+                    reason=str(a["reason"]),
+                    evidence=str(a["evidence"]),
+                )
+                for a in data["next_actions"]
+            ),
             key_insight=str(data["key_insight"]),
         )
     except (OSError, json.JSONDecodeError, KeyError, TypeError):
@@ -340,7 +393,10 @@ def cache_put(key: str, result: AIBriefingResult) -> None:
                 "executive": result.executive,
                 "architecture": result.architecture,
                 "quality_risk": result.quality_risk,
-                "next_actions": list(result.next_actions),
+                "next_actions": [
+                    {"action": a.action, "reason": a.reason, "evidence": a.evidence}
+                    for a in result.next_actions
+                ],
                 "key_insight": result.key_insight,
             },
             ensure_ascii=False,

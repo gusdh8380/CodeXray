@@ -81,7 +81,7 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         ai_key_insight=ai.key_insight if ai else None,
     )
     next_actions = _build_next_actions(
-        ai_actions=list(ai.next_actions) if ai else [],
+        ai_actions=ai.next_actions if ai else (),
         grade=grade,
         hotspot_count=hotspots.summary.hotspot,
         top_hotspot=top_hotspot_path,
@@ -402,14 +402,22 @@ def _build_starter_guide(*, quality: Any, hotspots: Any) -> list[dict[str, str]]
 
 def _build_next_actions(
     *,
-    ai_actions: list[str],
+    ai_actions: Any,
     grade: str,
     hotspot_count: int,
     top_hotspot: str,
     vibe_detected: bool,
 ) -> list[dict[str, str]]:
-    if ai_actions:
-        return [_format_ai_action(a, grade, hotspot_count, top_hotspot) for a in ai_actions[:3]]
+    structured = list(ai_actions) if ai_actions else []
+    if structured:
+        return [
+            {
+                "action": a.action,
+                "reason": a.reason,
+                "evidence": a.evidence,
+            }
+            for a in structured[:3]
+        ]
 
     actions: list[dict[str, str]] = []
     if hotspot_count > 0 and top_hotspot != "N/A":
@@ -451,20 +459,3 @@ def _build_next_actions(
             }
         )
     return actions[:3]
-
-
-def _format_ai_action(
-    raw: str,
-    grade: str,
-    hotspot_count: int,
-    top_hotspot: str,
-) -> dict[str, str]:
-    text = raw.strip()
-    return {
-        "action": text[:120],
-        "reason": "AI 해석에서 도출된 다음 행동입니다.",
-        "evidence": (
-            f"등급 {grade}, Hotspot {hotspot_count}개"
-            + (f", top {top_hotspot}" if top_hotspot != "N/A" else "")
-        ),
-    }

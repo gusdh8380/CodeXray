@@ -39,9 +39,13 @@ from ..vibe import to_json as vibe_to_json
 from .briefing_payload import build_briefing_payload
 from .jobs import (
     AIBriefingJob,
+    ReviewJob,
     cancel_ai_briefing_job,
+    cancel_review_job,
     get_ai_briefing_job,
+    get_review_job,
     start_ai_briefing_job,
+    start_review_job,
 )
 
 
@@ -138,6 +142,26 @@ def create_v2_router() -> APIRouter:
     async def report_endpoint(req: PathRequest) -> JSONResponse:
         return _validate_path_or_run(req, _build_report_payload)
 
+    @router.post("/api/review")
+    async def start_review(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(
+            req, lambda p: {"job_id": start_review_job(p).id}
+        )
+
+    @router.get("/api/review/status/{job_id}")
+    async def review_status(job_id: str) -> JSONResponse:
+        job = get_review_job(job_id)
+        if job is None:
+            return JSONResponse({"error": "review job not found"}, status_code=404)
+        return JSONResponse(_serialize_review_job(job))
+
+    @router.post("/api/review/cancel/{job_id}")
+    async def review_cancel(job_id: str) -> JSONResponse:
+        job = cancel_review_job(job_id)
+        if job is None:
+            return JSONResponse({"error": "review job not found"}, status_code=404)
+        return JSONResponse(_serialize_review_job(job))
+
     @router.post("/api/browse-folder")
     async def browse_folder_endpoint() -> JSONResponse:
         from .folder_picker import choose_folder
@@ -219,3 +243,41 @@ def _normalize_status(status: str) -> str:
     if status == "done":
         return "completed"
     return status
+
+
+def _serialize_review_job(job: ReviewJob) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "job_id": job.id,
+        "status": _normalize_status(job.status),
+    }
+    if job.status == "done" and job.result is not None:
+        payload["result"] = _serialize_review_result(job.result)
+    elif job.status == "failed":
+        payload["error"] = job.error or "알 수 없는 오류"
+    return payload
+
+
+def _serialize_review_result(result: Any) -> dict[str, Any]:
+    return {
+        "schema_version": result.schema_version,
+        "backend": result.backend,
+        "files_reviewed": result.files_reviewed,
+        "skipped": [{"path": s.path, "reason": s.reason} for s in result.skipped],
+        "reviews": [
+            {
+                "path": r.path,
+                "confidence": r.confidence,
+                "limitations": r.limitations,
+                "dimensions": {
+                    name: {
+                        "score": d.score,
+                        "evidence_lines": list(d.evidence_lines),
+                        "comment": d.comment,
+                        "suggestion": d.suggestion,
+                    }
+                    for name, d in r.dimensions.items()
+                },
+            }
+            for r in result.reviews
+        ],
+    }

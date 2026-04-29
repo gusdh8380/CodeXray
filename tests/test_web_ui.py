@@ -157,17 +157,7 @@ def test_vibe_coding_endpoint_returns_json_report(tmp_path: Path) -> None:
     assert any(p.endswith("AGENTS.md") for p in paths)
 
 
-def test_review_endpoint_is_opt_in(tmp_path: Path) -> None:
-    _make_tree(tmp_path)
-    client = TestClient(create_app())
-    response = client.post("/api/review", data={"path": str(tmp_path)})
-    assert response.status_code == 200
-    assert "AI review is opt-in" in response.text
-    assert "1-5 minutes" in response.text
-    assert 'name="run" value="true"' in response.text
-
-
-def test_review_run_starts_background_job(tmp_path: Path, monkeypatch) -> None:
+def test_review_endpoint_starts_job_and_returns_job_id(tmp_path: Path, monkeypatch) -> None:
     _make_tree(tmp_path)
     calls: list[Path] = []
 
@@ -175,31 +165,33 @@ def test_review_run_starts_background_job(tmp_path: Path, monkeypatch) -> None:
         calls.append(root)
         return ReviewJob(id="job123", root=root, status="running")
 
-    monkeypatch.setattr(routes, "start_review_job", fake_start)
+    import codexray.web.api_v2 as api_v2
+
+    monkeypatch.setattr(api_v2, "start_review_job", fake_start)
     client = TestClient(create_app())
-    response = client.post("/api/review", data={"path": str(tmp_path), "run": "true"})
+    response = client.post("/api/review", json={"path": str(tmp_path)})
     assert response.status_code == 200
+    assert response.json() == {"job_id": "job123"}
     assert calls == [tmp_path.resolve()]
-    assert "AI review is running" in response.text
-    assert "polling every 2 seconds" in response.text
-    assert "Cancel Review" in response.text
-    assert 'hx-get="/api/review/status/job123"' in response.text
 
 
-def test_review_cancel_route(monkeypatch) -> None:
+def test_review_cancel_route_returns_cancelled_status(monkeypatch) -> None:
     job = ReviewJob(id="job123", root=Path("."), status="cancelled")
+    import codexray.web.api_v2 as api_v2
 
-    monkeypatch.setattr(routes, "cancel_review_job", lambda job_id: job)
+    monkeypatch.setattr(api_v2, "cancel_review_job", lambda job_id: job)
     client = TestClient(create_app())
     response = client.post("/api/review/cancel/job123")
     assert response.status_code == 200
-    assert "AI review cancelled" in response.text
+    payload = response.json()
+    assert payload["status"] == "cancelled"
+    assert payload["job_id"] == "job123"
 
 
-def test_review_status_unknown_job_returns_error() -> None:
+def test_review_status_unknown_job_returns_404() -> None:
     client = TestClient(create_app())
     response = client.get("/api/review/status/unknown")
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert "review job not found" in response.text
 
 

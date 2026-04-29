@@ -8,6 +8,7 @@ import { EntrypointsTab } from "@/components/micro/EntrypointsTab"
 import { VibeCodingTab } from "@/components/micro/VibeCodingTab"
 import { GraphTab } from "@/components/micro/GraphTab"
 import { ReportTab } from "@/components/micro/ReportTab"
+import { ReviewTab } from "@/components/micro/ReviewTab"
 import { cn } from "@/lib/utils"
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { id: "vibe-coding", label: "바이브코딩 증거" },
   { id: "graph", label: "구조 그래프" },
   { id: "report", label: "리포트" },
+  { id: "review", label: "AI Review" },
 ] as const
 
 type TabId = (typeof TABS)[number]["id"]
@@ -72,6 +74,7 @@ export function MicroAnalysisArea({ path }: Props) {
             {active === "vibe-coding" && <VibeCodingTab path={path} />}
             {active === "graph" && <GraphTab path={path} />}
             {active === "report" && <ReportTab path={path} />}
+            {active === "review" && <ReviewTab path={path} />}
           </div>
         </div>
       )}

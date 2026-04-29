@@ -54,6 +54,12 @@ HTML_TEMPLATE = Template(
   .label { font-size: 10px; fill: #374151; pointer-events: none; }
   .label.dim { opacity: 0.15; }
   .empty-state { padding: 24px; color: #6b7280; font-size: 14px; }
+  .hint { color: #9ca3af; font-size: 11px; margin: 6px 0 14px; }
+  .zoom-controls { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 4px; flex-direction: column; z-index: 5; }
+  .zoom-controls button { width: 32px; height: 32px; border: 1px solid #d1d5db; border-radius: 6px; background: #ffffff; color: #111827; cursor: pointer; font-size: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .zoom-controls button:hover { background: #f3f4f6; }
+  svg { cursor: grab; }
+  svg:active { cursor: grabbing; }
 </style>
 </head>
 <body>
@@ -69,17 +75,23 @@ HTML_TEMPLATE = Template(
   <aside class="sidebar">
     <input type="search" id="search" placeholder="filter by path..." autocomplete="off" />
     <div class="legend">
-      <div class="row"><span class="dot hotspot"></span> hotspot (high change × high coupling)</div>
-      <div class="row"><span class="dot active_stable"></span> active_stable</div>
-      <div class="row"><span class="dot neglected_complex"></span> neglected_complex</div>
-      <div class="row"><span class="dot stable"></span> stable</div>
+      <div class="row"><span class="dot hotspot"></span> Hotspot (자주 변경 × 결합도 높음)</div>
+      <div class="row"><span class="dot active_stable"></span> 활발 안정</div>
+      <div class="row"><span class="dot neglected_complex"></span> 방치 복잡</div>
+      <div class="row"><span class="dot stable"></span> 안정</div>
     </div>
+    <p class="hint">스크롤로 확대/축소, 드래그로 이동, 더블클릭은 비활성화</p>
     <div class="detail" id="detail">
       <p class="empty">노드를 클릭하면 상세가 여기에 표시됩니다.</p>
     </div>
   </aside>
   <div class="graph">
     <svg id="viz"></svg>
+    <div class="zoom-controls">
+      <button type="button" id="zoom-in" aria-label="확대">+</button>
+      <button type="button" id="zoom-out" aria-label="축소">−</button>
+      <button type="button" id="zoom-reset" aria-label="원래 크기">⟳</button>
+    </div>
     <div id="empty" class="empty-state" style="display:none">분석 대상 노드가 없습니다.</div>
   </div>
 </div>
@@ -163,13 +175,32 @@ HTML_TEMPLATE = Template(
     .attr('orient', 'auto')
     .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#9ca3af');
 
-  var link = svg.append('g').selectAll('line')
+  var zoomLayer = svg.append('g').attr('class', 'zoom-layer');
+
+  var zoom = d3.zoom()
+    .scaleExtent([0.2, 4])
+    .on('zoom', function (event) {
+      zoomLayer.attr('transform', event.transform);
+    });
+  svg.call(zoom).on('dblclick.zoom', null);
+
+  function zoomBy(factor) {
+    svg.transition().duration(180).call(zoom.scaleBy, factor);
+  }
+  function zoomReset() {
+    svg.transition().duration(220).call(zoom.transform, d3.zoomIdentity);
+  }
+  document.getElementById('zoom-in').addEventListener('click', function () { zoomBy(1.4); });
+  document.getElementById('zoom-out').addEventListener('click', function () { zoomBy(1 / 1.4); });
+  document.getElementById('zoom-reset').addEventListener('click', zoomReset);
+
+  var link = zoomLayer.append('g').selectAll('line')
     .data(edges)
     .enter().append('line')
     .attr('class', 'edge')
     .attr('marker-end', 'url(#arrow)');
 
-  var node = svg.append('g').selectAll('circle')
+  var node = zoomLayer.append('g').selectAll('circle')
     .data(nodes)
     .enter().append('circle')
     .attr('class', function (d) { return 'node ' + d.category + (d.highlight ? ' high-coupling' : ''); })
@@ -204,8 +235,8 @@ HTML_TEMPLATE = Template(
       .attr('x2', function (d) { return d.target.x; })
       .attr('y2', function (d) { return d.target.y; });
     node
-      .attr('cx', function (d) { return Math.max(d.r, Math.min(width - d.r, d.x)); })
-      .attr('cy', function (d) { return Math.max(d.r, Math.min(height - d.r, d.y)); });
+      .attr('cx', function (d) { return d.x; })
+      .attr('cy', function (d) { return d.y; });
   }
 
   var detail = document.getElementById('detail');

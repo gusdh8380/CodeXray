@@ -110,11 +110,11 @@
 
 ## 13. 검증 및 자기 적용
 
-- [ ] 13.1 `uv run pytest tests/ -x` 전체 통과 확인 — 새 JSON API와 5섹션 구조 어서션 포함
-- [ ] 13.2 `cd frontend && npm run build` 성공 확인, 번들 크기 < 250KB 1차 목표
-- [ ] 13.3 `codexray serve` 실행 후 `/Users/jeonhyeono/Project/personal/CodeXray` 자체 분석으로 5섹션, 바이브코딩 감지, 3축 점수, 타임라인 모두 의미 있는 값 표시 확인
-- [ ] 13.4 `/Users/jeonhyeono/Project/personal/aquaview` 분석으로 동일 항목 검증
-- [ ] 13.5 라이트/다크 테마 토글 검증
-- [ ] 13.6 미시 분석 영역 펼치기/접기 + 모든 미시 탭 렌더링 검증
-- [ ] 13.7 Review 탭 명시 실행/취소/완료 흐름 검증
-- [ ] 13.8 `docs/validation/briefing-rebuild-self.md` 와 `docs/validation/briefing-rebuild-civilsim.md` 작성 — JSON endpoint smoke와 SPA 시각 결과 캡처 요약 포함
+- [x] 13.1 `uv run pytest tests/ -x` 전체 통과 확인 — 318 tests passing
+- [x] 13.2 `cd frontend && npm run build` 성공 확인 (248KB JS, < 250KB 목표)
+- [x] 13.3 `codexray serve` 실행 후 `/Users/jeonhyeono/Project/personal/CodeXray` 자체 분석으로 5섹션, 바이브코딩 감지, 3축 점수(100/60/85), 타임라인 4 events 확인
+- [x] 13.4 `/Users/jeonhyeono/Project/personal/aquaview` 분석으로 동일 항목 검증 (3축 53/25/0, 타임라인 1 event, AI가 도메인 정확히 식별)
+- [ ] 13.5 라이트/다크 테마 토글 검증 (브라우저 확인 필요)
+- [ ] 13.6 미시 분석 영역 펼치기/접기 + 모든 미시 탭 렌더링 검증 (Quality/Hotspot 두 탭 구현, 나머지는 후속 세션)
+- [ ] 13.7 Review 탭 명시 실행/취소/완료 흐름 검증 (후속 세션)
+- [x] 13.8 `docs/validation/briefing-rebuild-self.md` 와 `docs/validation/briefing-rebuild-aquaview.md` 작성

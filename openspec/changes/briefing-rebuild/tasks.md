@@ -18,12 +18,12 @@
 
 ## 3. AI 입력을 원본 코드 번들로 교체
 
-- [ ] 3.1 `src/codexray/web/ai_briefing.py`의 `build_evidence_bundle()` 를 raw code bundle 빌더로 교체 (README, AGENTS.md, CLAUDE.md, docs/intent.md, 진입점 파일, 상위 hotspot 파일)
-- [ ] 3.2 토큰 제한(예: 60K) 안에서 파일을 자르는 헬퍼 추가
-- [ ] 3.3 보조 메트릭(inventory/metrics/quality/hotspots 핵심 수치)을 bundle에 함께 포함
-- [ ] 3.4 AI 프롬프트를 5개 섹션 별 한국어 서술 + 행동+왜+증거 형식 next_actions를 JSON으로 반환하도록 재작성
-- [ ] 3.5 `parse_ai_briefing_response()` 를 새 응답 구조에 맞게 갱신
-- [ ] 3.6 캐시 키에 prompt version 포함, 기존 캐시 자동 무효화
+- [x] 3.1 `build_raw_code_bundle()` 추가 — CLAUDE.md/AGENTS.md/README/intent.md + 진입점 + 상위 hotspot/coupling 파일을 markdown 번들로 묶음
+- [x] 3.2 `_read_truncated()` 헬퍼 — 파일별 18K char 한계, 초과 시 head/tail + 중략 표시
+- [x] 3.3 메타데이터·구조·품질 차원 보조 정보를 번들 상단에 포함
+- [x] 3.4 AI 프롬프트 재작성 — "직접 코드를 읽고" 작성하도록 변경, JSON 응답 구조 유지
+- [x] 3.5 `parse_ai_briefing_response()` 호환 유지 (응답 스키마 동일)
+- [x] 3.6 PROMPT_VERSION = "v2-raw-code", `cache_get()`이 schema/prompt 불일치 시 무시 — 기존 캐시 자동 무효화
 - [ ] 3.7 codex 우선, claude 폴백 동작 검증 테스트 추가
 
 ## 4. 바이브코딩 인사이트 모듈 (백엔드)

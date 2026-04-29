@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -138,6 +139,11 @@ function AxisCard({
         <div className="text-[10px] text-muted-foreground uppercase">/ 100</div>
       </div>
       <Progress value={axis.score} />
+      {axis.score_band && (
+        <p className="text-[11px] text-muted-foreground italic leading-snug border-l-2 border-muted-foreground/20 pl-2">
+          {axis.score_band}
+        </p>
+      )}
       {axis.breakdown && axis.breakdown.length > 0 ? (
         <AxisBreakdown items={axis.breakdown} />
       ) : (
@@ -199,7 +205,7 @@ function Timeline({
   )
 }
 
-function StarterGuide({ guide }: { guide: { action: string; reason: string }[] }) {
+function StarterGuide({ guide }: { guide: import("@/lib/api").StarterGuideItem[] }) {
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed text-foreground/90">
@@ -209,14 +215,51 @@ function StarterGuide({ guide }: { guide: { action: string; reason: string }[] }
         {guide.length === 0 ? (
           <li className="text-sm text-muted-foreground">시작 가이드 데이터가 없습니다.</li>
         ) : (
-          guide.map((g, i) => (
-            <li key={i} className="rounded-lg border p-4">
-              <div className="font-semibold text-sm">{g.action}</div>
-              <div className="text-sm text-muted-foreground mt-1 leading-relaxed">{g.reason}</div>
-            </li>
-          ))
+          guide.map((g, i) => <StarterGuideCard key={i} item={g} />)
         )}
       </ul>
+    </div>
+  )
+}
+
+function StarterGuideCard({ item }: { item: import("@/lib/api").StarterGuideItem }) {
+  return (
+    <li className="rounded-lg border p-4 space-y-2">
+      <div className="font-semibold text-sm">{item.action}</div>
+      <div className="text-sm text-muted-foreground leading-relaxed">{item.reason}</div>
+      {item.ai_prompt && <CopyPromptBox prompt={item.ai_prompt} />}
+    </li>
+  )
+}
+
+function CopyPromptBox({ prompt }: { prompt: string }) {
+  const [copied, setCopied] = useState(false)
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(prompt)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* noop */
+    }
+  }
+  return (
+    <div className="rounded-md border bg-card p-3 space-y-2 mt-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+          Claude / Codex 에 복사
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="text-xs rounded border px-2 py-1 hover:bg-accent"
+        >
+          {copied ? "복사됨" : "복사"}
+        </button>
+      </div>
+      <p className="text-xs leading-relaxed font-mono text-muted-foreground whitespace-pre-wrap">
+        {prompt}
+      </p>
     </div>
   )
 }

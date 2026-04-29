@@ -14,6 +14,34 @@ def _item(label: str, delta: int, satisfied: bool, hint: str = "") -> dict[str, 
     return {"label": label, "delta": delta, "satisfied": satisfied, "hint": hint}
 
 
+_SCORE_BANDS = {
+    "environment": {
+        "high": "성숙: 에이전트 지침과 명세 체계가 모두 갖춰진 상태. AI가 매 세션 바로 일을 시작할 수 있음",
+        "mid": "보통: 기본 지침은 있지만 명세 체계나 세부 설정이 빠져 있음",
+        "low": "초기: AI가 매번 프로젝트 맥락을 처음부터 추론해야 하는 상태",
+    },
+    "process": {
+        "high": "성숙: 명세 → 빌드 → 검증 사이클이 git에 누적되고 fix 비율도 낮음",
+        "mid": "보통: 일부 프로세스 흔적은 있지만 fix 빈도나 hotspot 누적이 아쉬움",
+        "low": "초기: 프로세스 흔적이 거의 없고 코드만 빠르게 쌓이는 패턴",
+    },
+    "handoff": {
+        "high": "성숙: 검증·회고·인수인계 문서와 테스트가 모두 갖춰져 다음 세션이 즉시 이어받을 수 있음",
+        "mid": "보통: 일부 문서는 있지만 검증 또는 회고가 비어 있음",
+        "low": "초기: 다음 AI가 '여기까지 어디까지 했지?'를 알아낼 단서가 거의 없음",
+    },
+}
+
+
+def _score_band(name: str, score: int) -> str:
+    bands = _SCORE_BANDS.get(name, {})
+    if score >= 70:
+        return bands.get("high", "")
+    if score >= 40:
+        return bands.get("mid", "")
+    return bands.get("low", "")
+
+
 def axis_environment(*, root: Path, vibe: Any) -> dict[str, Any]:
     """Score how well the repo is set up for AI to work in."""
     breakdown: list[dict[str, Any]] = []
@@ -81,6 +109,7 @@ def axis_environment(*, root: Path, vibe: Any) -> dict[str, Any]:
         "score": score,
         "weaknesses": weaknesses[:3],
         "breakdown": breakdown,
+        "score_band": _score_band("environment", score),
     }
 
 
@@ -217,6 +246,7 @@ def axis_process(*, history: Any, hotspots: Any, quality: Any) -> dict[str, Any]
         "score": score,
         "weaknesses": weaknesses[:3],
         "breakdown": breakdown,
+        "score_band": _score_band("process", score),
     }
 
 
@@ -310,4 +340,5 @@ def axis_handoff(*, root: Path, quality: Any) -> dict[str, Any]:
         "score": score,
         "weaknesses": weaknesses[:3],
         "breakdown": breakdown,
+        "score_band": _score_band("handoff", score),
     }

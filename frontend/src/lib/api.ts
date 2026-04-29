@@ -63,6 +63,7 @@ export interface VibeAxis {
   label: string
   weaknesses: string[]
   breakdown?: AxisBreakdownItem[]
+  score_band?: string
 }
 
 export interface TimelineEntry {
@@ -77,12 +78,18 @@ export interface IntentAlignment {
   intent_present: boolean
 }
 
+export interface StarterGuideItem {
+  action: string
+  reason: string
+  ai_prompt?: string
+}
+
 export interface VibeInsights {
   detected: boolean
   axes?: VibeAxis[]
   timeline?: TimelineEntry[]
   ai_narrative?: string
-  starter_guide?: { action: string; reason: string }[]
+  starter_guide?: StarterGuideItem[]
   intent_alignment?: IntentAlignment
 }
 

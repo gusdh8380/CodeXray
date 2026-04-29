@@ -29,6 +29,7 @@ from ..metrics import build_metrics
 from ..metrics import to_json as metrics_to_json
 from ..quality import build_quality
 from ..quality import to_json as quality_to_json
+from ..architecture import build_architecture_view
 from ..dashboard import build_dashboard
 from ..dashboard import to_html as dashboard_to_html
 from ..report import build_report
@@ -127,6 +128,10 @@ def create_v2_router() -> APIRouter:
         return _validate_path_or_run(
             req, lambda p: _decode(vibe_to_json(build_vibe_coding_report(p)))
         )
+
+    @router.post("/api/architecture")
+    async def architecture_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(req, build_architecture_view)
 
     @router.post("/api/dashboard")
     async def dashboard_endpoint(req: PathRequest) -> JSONResponse:

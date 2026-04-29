@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { Moon, Sun } from "lucide-react"
+import { FolderOpen, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { applyTheme, readTheme, type Theme } from "@/lib/theme"
+import { browseFolder } from "@/lib/api"
 import { getRecentPaths } from "@/lib/recent-paths"
 
 interface HeaderProps {
@@ -29,6 +30,13 @@ export function Header({ path, onPathChange, onSubmit, isAnalyzing }: HeaderProp
     applyTheme(next)
   }
 
+  async function handleBrowse() {
+    const result = await browseFolder()
+    if (result.path) {
+      onPathChange(result.path)
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (path.trim() && !isAnalyzing) onSubmit(path.trim())
@@ -50,6 +58,17 @@ export function Header({ path, onPathChange, onSubmit, isAnalyzing }: HeaderProp
             disabled={isAnalyzing}
             aria-label="레포 경로"
           />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleBrowse}
+            disabled={isAnalyzing}
+            aria-label="폴더 선택"
+            title="폴더 선택 (macOS)"
+          >
+            <FolderOpen className="h-4 w-4" />
+          </Button>
           {recents.length > 0 && (
             <select
               className="h-10 rounded-md border bg-background px-2 text-sm"

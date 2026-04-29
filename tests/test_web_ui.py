@@ -203,30 +203,33 @@ def test_review_status_unknown_job_returns_error() -> None:
     assert "review job not found" in response.text
 
 
-def test_browse_folder_updates_path_input(monkeypatch) -> None:
+def test_browse_folder_returns_chosen_path_json(monkeypatch) -> None:
+    import codexray.web.folder_picker as folder_picker
+
     monkeypatch.setattr(
-        routes,
+        folder_picker,
         "choose_folder",
         lambda: FolderPickerResult("/tmp/example"),
     )
     client = TestClient(create_app())
     response = client.post("/api/browse-folder")
     assert response.status_code == 200
-    assert 'hx-swap-oob="true"' in response.text
-    assert 'value="/tmp/example"' in response.text
+    payload = response.json()
+    assert payload == {"path": "/tmp/example"}
 
 
-def test_browse_folder_cancel_keeps_input(monkeypatch) -> None:
+def test_browse_folder_cancelled_returns_json_flag(monkeypatch) -> None:
+    import codexray.web.folder_picker as folder_picker
+
     monkeypatch.setattr(
-        routes,
+        folder_picker,
         "choose_folder",
         lambda: FolderPickerResult(None, cancelled=True),
     )
     client = TestClient(create_app())
     response = client.post("/api/browse-folder")
     assert response.status_code == 200
-    assert "Folder selection cancelled" in response.text
-    assert "path-input" not in response.text
+    assert response.json() == {"cancelled": True}
 
 
 def test_insights_unavailable_when_no_adapter(tmp_path: Path, monkeypatch) -> None:

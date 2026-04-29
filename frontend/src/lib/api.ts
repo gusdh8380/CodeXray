@@ -116,6 +116,28 @@ export async function getBriefingStatus(jobId: string): Promise<BriefingJobStatu
   return res.json()
 }
 
+export interface BrowseFolderResult {
+  path?: string
+  cancelled?: boolean
+  error?: string
+}
+
+export async function browseFolder(): Promise<BrowseFolderResult> {
+  const res = await fetch(`${API_BASE}/api/browse-folder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) {
+    try {
+      const body = await res.json()
+      return { error: body?.error || `폴더 선택 실패: ${res.status}` }
+    } catch {
+      return { error: `폴더 선택 실패: ${res.status}` }
+    }
+  }
+  return res.json()
+}
+
 export async function fetchTab<T = unknown>(tab: string, path: string): Promise<T> {
   const res = await fetch(`${API_BASE}/api/${tab}`, {
     method: "POST",

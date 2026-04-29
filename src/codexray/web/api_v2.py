@@ -138,6 +138,17 @@ def create_v2_router() -> APIRouter:
     async def report_endpoint(req: PathRequest) -> JSONResponse:
         return _validate_path_or_run(req, _build_report_payload)
 
+    @router.post("/api/browse-folder")
+    async def browse_folder_endpoint() -> JSONResponse:
+        from .folder_picker import choose_folder
+
+        result = choose_folder()
+        if result.cancelled:
+            return JSONResponse({"cancelled": True})
+        if result.error:
+            return JSONResponse({"error": result.error}, status_code=400)
+        return JSONResponse({"path": result.path})
+
     return router
 
 

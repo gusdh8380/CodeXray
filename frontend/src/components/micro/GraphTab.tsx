@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useTabData } from "@/components/micro/useTabData"
 import { ForceView } from "@/components/micro/architecture/ForceView"
 import { LayeredView } from "@/components/micro/architecture/LayeredView"
+import { HullView } from "@/components/micro/architecture/HullView"
 import { ModuleLegend } from "@/components/micro/architecture/ModuleLegend"
 import type { ArchitectureView } from "@/lib/architecture"
 import { cn } from "@/lib/utils"
@@ -17,7 +18,7 @@ interface ViewSpec {
 const VIEWS: ViewSpec[] = [
   { id: "force", label: "힘 기반", desc: "연결 관계가 잘 보임" },
   { id: "layered", label: "레이어드", desc: "흐름 방향이 잘 보임" },
-  { id: "hull", label: "모듈 헐", desc: "준비 중", disabled: true },
+  { id: "hull", label: "모듈 헐", desc: "모듈 경계가 한눈에 보임" },
   { id: "bundling", label: "방사형 번들", desc: "준비 중", disabled: true },
 ]
 
@@ -82,6 +83,7 @@ export function GraphTab({ path }: Props) {
 
       {view === "force" && <ForceView data={state.data} height={680} />}
       {view === "layered" && <LayeredView data={state.data} height={760} />}
+      {view === "hull" && <HullView data={state.data} height={720} />}
     </div>
   )
 }

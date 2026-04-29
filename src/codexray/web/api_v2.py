@@ -29,6 +29,8 @@ from ..metrics import build_metrics
 from ..metrics import to_json as metrics_to_json
 from ..quality import build_quality
 from ..quality import to_json as quality_to_json
+from ..vibe import build_vibe_coding_report
+from ..vibe import to_json as vibe_to_json
 from .briefing_payload import build_briefing_payload
 from .jobs import (
     AIBriefingJob,
@@ -110,6 +112,12 @@ def create_v2_router() -> APIRouter:
     @router.post("/api/hotspots")
     async def hotspots_endpoint(req: PathRequest) -> JSONResponse:
         return _validate_path_or_run(req, lambda p: _decode(hotspots_to_json(build_hotspots(p))))
+
+    @router.post("/api/vibe-coding")
+    async def vibe_endpoint(req: PathRequest) -> JSONResponse:
+        return _validate_path_or_run(
+            req, lambda p: _decode(vibe_to_json(build_vibe_coding_report(p)))
+        )
 
     return router
 

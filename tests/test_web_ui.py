@@ -90,7 +90,6 @@ def test_deterministic_endpoints_return_fragments(tmp_path: Path) -> None:
     htmx_only_endpoints = [
         "/api/overview",
         "/api/report",
-        "/api/vibe-coding",
     ]
     for endpoint in htmx_only_endpoints:
         response = client.post(endpoint, data={"path": str(tmp_path)})
@@ -141,7 +140,7 @@ def test_briefing_endpoint_returns_job_id_json(tmp_path: Path) -> None:
     assert isinstance(payload.get("job_id"), str) and payload["job_id"]
 
 
-def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> None:
+def test_vibe_coding_endpoint_returns_json_report(tmp_path: Path) -> None:
     _make_tree(tmp_path)
     (tmp_path / "AGENTS.md").write_text("# agent rules\n")
     (tmp_path / ".claude" / "skills").mkdir(parents=True)
@@ -150,16 +149,14 @@ def test_vibe_coding_endpoint_renders_non_developer_report(tmp_path: Path) -> No
     (tmp_path / ".omc" / "project-memory.json").write_text("{}\n")
 
     client = TestClient(create_app())
-    response = client.post("/api/vibe-coding", data={"path": str(tmp_path)})
+    response = client.post("/api/vibe-coding", json={"path": str(tmp_path)})
 
     assert response.status_code == 200
-    assert 'data-codexray-vibe="report"' in response.text
-    assert "Vibe Coding" in response.text
-    assert "잘한 점" in response.text
-    assert "주의할 점" in response.text
-    assert "다음 행동" in response.text
-    assert "에이전트 지침" in response.text
-    assert "AGENTS.md" in response.text
+    payload = response.json()
+    assert payload["confidence"] in {"low", "medium", "high"}
+    assert isinstance(payload.get("evidence"), list) and payload["evidence"]
+    paths = {e["path"] for e in payload["evidence"]}
+    assert any(p.endswith("AGENTS.md") for p in paths)
 
 
 def test_review_endpoint_is_opt_in(tmp_path: Path) -> None:

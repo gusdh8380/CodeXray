@@ -344,9 +344,8 @@ def make_cache_key(root: Path, evidence_json: str, adapter_id: str) -> str:
 
 
 def _cache_dir() -> Path:
-    base = Path(os.environ.get("CODEXRAY_CACHE_DIR", "")) or (
-        Path.home() / ".cache" / "codexray" / "ai-briefing"
-    )
+    override = os.environ.get("CODEXRAY_CACHE_DIR", "").strip()
+    base = Path(override) if override else Path.home() / ".cache" / "codexray" / "ai-briefing"
     base.mkdir(parents=True, exist_ok=True)
     return base
 

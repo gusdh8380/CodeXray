@@ -124,31 +124,37 @@ function Timeline({
   entries: { day: number; type: string; title: string; evidence?: string }[]
 }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+    <div className="rounded-lg border bg-card p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">
         개발 과정 타임라인
       </div>
-      <ol className="space-y-2 max-h-72 overflow-y-auto pr-2">
+      <ol className="relative space-y-5 max-h-96 overflow-y-auto pr-2">
+        <span
+          className="absolute left-[7px] top-1.5 bottom-1.5 w-px bg-border"
+          aria-hidden
+        />
         {entries.map((entry, i) => (
-          <li key={i} className="flex items-start gap-3 text-sm">
+          <li key={i} className="relative flex items-start gap-4 text-sm">
             <span
               className={cn(
-                "mt-1 h-2 w-2 rounded-full shrink-0",
+                "relative z-10 mt-1 h-4 w-4 rounded-full shrink-0 ring-4 ring-card",
                 TIMELINE_TYPE_COLOR[entry.type] || "bg-slate-500",
               )}
             />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[10px] uppercase">
+                  {TIMELINE_TYPE_LABEL[entry.type] || entry.type}
+                </Badge>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   Day {entry.day}
                 </span>
-                <Badge variant="outline" className="text-[10px]">
-                  {TIMELINE_TYPE_LABEL[entry.type] || entry.type}
-                </Badge>
               </div>
-              <div className="font-medium truncate">{entry.title}</div>
+              <div className="font-medium leading-snug">{entry.title}</div>
               {entry.evidence && (
-                <div className="text-xs text-muted-foreground truncate">{entry.evidence}</div>
+                <div className="text-xs text-muted-foreground font-mono break-all">
+                  {entry.evidence}
+                </div>
               )}
             </div>
           </li>

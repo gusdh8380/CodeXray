@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Lightbulb } from "lucide-react"
 import { AxisBreakdown } from "@/components/briefing/AxisBreakdown"
-import type { VibeInsights } from "@/lib/api"
+import { BlindSpotBlock } from "@/components/briefing/BlindSpotBlock"
+import { ProcessProxiesPanel } from "@/components/briefing/ProcessProxiesPanel"
+import { EvaluationPhilosophyToggle } from "@/components/briefing/EvaluationPhilosophyToggle"
+import type { VibeAxis, VibeAxisState, VibeInsights } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 const TIMELINE_TYPE_LABEL: Record<string, string> = {
@@ -23,6 +25,43 @@ const TIMELINE_TYPE_COLOR: Record<string, string> = {
   retro: "bg-amber-500",
 }
 
+const STATE_LABEL: Record<VibeAxisState, string> = {
+  strong: "강함",
+  moderate: "보통",
+  weak: "약함",
+  unknown: "판단유보",
+}
+
+const STATE_RANK: Record<VibeAxisState, number> = {
+  unknown: 0,
+  weak: 1,
+  moderate: 2,
+  strong: 3,
+}
+
+const STATE_STYLES: Record<VibeAxisState, { dot: string; text: string; ring: string }> = {
+  strong: {
+    dot: "bg-emerald-500",
+    text: "text-emerald-700 dark:text-emerald-400",
+    ring: "ring-emerald-500/30",
+  },
+  moderate: {
+    dot: "bg-amber-500",
+    text: "text-amber-700 dark:text-amber-400",
+    ring: "ring-amber-500/30",
+  },
+  weak: {
+    dot: "bg-rose-500",
+    text: "text-rose-700 dark:text-rose-400",
+    ring: "ring-rose-500/30",
+  },
+  unknown: {
+    dot: "bg-slate-400",
+    text: "text-slate-600 dark:text-slate-400",
+    ring: "ring-slate-400/30",
+  },
+}
+
 interface Props {
   data: VibeInsights
 }
@@ -35,12 +74,25 @@ export function VibeInsightsSection({ data }: Props) {
           Vibe Coding ★
         </div>
         <h2 className="text-2xl font-bold tracking-tight">바이브코딩 인사이트</h2>
+        <p className="text-sm text-muted-foreground italic">
+          슬로건: <strong>"주인이 있는 프로젝트"</strong>
+        </p>
 
         {!data.detected ? (
           <StarterGuide guide={data.starter_guide ?? []} />
         ) : (
           <DetectedView data={data} />
         )}
+
+        {data.process_proxies && (
+          <ProcessProxiesPanel proxies={data.process_proxies} />
+        )}
+
+        {data.blind_spots && data.blind_spots.length > 0 && (
+          <BlindSpotBlock items={data.blind_spots} />
+        )}
+
+        <EvaluationPhilosophyToggle />
       </CardContent>
     </Card>
   )
@@ -48,15 +100,15 @@ export function VibeInsightsSection({ data }: Props) {
 
 function DetectedView({ data }: { data: VibeInsights }) {
   const axes = data.axes ?? []
-  const weakest = axes.reduce<typeof axes[number] | null>((acc, axis) => {
-    if (!acc || axis.score < acc.score) return axis
+  const weakest = axes.reduce<VibeAxis | null>((acc, axis) => {
+    if (!acc || STATE_RANK[axis.state] < STATE_RANK[acc.state]) return axis
     return acc
   }, null)
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        AI 협업 흔적이 감지되었습니다. 세 축으로 평가합니다.
+        AI 협업 흔적이 감지되었습니다. 의도 / 검증 / 이어받기 세 축으로 평가합니다.
       </p>
 
       <div className="grid gap-3 md:grid-cols-3">
@@ -110,50 +162,49 @@ function IntentAlignmentCard({
   )
 }
 
-function AxisCard({
-  axis,
-  isWeakest,
-}: {
-  axis: import("@/lib/api").VibeAxis
-  isWeakest: boolean
-}) {
-  const scoreColor =
-    axis.score >= 70 ? "text-emerald-600" : axis.score >= 40 ? "text-amber-600" : "text-rose-600"
+function AxisCard({ axis, isWeakest }: { axis: VibeAxis; isWeakest: boolean }) {
+  const styles = STATE_STYLES[axis.state]
   return (
     <div
       className={cn(
         "rounded-lg border p-4 space-y-3",
-        isWeakest && "border-rose-500/40 bg-rose-500/5",
+        isWeakest && axis.state !== "strong" && "border-rose-500/40 bg-rose-500/5",
       )}
     >
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold">{axis.label}</div>
-        {isWeakest && (
+        {isWeakest && axis.state !== "strong" && (
           <Badge variant="destructive" className="text-[10px]">
             약점
           </Badge>
         )}
       </div>
-      <div>
-        <div className={cn("text-3xl font-bold", scoreColor)}>{axis.score}</div>
-        <div className="text-[10px] text-muted-foreground uppercase">/ 100</div>
+      <div className="flex items-center gap-2">
+        <span className={cn("h-3 w-3 rounded-full", styles.dot)} />
+        <span className={cn("text-lg font-bold", styles.text)}>
+          {STATE_LABEL[axis.state]}
+        </span>
       </div>
-      <Progress value={axis.score} />
-      {axis.score_band && (
-        <p className="text-[11px] text-muted-foreground italic leading-snug border-l-2 border-muted-foreground/20 pl-2">
-          {axis.score_band}
-        </p>
-      )}
-      {axis.breakdown && axis.breakdown.length > 0 ? (
-        <AxisBreakdown items={axis.breakdown} />
-      ) : (
-        axis.weaknesses.length > 0 && (
-          <ul className="text-xs text-muted-foreground space-y-0.5 mt-2">
-            {axis.weaknesses.slice(0, 3).map((w, i) => (
-              <li key={i}>• {w}</li>
+      <div className="text-xs text-muted-foreground">
+        신호 {axis.signal_count}/{axis.signal_pool_size}개
+      </div>
+      {axis.top_signals && axis.top_signals.length > 0 && (
+        <div className="space-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            대표 근거
+          </div>
+          <ul className="text-xs space-y-0.5">
+            {axis.top_signals.slice(0, 3).map((sig, i) => (
+              <li key={i} className="flex items-start gap-1.5">
+                <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
+                <span className="leading-snug">{sig}</span>
+              </li>
             ))}
           </ul>
-        )
+        </div>
+      )}
+      {axis.breakdown && axis.breakdown.length > 0 && (
+        <AxisBreakdown items={axis.breakdown} />
       )}
     </div>
   )

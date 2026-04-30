@@ -6,15 +6,18 @@ import {
   ArrowRight,
   Boxes,
   Check,
+  CheckCircle2,
   Code2,
   Copy,
+  HelpCircle,
   Sparkles,
   Sprout,
 } from "lucide-react"
-import type { NextAction, NextActionCategory } from "@/lib/api"
+import type { NextAction, NextActionCategory, ZeroActionState } from "@/lib/api"
 
 interface Props {
   actions: NextAction[]
+  zeroActionState?: ZeroActionState | null
 }
 
 const CATEGORY_ORDER: NextActionCategory[] = ["code", "structural", "vibe_coding"]
@@ -40,7 +43,7 @@ const CATEGORY_META: Record<
   },
 }
 
-export function NextActionsSection({ actions }: Props) {
+export function NextActionsSection({ actions, zeroActionState }: Props) {
   const grouped = groupByCategory(actions)
   const hasAny = actions.length > 0
 
@@ -55,7 +58,7 @@ export function NextActionsSection({ actions }: Props) {
         <ReviewWarningBanner />
 
         {!hasAny ? (
-          <p className="text-sm text-muted-foreground">추천 행동이 없습니다.</p>
+          <ZeroActionView state={zeroActionState ?? null} />
         ) : (
           <div className="space-y-6">
             {CATEGORY_ORDER.map((cat) => {
@@ -67,6 +70,45 @@ export function NextActionsSection({ actions }: Props) {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function ZeroActionView({ state }: { state: ZeroActionState | null }) {
+  if (!state || state.kind === "silent") {
+    return (
+      <p className="text-sm text-muted-foreground">
+        고확신 추천이 없습니다. 추가 정보가 필요할 수 있어요.
+      </p>
+    )
+  }
+  if (state.kind === "praise") {
+    return (
+      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+        <div className="flex items-start gap-2.5">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              잘 갖춰져 있습니다
+            </div>
+            <p className="text-sm leading-relaxed">{state.message}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  // judgment_pending
+  return (
+    <div className="rounded-lg border border-slate-500/30 bg-slate-500/5 p-4">
+      <div className="flex items-start gap-2.5">
+        <HelpCircle className="h-5 w-5 text-slate-600 dark:text-slate-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            판단 보류
+          </div>
+          <p className="text-sm leading-relaxed">{state.message}</p>
+        </div>
+      </div>
+    </div>
   )
 }
 

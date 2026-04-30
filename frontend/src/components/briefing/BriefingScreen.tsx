@@ -47,7 +47,10 @@ export function BriefingScreen({ data }: Props) {
 
       <VibeInsightsSection data={data.vibe_insights} />
 
-      <NextActionsSection actions={data.next_actions} />
+      <NextActionsSection
+        actions={data.next_actions}
+        zeroActionState={data.zero_action_state}
+      />
 
       <MicroAnalysisArea path={data.path} />
     </div>

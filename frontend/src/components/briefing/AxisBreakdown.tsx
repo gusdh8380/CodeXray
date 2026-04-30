@@ -1,9 +1,9 @@
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { AxisBreakdownItem } from "@/lib/api"
+import type { VibeSignal } from "@/lib/api"
 
 interface Props {
-  items: AxisBreakdownItem[]
+  items: VibeSignal[]
 }
 
 export function AxisBreakdown({ items }: Props) {
@@ -14,40 +14,27 @@ export function AxisBreakdown({ items }: Props) {
         <li
           key={i}
           className="flex items-start gap-2 text-xs"
-          title={item.hint}
+          title={item.evidence}
         >
           <span
             className={cn(
               "mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full shrink-0",
-              item.satisfied
+              item.present
                 ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                 : "bg-rose-500/15 text-rose-700 dark:text-rose-400",
             )}
           >
-            {item.satisfied ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+            {item.present ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
           </span>
           <span className="flex-1 leading-snug">
-            <span className={cn(!item.satisfied && "text-muted-foreground")}>{item.label}</span>
-          </span>
-          <span
-            className={cn(
-              "font-mono tabular-nums shrink-0",
-              item.satisfied
-                ? item.delta > 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-muted-foreground"
-                : "text-rose-600 dark:text-rose-400",
+            <span className={cn(!item.present && "text-muted-foreground")}>
+              {item.label}
+            </span>
+            {item.evidence && (
+              <span className="block text-[10px] text-muted-foreground italic mt-0.5">
+                {item.evidence}
+              </span>
             )}
-          >
-            {item.satisfied
-              ? item.delta > 0
-                ? `+${item.delta}`
-                : item.delta < 0
-                  ? `${item.delta}`
-                  : "0"
-              : item.delta > 0
-                ? `−${item.delta}`
-                : "0"}
           </span>
         </li>
       ))}

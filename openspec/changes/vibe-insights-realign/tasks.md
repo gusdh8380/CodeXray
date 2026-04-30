@@ -56,46 +56,44 @@
 
 ## 8. 프론트엔드 — 4단계 상태 표시
 
-- [ ] 8.1 `frontend/src/components/micro/VibeCodingTab.tsx` (또는 `BriefingScreen.tsx` 의 vibe coding 섹션) — 점수 0-100 표시 컴포넌트 → 4 단계 상태 라벨 + 신호 개수 + 대표 근거 컴포넌트로 교체
-- [ ] 8.2 상태별 색상·아이콘 매핑 (강함=초록, 보통=황, 약함=빨강, 판단유보=회색) — 색맹 보조용 라벨 텍스트도 함께
-- [ ] 8.3 0-100 점수는 디버그 토글에서만 노출 (또는 완전 비노출. 구현 단계 판단)
+- [x] 8.1 `VibeInsightsSection.tsx` 의 `AxisCard` 재작성 — 점수 0-100 → 4 단계 상태 라벨 + 신호 개수 + 대표 근거
+- [x] 8.2 상태별 색상 매핑 — `STATE_STYLES` (강함=초록 / 보통=황 / 약함=빨강 / 판단유보=회색) + 라벨 텍스트
+- [x] 8.3 0-100 원시 점수는 payload `_raw_score` 에 보존하되 화면 미노출
 
 ## 9. 프론트엔드 — 카드 0–3개 동적 + zero-action 메시지
 
-- [ ] 9.1 `NextActionsSection.tsx` — `next_actions` 빈 리스트 + `zero_action_state` 분기 처리 추가
-- [ ] 9.2 `praise` 분기 — "유지할 습관" 한 줄 카드 (배경 톤 다르게, 초록 계열)
-- [ ] 9.3 `judgment_pending` 분기 — "코드만 봐선 추가 진단 어려움" 메시지 카드 (배경 톤 회색)
-- [ ] 9.4 `silent` 분기 — 영역 자체 숨김 또는 보조 텍스트만
+- [x] 9.1 `NextActionsSection.tsx` — `zeroActionState` prop 추가, 빈 리스트 분기에서 `ZeroActionView` 렌더
+- [x] 9.2 `praise` 분기 — `CheckCircle2` 아이콘 + 초록 계열 박스 + 메시지 노출
+- [x] 9.3 `judgment_pending` 분기 — `HelpCircle` 아이콘 + 회색 계열 박스
+- [x] 9.4 `silent` 분기 — 보조 텍스트 한 줄
 
 ## 10. 프론트엔드 — blind spot 고정 블록
 
-- [ ] 10.1 신규 컴포넌트 `BlindSpotBlock.tsx` 추가
-- [ ] 10.2 `payload.blind_spots` 의 항목들을 자가 점검 체크리스트 톤으로 렌더
-- [ ] 10.3 위치: `NextActionsSection` 직후 또는 vibe coding 섹션 하단 (구현 시 가독성 보고 결정)
-- [ ] 10.4 톤: "이 셋은 코드만 봐서는 판단 못 합니다. 화면 상태와 무관하게 자가 점검해 주세요" 같은 자가 책임 환기 표현
+- [x] 10.1 신규 컴포넌트 `BlindSpotBlock.tsx`
+- [x] 10.2 `payload.vibe_insights.blind_spots` 4 항목 자가 점검 체크리스트로 렌더
+- [x] 10.3 위치: vibe coding 섹션 하단 (`VibeInsightsSection` 안에서)
+- [x] 10.4 톤: "이 항목들은 코드만 봐서는 판단할 수 없습니다. 화면 상태와 무관하게 직접 자가 점검해 주세요"
 
 ## 11. 프론트엔드 — process proxies 보조 패널
 
-- [ ] 11.1 신규 컴포넌트 `ProcessProxiesPanel.tsx` 추가 (collapsable 토글 또는 작은 글씨 보조)
-- [ ] 11.2 헤더에 "참고용 — 단독 판정 근거 아님" 명시
-- [ ] 11.3 vibe coding 섹션 안에서 *축 상태 라벨 옆이 아니라* 별도 영역에 배치
+- [x] 11.1 신규 컴포넌트 `ProcessProxiesPanel.tsx` (collapsable, 기본 접힘)
+- [x] 11.2 헤더: `참고용 — 단독 판정 근거 아님` (백엔드 note 인용)
+- [x] 11.3 vibe coding 섹션 안 별도 영역 (축 상태 카드와 분리)
 
 ## 12. 슬로건 노출 (선택)
 
-- [ ] 12.1 vibe coding 섹션 헤더 또는 intent_alignment 옆에 슬로건 한 줄 ("주인이 있는 프로젝트") 노출
-- [ ] 12.2 hover/클릭 시 운영 정의 (외부화된 의도 / 독립 검증 / 인간 최종 판단) 표시 — 구현 단계 판단
+- [x] 12.1 vibe coding 섹션 헤더 아래에 슬로건 한 줄 노출 (italic, "주인이 있는 프로젝트")
+- [-] 12.2 hover/클릭 시 운영 정의 표시 — 철학 토글이 같은 역할 함, 중복 회피로 미구현
 
 ## 12b. 평가 철학 토글 (Decision 10)
 
-- [ ] 12b.1 신규 컴포넌트 `EvaluationPhilosophyToggle.tsx` 추가 — collapsable, 기본 접힘
-- [ ] 12b.2 라벨: "이 도구가 바이브코딩을 어떻게 평가하나요?"
-- [ ] 12b.3 위치: vibe coding 섹션 최하단 (blind spot 블록 아래)
-- [ ] 12b.4 콘텐츠 8 sub-section 렌더 (사용자 검토 후 확정된 텍스트):
-      슬로건 → 운영 정의 → 8 신호 → 3축 매핑 → 4 단계 상태 의미 →
-      카드 수 정책 → 사각지대 → 출처
-- [ ] 12b.5 콘텐츠는 *정적 텍스트* (분석 결과 의존 X) — 별도 모듈 (`philosophy_content.ts` 또는 markdown 파일) 로 분리
-- [ ] 12b.6 출처 인용은 영어 원문 그대로 표시 OK (한국어 번역 병기는 선택)
-- [ ] 12b.7 비개발자 청자 톤 유지 (메트릭 용어 직접 사용 금지, codebase-briefing 톤 규칙 준수)
+- [x] 12b.1 신규 컴포넌트 `EvaluationPhilosophyToggle.tsx` (collapsable, 기본 접힘)
+- [x] 12b.2 라벨: "이 도구가 바이브코딩을 어떻게 평가하나요?"
+- [x] 12b.3 위치: vibe coding 섹션 최하단 (`VibeInsightsSection` 안)
+- [x] 12b.4 콘텐츠 8 sub-section 모두 렌더 (사용자 검토 통과 콘텐츠)
+- [x] 12b.5 콘텐츠는 컴포넌트 내부 정적 텍스트 (분석 결과 의존 X) — 별도 모듈 분리는 추후 정리 시
+- [x] 12b.6 출처 인용 — Anthropic / OpenAI / Karpathy / Simon Willison / Kent Beck 등 한 줄씩
+- [x] 12b.7 비개발자 청자 톤 유지 — 메트릭 용어 사용 안 함
 
 ## 13. 테스트 보강
 

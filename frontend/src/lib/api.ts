@@ -57,13 +57,44 @@ export interface AxisBreakdownItem {
   hint: string
 }
 
+export type VibeAxisState = "strong" | "moderate" | "weak" | "unknown"
+
+export interface VibeSignal {
+  label: string
+  present: boolean
+  evidence: string
+}
+
 export interface VibeAxis {
   name: string
-  score: number
   label: string
+  state: VibeAxisState
+  signal_count: number
+  signal_pool_size: number
+  signal_ratio: number
+  top_signals: string[]
   weaknesses: string[]
-  breakdown?: AxisBreakdownItem[]
-  score_band?: string
+  breakdown?: VibeSignal[]
+  _raw_score?: number
+}
+
+export interface ProcessProxyItem {
+  label: string
+  value: string
+  raw: number
+}
+
+export interface ProcessProxies {
+  available: boolean
+  items: ProcessProxyItem[]
+  note: string
+}
+
+export type ZeroActionKind = "praise" | "judgment_pending" | "silent"
+
+export interface ZeroActionState {
+  kind: ZeroActionKind
+  message: string
 }
 
 export interface TimelineEntry {
@@ -91,6 +122,8 @@ export interface VibeInsights {
   ai_narrative?: string
   starter_guide?: StarterGuideItem[]
   intent_alignment?: IntentAlignment
+  blind_spots?: string[]
+  process_proxies?: ProcessProxies
 }
 
 export type NextActionCategory = "code" | "structural" | "vibe_coding"
@@ -111,6 +144,7 @@ export interface BriefingPayload {
   current_state: BriefingSection
   vibe_insights: VibeInsights
   next_actions: NextAction[]
+  zero_action_state: ZeroActionState | null
   ai_used: boolean
 }
 

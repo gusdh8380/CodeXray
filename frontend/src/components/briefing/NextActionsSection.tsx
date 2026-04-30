@@ -1,14 +1,49 @@
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Check, Copy, Sparkles } from "lucide-react"
-import type { NextAction } from "@/lib/api"
+import {
+  AlertTriangle,
+  ArrowRight,
+  Boxes,
+  Check,
+  Code2,
+  Copy,
+  Sparkles,
+  Sprout,
+} from "lucide-react"
+import type { NextAction, NextActionCategory } from "@/lib/api"
 
 interface Props {
   actions: NextAction[]
 }
 
+const CATEGORY_ORDER: NextActionCategory[] = ["code", "structural", "vibe_coding"]
+
+const CATEGORY_META: Record<
+  NextActionCategory,
+  { label: string; description: string; icon: typeof Code2 }
+> = {
+  code: {
+    label: "코드 측면",
+    description: "함수·모듈 내부 변경, 테스트 보강, 에러 처리",
+    icon: Code2,
+  },
+  structural: {
+    label: "구조 측면",
+    description: "모듈 분리, 의존성 정리, 아키텍처 개선",
+    icon: Boxes,
+  },
+  vibe_coding: {
+    label: "바이브코딩 측면",
+    description: "AI 협업 환경·프로세스·이어받기 보강",
+    icon: Sprout,
+  },
+}
+
 export function NextActionsSection({ actions }: Props) {
+  const grouped = groupByCategory(actions)
+  const hasAny = actions.length > 0
+
   return (
     <Card className="border-2 border-emerald-500/20">
       <CardContent className="space-y-6 px-8 py-2">
@@ -16,18 +51,78 @@ export function NextActionsSection({ actions }: Props) {
           Next Actions
         </div>
         <h2 className="text-2xl font-bold tracking-tight">지금 뭘 해야 해</h2>
-        {actions.length === 0 ? (
+
+        <ReviewWarningBanner />
+
+        {!hasAny ? (
           <p className="text-sm text-muted-foreground">추천 행동이 없습니다.</p>
         ) : (
-          <ol className="space-y-4">
-            {actions.map((a, i) => (
-              <ActionCard key={i} action={a} index={i} />
-            ))}
-          </ol>
+          <div className="space-y-6">
+            {CATEGORY_ORDER.map((cat) => {
+              const items = grouped[cat]
+              if (!items || items.length === 0) return null
+              return <CategoryGroup key={cat} category={cat} items={items} />
+            })}
+          </div>
         )}
       </CardContent>
     </Card>
   )
+}
+
+function ReviewWarningBanner() {
+  return (
+    <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+      <div className="flex items-start gap-2.5 text-sm text-amber-900 dark:text-amber-200">
+        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+        <p className="leading-relaxed">
+          <span className="font-semibold">검토 후 진행하세요. </span>
+          AI가 자동 생성한 추천이라 그대로 적용하면 부적절할 수 있습니다.
+          특히 결합도/Hotspot 같은 메트릭은 CLI/API 진입점 같은 파일에서 자연스럽게
+          높을 수 있으니 맥락을 함께 판단하세요.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function CategoryGroup({
+  category,
+  items,
+}: {
+  category: NextActionCategory
+  items: NextAction[]
+}) {
+  const meta = CATEGORY_META[category]
+  const Icon = meta.icon
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+        <h3 className="text-sm font-bold tracking-tight">{meta.label}</h3>
+        <span className="text-xs text-muted-foreground">{meta.description}</span>
+      </div>
+      <ol className="space-y-3">
+        {items.map((a, i) => (
+          <ActionCard key={`${category}-${i}`} action={a} index={i} />
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function groupByCategory(actions: NextAction[]): Record<NextActionCategory, NextAction[]> {
+  const grouped: Record<NextActionCategory, NextAction[]> = {
+    code: [],
+    structural: [],
+    vibe_coding: [],
+  }
+  for (const a of actions) {
+    const cat: NextActionCategory =
+      a.category === "structural" || a.category === "vibe_coding" ? a.category : "code"
+    grouped[cat].push(a)
+  }
+  return grouped
 }
 
 function ActionCard({ action, index }: { action: NextAction; index: number }) {

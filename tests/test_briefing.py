@@ -147,10 +147,20 @@ def test_briefing_payload_has_five_sections_and_schema_version(tmp_path: Path) -
 
     next_actions = payload["next_actions"]
     assert isinstance(next_actions, list) and next_actions
+    allowed_categories = {"code", "structural", "vibe_coding"}
     for action in next_actions:
         assert action["action"]
         assert action["reason"]
         assert action["evidence"]
+        assert action["category"] in allowed_categories
+    by_category: dict[str, list[dict]] = {}
+    for a in next_actions:
+        by_category.setdefault(a["category"], []).append(a)
+    for items in by_category.values():
+        assert len(items) <= 3
+    assert any(a["category"] == "vibe_coding" for a in next_actions), (
+        "vibe_coding 카테고리는 starter_guide(미감지) 또는 axes 약점(감지)에서 합성되어야 함"
+    )
 
 
 def test_briefing_payload_serializes_as_json(tmp_path: Path) -> None:

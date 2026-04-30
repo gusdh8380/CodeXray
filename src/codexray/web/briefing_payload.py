@@ -22,7 +22,9 @@ from ..vibe_insights import build_vibe_insights
 from .ai_briefing import AIBriefingResult
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+
+_PER_CATEGORY_LIMIT = 3
 
 
 def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str, Any]:
@@ -85,7 +87,7 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         grade=grade,
         hotspot_count=hotspots.summary.hotspot,
         top_hotspot=top_hotspot_path,
-        vibe_detected=vibe_insights["detected"],
+        vibe_insights=vibe_insights,
     )
 
     intent_alignment = (ai.intent_alignment if ai else "").strip()
@@ -257,57 +259,110 @@ def _build_next_actions(
     grade: str,
     hotspot_count: int,
     top_hotspot: str,
-    vibe_detected: bool,
-) -> list[dict[str, str]]:
+    vibe_insights: dict[str, Any],
+) -> list[dict[str, Any]]:
+    by_category: dict[str, list[dict[str, Any]]] = {
+        "code": [],
+        "structural": [],
+        "vibe_coding": [],
+    }
+
     structured = list(ai_actions) if ai_actions else []
-    if structured:
-        return [
+    for a in structured:
+        cat = a.category if a.category in {"code", "structural"} else "code"
+        if len(by_category[cat]) >= _PER_CATEGORY_LIMIT:
+            continue
+        by_category[cat].append(
             {
                 "action": a.action,
                 "reason": a.reason,
                 "evidence": a.evidence,
                 "ai_prompt": a.ai_prompt,
+                "category": cat,
             }
-            for a in structured[:3]
+        )
+
+    if not structured:
+        if hotspot_count > 0 and top_hotspot != "N/A":
+            by_category["code"].append(
+                {
+                    "action": f"{top_hotspot} 부터 리뷰",
+                    "reason": (
+                        "변경 빈도와 결합도가 모두 높아 다음 기능 추가 시 가장 먼저 깨질 위험이 "
+                        "있는 파일입니다."
+                    ),
+                    "evidence": f"Hotspot {hotspot_count}개 중 최상위, 우선순위 1위",
+                    "ai_prompt": "",
+                    "category": "code",
+                }
+            )
+        if grade in {"D", "F"}:
+            by_category["structural"].append(
+                {
+                    "action": "낮은 품질 등급의 원인 차원부터 보강",
+                    "reason": (
+                        "전체 등급이 낮을 때 우선 어떤 차원이 가장 약한지 식별하면 가장 적은 "
+                        "노력으로 평균을 올릴 수 있습니다."
+                    ),
+                    "evidence": f"종합 등급 {grade}",
+                    "ai_prompt": "",
+                    "category": "structural",
+                }
+            )
+
+    by_category["vibe_coding"].extend(_synthesize_vibe_coding_actions(vibe_insights))
+
+    return (
+        by_category["code"][:_PER_CATEGORY_LIMIT]
+        + by_category["structural"][:_PER_CATEGORY_LIMIT]
+        + by_category["vibe_coding"][:_PER_CATEGORY_LIMIT]
+    )
+
+
+_AXIS_LABEL = {
+    "environment": "환경 구축",
+    "process": "개발 과정",
+    "handoff": "이어받기",
+}
+
+
+def _synthesize_vibe_coding_actions(
+    vibe_insights: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not vibe_insights.get("detected"):
+        guide = vibe_insights.get("starter_guide", []) or []
+        return [
+            {
+                "action": item.get("action", ""),
+                "reason": item.get("reason", ""),
+                "evidence": "바이브코딩 신호 미감지 — 첫 걸음 추천",
+                "ai_prompt": item.get("ai_prompt", ""),
+                "category": "vibe_coding",
+            }
+            for item in guide[:_PER_CATEGORY_LIMIT]
+            if item.get("action")
         ]
 
-    actions: list[dict[str, str]] = []
-    if hotspot_count > 0 and top_hotspot != "N/A":
-        actions.append(
-            {
-                "action": f"{top_hotspot} 부터 리뷰",
-                "reason": (
-                    "변경 빈도와 결합도가 모두 높아 다음 기능 추가 시 가장 먼저 깨질 위험이 "
-                    "있는 파일입니다."
-                ),
-                "evidence": f"Hotspot {hotspot_count}개 중 최상위, 우선순위 1위",
-            }
-        )
-    if grade in {"D", "F"}:
-        actions.append(
-            {
-                "action": "낮은 품질 등급의 원인 차원부터 보강",
-                "reason": (
-                    "전체 등급이 낮을 때 우선 어떤 차원이 가장 약한지 식별하면 가장 적은 "
-                    "노력으로 평균을 올릴 수 있습니다."
-                ),
-                "evidence": f"종합 등급 {grade}",
-            }
-        )
-    if not vibe_detected:
-        actions.append(
-            {
-                "action": "CLAUDE.md 한 페이지부터 작성",
-                "reason": "AI 협업 흔적이 없는 상태에서 가장 적은 비용으로 시작할 수 있는 첫 단계입니다.",
-                "evidence": "바이브코딩 신호 미감지",
-            }
-        )
-    if not actions:
-        actions.append(
-            {
-                "action": "프로젝트 사용자 인터뷰로 의도 검증",
-                "reason": "현재 구조와 품질이 안정적이므로 다음 우선순위는 만드는 사람과 쓰는 사람의 합의 검증입니다.",
-                "evidence": "주요 위험 신호 없음",
-            }
-        )
-    return actions[:3]
+    axes = vibe_insights.get("axes") or []
+    if not axes:
+        return []
+    weakest = min(axes, key=lambda ax: ax.get("score", 0))
+    weaknesses = list(weakest.get("weaknesses") or [])
+    if not weaknesses:
+        return []
+    axis_name = str(weakest.get("name") or "")
+    axis_label = _AXIS_LABEL.get(axis_name, axis_name or "바이브코딩 축")
+    score = weakest.get("score", 0)
+    return [
+        {
+            "action": f"{weakness} 보완",
+            "reason": (
+                f"{axis_label} 축이 가장 약합니다(점수 {score}). "
+                "이 항목을 채우면 바이브코딩 진단의 가장 큰 갭이 좁혀집니다."
+            ),
+            "evidence": f"바이브코딩 3축 — {axis_label} 약점",
+            "ai_prompt": "",
+            "category": "vibe_coding",
+        }
+        for weakness in weaknesses[:_PER_CATEGORY_LIMIT]
+    ]

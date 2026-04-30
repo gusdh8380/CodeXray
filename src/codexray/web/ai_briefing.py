@@ -25,8 +25,10 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 
-PROMPT_VERSION = "v4-plain-lang-intent-prompt"
-SCHEMA_VERSION = 4
+PROMPT_VERSION = "v5-categorized-actions"
+SCHEMA_VERSION = 5
+
+_ALLOWED_CATEGORIES = {"code", "structural", "vibe_coding"}
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
@@ -53,6 +55,7 @@ class AINextAction:
     reason: str
     evidence: str
     ai_prompt: str = ""
+    category: str = "code"
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,10 +253,11 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
       "action": "구체적이고 실행 가능한 행동 한 줄",
       "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에'로 인과 연결",
       "evidence": "분석에서 인용한 근거 (등급/파일명/수치/커밋)",
-      "ai_prompt": "비개발자가 Claude/Codex CLI에 그대로 복사·붙여넣기 할 수 있는 자연어 명령. 예: 'src/foo.py를 두 부분으로 나누세요. 1) 데이터 가져오기 2) 화면 그리기. 변경 후 기존 동작이 그대로 유지되어야 합니다.'"
+      "ai_prompt": "비개발자가 Claude/Codex CLI에 그대로 복사·붙여넣기 할 수 있는 자연어 명령. 예: 'src/foo.py를 두 부분으로 나누세요. 1) 데이터 가져오기 2) 화면 그리기. 변경 후 기존 동작이 그대로 유지되어야 합니다.'",
+      "category": "code 또는 structural 중 하나. code는 함수/모듈 내부 변경(테스트 보강·에러 처리·로직 정리 등), structural은 모듈 분리·의존성 정리·아키텍처 변경"
     }},
-    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "..." }},
-    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "..." }}
+    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "...", "category": "code | structural" }},
+    {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "...", "category": "code | structural" }}
   ],
   "key_insight": "코드를 읽고 발견한 가장 중요한 한 가지 통찰 (의도/구조 차원)",
   "intent_alignment": "docs/intent.md 또는 README가 있다면 그 내용과 현재 코드의 일치/불일치를 한 문단으로 짚어라. 의도와 결과 사이의 갭을 구체적으로. 의도 문서가 없으면 빈 문자열을 반환"
@@ -266,6 +270,8 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
 3. 수치 (예: 'Hotspot 23개', '테스트 0점')는 인용하되 의미를 함께 풀어줄 것
 4. next_actions의 ai_prompt 필드는 비개발자가 그대로 AI에게 복사해서 보낼 수 있는 자연어 작업 지시여야 함 (코드 작성 지침)
 5. intent_alignment는 의도 문서가 있을 때만 채우고, 의도와 코드 사이의 구체적 갭을 짚을 것
+6. next_actions의 category 필드는 반드시 "code" 또는 "structural" 중 하나로 채울 것. "vibe_coding" 카테고리는 시스템이 별도로 채우니 **절대 생성하지 말 것**
+7. next_actions는 카테고리당 최대 3개, 합쳐서 최대 6개 (vibe_coding은 시스템이 별도로 추가). 카테고리가 비어있어도 OK (해당 카테고리에 추천할 게 없으면 그 카테고리 항목 자체를 생략)
 
 레포 자료:
 
@@ -321,6 +327,9 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
             reason = str(item.get("reason", "")).strip()
             evidence = str(item.get("evidence", "")).strip()
             ai_prompt = str(item.get("ai_prompt", "")).strip()
+            category = str(item.get("category", "code")).strip()
+            if category not in _ALLOWED_CATEGORIES:
+                category = "code"
             if not action:
                 continue
             actions.append(
@@ -329,6 +338,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
                     reason=reason or "AI 해석에서 도출된 우선 행동입니다.",
                     evidence=evidence or "근거 인용 없음",
                     ai_prompt=ai_prompt,
+                    category=category,
                 )
             )
         elif isinstance(item, str):
@@ -340,6 +350,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
                         reason="AI 해석에서 도출된 우선 행동입니다.",
                         evidence="근거 인용 없음",
                         ai_prompt="",
+                        category="code",
                     )
                 )
     return tuple(actions)
@@ -382,6 +393,11 @@ def cache_get(key: str) -> AIBriefingResult | None:
                     reason=str(a["reason"]),
                     evidence=str(a["evidence"]),
                     ai_prompt=str(a.get("ai_prompt", "")),
+                    category=(
+                        str(a.get("category", "code"))
+                        if str(a.get("category", "code")) in _ALLOWED_CATEGORIES
+                        else "code"
+                    ),
                 )
                 for a in data["next_actions"]
             ),
@@ -409,6 +425,7 @@ def cache_put(key: str, result: AIBriefingResult) -> None:
                         "reason": a.reason,
                         "evidence": a.evidence,
                         "ai_prompt": a.ai_prompt,
+                        "category": a.category,
                     }
                     for a in result.next_actions
                 ],

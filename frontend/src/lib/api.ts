@@ -93,11 +93,14 @@ export interface VibeInsights {
   intent_alignment?: IntentAlignment
 }
 
+export type NextActionCategory = "code" | "structural" | "vibe_coding"
+
 export interface NextAction {
   action: string
   reason: string
   evidence: string
   ai_prompt?: string
+  category: NextActionCategory
 }
 
 export interface BriefingPayload {

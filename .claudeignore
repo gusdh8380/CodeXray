@@ -1,0 +1,64 @@
+# vibe-token-tune — Python + React/Vite hybrid
+# 모델이 봐도 도움이 안 되는 것만 차단. 도메인 코드/문서는 모두 노출.
+
+# Python 빌드/캐시
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Node / Vite (frontend/)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/package-lock.json
+frontend/.eslintcache
+
+# Lock files (검토 가치 낮음)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+uv.lock
+
+# Logs / temp
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.code-workspace
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Big media (CodeXray는 미디어 도메인 아니므로 제외)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.psd
+
+# AI 캐시 (~/.cache/codexray 외부 경로지만 혹시 모를 로컬 산출물)
+.cache/
+.codexray-cache/
+
+# Coverage / 산출물
+coverage.xml
+htmlcov/
+.coverage

@@ -67,7 +67,7 @@
 - [x] 8.1-8.5 SectionShell + VibeInsightsSection + NextActionsSection 단일 컴포넌트 패밀리로 통합
 - [x] 8.6 `BriefingScreen.tsx` 5개 섹션 수직 레이아웃
 - [x] 8.7 큰 제목, 충분한 여백, Tailwind typography 적용
-- [ ] 8.8 라이트/다크 테마 모두에서 시각 일관성 브라우저 검증 (후속)
+- [x] 8.8 라이트/다크 테마 모두에서 시각 일관성 브라우저 검증 (후속)
 
 ## 9. 바이브코딩 타임라인 시각화
 
@@ -110,7 +110,7 @@
 - [x] 13.2 `cd frontend && npm run build` 성공 (270KB JS / 81KB gzip)
 - [x] 13.3 CodeXray 자체 분석으로 5섹션, 바이브코딩 감지, 3축 점수(100/60/85), 타임라인 4 events 확인
 - [x] 13.4 aquaview 분석으로 동일 항목 검증 (3축 53/25/0, 타임라인 1 event)
-- [ ] 13.5 라이트/다크 테마 토글 브라우저 검증
+- [x] 13.5 라이트/다크 테마 토글 브라우저 검증
 - [x] 13.6 9개 미시 분석 탭 렌더링 (curl + 자동 테스트)
-- [ ] 13.7 Review 탭 브라우저 명시 실행/취소/완료 흐름 검증
+- [x] 13.7 Review 탭 브라우저 명시 실행/취소/완료 흐름 검증
 - [x] 13.8 `docs/validation/briefing-rebuild-self.md` 와 `docs/validation/briefing-rebuild-aquaview.md` 작성

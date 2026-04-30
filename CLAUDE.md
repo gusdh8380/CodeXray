@@ -30,7 +30,7 @@ uv run codexray serve --no-browser
 
 ## Current Sprint
 
-**briefing-rebuild** 변경 ~85% 완료. 비개발자 학습 도구 v1 출시 (breakdown / intent alignment / AI 프롬프트 복사). 잔여: 라이트/다크 브라우저 검증, 잔여 htmx 정리.
+활성 OpenSpec 변경 없음. **briefing-rebuild** 2026-04-30 archive 완료 (5섹션 SPA + 바이브코딩 3축 + 비개발자 학습 도구 v1 모두 main spec에 흡수). 다음 변경 propose 시 archive 사례 참고.
 
 ## Load on Demand
 
@@ -38,7 +38,8 @@ uv run codexray serve --no-browser
 
 - `docs/intent.md` — 프로젝트 Why / What / Not (의도공학 1차 자료)
 - `AGENTS.md` — 에이전트별 역할 분리 (176줄)
-- `openspec/changes/briefing-rebuild/` — 현재 진행 변경의 proposal/design/specs/tasks
+- `openspec/changes/archive/2026-04-30-briefing-rebuild/` — 직전 대형 변경 (proposal/design/specs/tasks)
+- `openspec/specs/` — 현재 capability spec (codebase-briefing, web-ui, react-frontend, vibe-coding-insights 등)
 - `docs/validation/briefing-rebuild-self.md` — 최근 자체 검증 결과
 - `docs/validation/briefing-rebuild-aquaview.md` — aquaview 레포 검증
 - `docs/constraints.md` — 기술 제약

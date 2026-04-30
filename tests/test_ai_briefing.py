@@ -92,9 +92,10 @@ def test_parse_next_actions_string_form_defaults_to_code() -> None:
     assert result.next_actions[0].category == "code"
 
 
-def test_parse_next_actions_vibe_coding_category_passes_through() -> None:
-    # AI is told not to generate vibe_coding, but if it does, parser keeps the
-    # value as-is. Filtering happens at the payload-builder layer.
+def test_parse_next_actions_vibe_coding_category_demoted_to_code() -> None:
+    # AI is told not to generate vibe_coding (system synthesizes it from
+    # vibe_insights data). If AI accidentally returns vibe_coding the parser
+    # demotes it to code so behavior is consistent across parser and payload.
     result = parse_ai_briefing_response(
         _wrap(
             _payload_with_actions(
@@ -112,4 +113,4 @@ def test_parse_next_actions_vibe_coding_category_passes_through() -> None:
         backend="codex",
     )
     assert result is not None
-    assert result.next_actions[0].category == "vibe_coding"
+    assert result.next_actions[0].category == "code"

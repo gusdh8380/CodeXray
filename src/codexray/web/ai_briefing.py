@@ -28,7 +28,9 @@ from ..quality import build_quality
 PROMPT_VERSION = "v5-categorized-actions"
 SCHEMA_VERSION = 5
 
-_ALLOWED_CATEGORIES = {"code", "structural", "vibe_coding"}
+# vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서만 합성한다.
+# AI 응답에 vibe_coding 이 들어와도 code 로 강등 — design.md D2 결정 일관 적용.
+_AI_AI_ALLOWED_CATEGORIES = {"code", "structural"}
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
@@ -328,7 +330,7 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
             evidence = str(item.get("evidence", "")).strip()
             ai_prompt = str(item.get("ai_prompt", "")).strip()
             category = str(item.get("category", "code")).strip()
-            if category not in _ALLOWED_CATEGORIES:
+            if category not in _AI_ALLOWED_CATEGORIES:
                 category = "code"
             if not action:
                 continue
@@ -395,7 +397,7 @@ def cache_get(key: str) -> AIBriefingResult | None:
                     ai_prompt=str(a.get("ai_prompt", "")),
                     category=(
                         str(a.get("category", "code"))
-                        if str(a.get("category", "code")) in _ALLOWED_CATEGORIES
+                        if str(a.get("category", "code")) in _AI_ALLOWED_CATEGORIES
                         else "code"
                     ),
                 )

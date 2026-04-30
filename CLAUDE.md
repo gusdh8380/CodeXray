@@ -30,7 +30,11 @@ uv run codexray serve --no-browser
 
 ## Current Sprint
 
-활성 OpenSpec 변경 없음. **briefing-rebuild** + **categorized-next-actions** 2026-04-30 archive 완료. 후자는 다음 행동 3 카테고리(코드/구조/바이브코딩) + 검토 경고 배너 + Codex review 사이클 도입. 다음 변경 후보: cross-platform-distribution (Windows/Linux 지원 + 설치 가이드 + AI 어댑터 graceful degradation).
+활성 OpenSpec 변경: **`vibe-insights-realign`** (proposal 단계, 2026-05-01 시작). 3 축 재설계 (environment/process/handoff → intent/verification/continuity), 점수 0-100 → 4 단계 상태, 카드 수 동적 0-3, blind spot 상시 노출, ai_prompt 라벨 두 개 갱신.
+
+직전 archive: **briefing-persona-split** (2026-04-30) — 페르소나 분리 + ai_prompt 6 라벨 3단 구조 + 폴백 파서. 본 변경의 기반.
+
+이전 archive: **briefing-rebuild** + **categorized-next-actions** (2026-04-30).
 
 ## Load on Demand
 

@@ -21,7 +21,7 @@ from ..vibe import build_vibe_coding_report
 from ..vibe_insights import build_vibe_insights
 from .ai_briefing import AIBriefingResult
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 _PER_CATEGORY_LIMIT = 3
 
@@ -64,20 +64,20 @@ def _build_low_grade_prompt(grade: str) -> str:
 
 
 def _build_vibe_axis_weakness_prompt(
-    weakness: str, axis_label: str, score: int
+    weakness: str, axis_label: str, state: str
 ) -> str:
     return (
         "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
         f"[지금 상황] 바이브코딩 진단에서 '{axis_label}' 축이 가장 약합니다 "
-        f"(점수 {score}/100). 그 축의 약점 중 하나가 '{weakness}' 입니다.\n"
+        f"(상태 {state}). 그 축에서 빠진 항목 중 하나가 '{weakness}' 입니다.\n"
         f"[해줄 일] '{weakness}' 를 보완해 주세요. "
-        "어떻게 보완할지 모르겠으면 먼저 'CodeXray 가 이 약점을 왜 지적했는지, "
+        "어떻게 보완할지 모르겠으면 먼저 'CodeXray 가 이 항목을 왜 지적했는지, "
         "구체적으로 무엇을 만들거나 고쳐야 하는지 설명해줘' 라고 AI 에게 물어 "
         "이해부터 잡고 시작하세요.\n"
-        "[끝나고 확인] 1) 약점에 해당하는 새 파일/설정이 생겼거나 기존 항목이 "
+        "[끝나고 확인] 1) 빠진 항목에 해당하는 새 파일/설정이 생겼거나 기존 항목이 "
         "보완됐는지, 2) 기존 코드/문서는 어떤 것도 의도치 않게 변경되지 않았는지 "
         "확인해 주세요.\n"
-        "[건드리지 말 것] 이번 약점 외 다른 영역은 다음 세션에서 다루세요."
+        "[건드리지 말 것] 이번 항목 외 다른 영역은 다음 세션에서 다루세요."
     )
 
 
@@ -374,10 +374,12 @@ def _build_next_actions(
 
 
 _AXIS_LABEL = {
-    "environment": "환경 구축",
-    "process": "개발 과정",
-    "handoff": "이어받기",
+    "intent": "의도",
+    "verification": "검증",
+    "continuity": "이어받기",
 }
+
+_STATE_RANK = {"unknown": 0, "weak": 1, "moderate": 2, "strong": 3}
 
 
 def _synthesize_vibe_coding_actions(
@@ -400,23 +402,23 @@ def _synthesize_vibe_coding_actions(
     axes = vibe_insights.get("axes") or []
     if not axes:
         return []
-    weakest = min(axes, key=lambda ax: ax.get("score", 0))
+    weakest = min(axes, key=lambda ax: _STATE_RANK.get(ax.get("state", "unknown"), 0))
     weaknesses = list(weakest.get("weaknesses") or [])
     if not weaknesses:
         return []
     axis_name = str(weakest.get("name") or "")
     axis_label = _AXIS_LABEL.get(axis_name, axis_name or "바이브코딩 축")
-    score = weakest.get("score", 0)
+    state = weakest.get("state", "unknown")
     return [
         {
             "action": f"{weakness} 보완",
             "reason": (
-                f"{axis_label} 축이 가장 약합니다(점수 {score}). "
+                f"{axis_label} 축이 가장 약합니다 (상태 {state}). "
                 "이 항목을 채우면 바이브코딩 진단의 가장 큰 갭이 좁혀집니다."
             ),
-            "evidence": f"바이브코딩 3축 — {axis_label} 약점",
+            "evidence": f"바이브코딩 3축 — {axis_label} 빠진 항목",
             "ai_prompt": _build_vibe_axis_weakness_prompt(
-                weakness=weakness, axis_label=axis_label, score=score
+                weakness=weakness, axis_label=axis_label, state=state
             ),
             "category": "vibe_coding",
         }

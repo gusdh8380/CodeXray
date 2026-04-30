@@ -33,14 +33,34 @@ def test_detect_vibe_coding_no_signal(tmp_path: Path) -> None:
 
 def test_build_vibe_insights_detected_returns_three_axes(tmp_path: Path) -> None:
     _make_simple_tree(tmp_path)
-    (tmp_path / "CLAUDE.md").write_text("# agent\n")
+    (tmp_path / "CLAUDE.md").write_text("# agent\n" + "x" * 600)  # exceed _MIN_GUIDE_SIZE
     (tmp_path / "openspec").mkdir()
     payload = _run(tmp_path)
     assert payload["detected"] is True
     axis_names = {a["name"] for a in payload["axes"]}
-    assert axis_names == {"environment", "process", "handoff"}
+    assert axis_names == {"intent", "verification", "continuity"}
     for axis in payload["axes"]:
-        assert 0 <= axis["score"] <= 100
+        assert axis["state"] in {"strong", "moderate", "weak", "unknown"}
+        assert axis["signal_pool_size"] == 3
+        assert 0 <= axis["signal_count"] <= 3
+        assert 0.0 <= axis["signal_ratio"] <= 1.0
+
+
+def test_build_vibe_insights_detected_includes_blind_spots_and_proxies(
+    tmp_path: Path,
+) -> None:
+    # Decision 6 + 8 — blind_spots 항상 4 항목, process_proxies 분리.
+    _make_simple_tree(tmp_path)
+    (tmp_path / "CLAUDE.md").write_text("# agent\n" + "x" * 600)
+    (tmp_path / "openspec").mkdir()
+    payload = _run(tmp_path)
+    assert payload["detected"] is True
+    assert "blind_spots" in payload
+    assert isinstance(payload["blind_spots"], list)
+    assert len(payload["blind_spots"]) == 4
+    assert "process_proxies" in payload
+    proxies = payload["process_proxies"]
+    assert "available" in proxies and "items" in proxies and "note" in proxies
 
 
 def test_build_vibe_insights_not_detected_returns_starter_guide(tmp_path: Path) -> None:

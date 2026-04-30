@@ -1,344 +1,442 @@
-"""Three-axis vibe-coding scoring (environment / process / handoff).
+"""Three-axis vibe-coding evaluation: intent / verification / continuity.
 
-Each axis returns a breakdown list so the SPA can show *why* a score is what
-it is — every check item carries its delta and whether the repo satisfied it.
+Each axis evaluates a non-negotiable aspect of "주인이 있는 프로젝트":
+- intent: 외부화된 의도 — 새 AI 세션이 맥락 없이도 이어받을 수 있는가
+- verification: 독립 검증 — 결과를 사람이 직접 확인할 수 있는가
+- continuity: 이어받기 — 다음 세션이 진행을 이어갈 수 있는가
+
+Returns a 4-level state (strong / moderate / weak / unknown) instead of a
+0–100 score so the false precision trap is avoided. Raw ratio is preserved
+in `_raw_score` for debugging.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
+# State thresholds (ratio of detected signals over pool size).
+_STRONG_RATIO = 0.7
+_MODERATE_RATIO = 0.4
+_WEAK_RATIO = 0.1
 
-def _item(label: str, delta: int, satisfied: bool, hint: str = "") -> dict[str, Any]:
-    return {"label": label, "delta": delta, "satisfied": satisfied, "hint": hint}
+# Minimum size for an AI guide doc to count as "충실도 충족".
+_MIN_GUIDE_SIZE = 500
 
-
-_SCORE_BANDS = {
-    "environment": {
-        "high": "성숙: 에이전트 지침과 명세 체계가 모두 갖춰진 상태. AI가 매 세션 바로 일을 시작할 수 있음",
-        "mid": "보통: 기본 지침은 있지만 명세 체계나 세부 설정이 빠져 있음",
-        "low": "초기: AI가 매번 프로젝트 맥락을 처음부터 추론해야 하는 상태",
-    },
-    "process": {
-        "high": "성숙: 명세 → 빌드 → 검증 사이클이 git에 누적되고 fix 비율도 낮음",
-        "mid": "보통: 일부 프로세스 흔적은 있지만 fix 빈도나 hotspot 누적이 아쉬움",
-        "low": "초기: 프로세스 흔적이 거의 없고 코드만 빠르게 쌓이는 패턴",
-    },
-    "handoff": {
-        "high": "성숙: 검증·회고·인수인계 문서와 테스트가 모두 갖춰져 다음 세션이 즉시 이어받을 수 있음",
-        "mid": "보통: 일부 문서는 있지만 검증 또는 회고가 비어 있음",
-        "low": "초기: 다음 AI가 '여기까지 어디까지 했지?'를 알아낼 단서가 거의 없음",
-    },
-}
-
-
-def _score_band(name: str, score: int) -> str:
-    bands = _SCORE_BANDS.get(name, {})
-    if score >= 70:
-        return bands.get("high", "")
-    if score >= 40:
-        return bands.get("mid", "")
-    return bands.get("low", "")
+# README purpose detection keywords (English + Korean).
+_PURPOSE_KEYWORDS = (
+    "what",
+    "purpose",
+    "why",
+    "이 프로젝트",
+    "이 도구",
+    "이 라이브러리",
+    "this is",
+    "we built",
+    "designed to",
+    "정체",
+    "무엇",
+    "역할",
+)
 
 
-def axis_environment(*, root: Path, vibe: Any) -> dict[str, Any]:
-    """Score how well the repo is set up for AI to work in."""
-    breakdown: list[dict[str, Any]] = []
-    weaknesses: list[str] = []
+def _file_exists(root: Path, path: str) -> bool:
+    p = root / path
+    return p.exists() and p.is_file()
 
-    has_claude = (root / "CLAUDE.md").exists()
-    breakdown.append(
-        _item(
-            "CLAUDE.md (에이전트 지침서)",
-            30,
-            has_claude,
-            "AI가 매번 프로젝트 맥락을 다시 파악하지 않게 해주는 가장 중요한 파일",
-        )
-    )
-    if not has_claude:
-        weaknesses.append("CLAUDE.md 없음")
 
-    has_agents = (root / "AGENTS.md").exists()
-    breakdown.append(
-        _item(
-            "AGENTS.md (에이전트별 역할 분리)",
-            15,
-            has_agents,
-            "여러 AI 에이전트를 함께 쓰는 경우 누가 뭘 하는지 분리한 문서",
-        )
-    )
+def _dir_exists(root: Path, path: str) -> bool:
+    p = root / path
+    return p.exists() and p.is_dir()
 
-    has_claude_dir = (root / ".claude").exists()
-    breakdown.append(
-        _item(
-            ".claude/ 설정 폴더",
-            15,
-            has_claude_dir,
-            "Claude Code의 도구 권한·환경 설정",
-        )
-    )
 
-    has_openspec = (root / "openspec").exists()
-    breakdown.append(
-        _item(
-            "openspec/ 명세 체계",
-            25,
-            has_openspec,
-            "변경마다 명세부터 쓰는 구조화된 워크플로우",
-        )
-    )
-    if not has_openspec:
-        weaknesses.append("OpenSpec 명세 체계 없음")
+def _file_size(root: Path, path: str) -> int:
+    p = root / path
+    if not p.exists() or not p.is_file():
+        return 0
+    try:
+        return p.stat().st_size
+    except OSError:
+        return 0
 
-    confidence_label, confidence_delta = _confidence_score(vibe.confidence)
-    breakdown.append(
-        _item(
-            f"vibe 분석기 신뢰도 ({confidence_label})",
-            confidence_delta,
-            confidence_delta > 0,
-            "파일·git 흔적 종합 신뢰도 (낮음/중간/높음)",
-        )
-    )
 
-    score = sum(item["delta"] for item in breakdown if item["satisfied"])
-    score = max(0, min(score, 100))
+def _read_text_safe(root: Path, path: str, *, max_chars: int = 5000) -> str:
+    p = root / path
+    if not p.exists() or not p.is_file():
+        return ""
+    try:
+        return p.read_text(encoding="utf-8", errors="replace")[:max_chars]
+    except OSError:
+        return ""
+
+
+def _has_purpose_paragraph(readme_text: str) -> bool:
+    """README가 'what / why / 이 프로젝트는' 같은 의도 표현을 첫 단락에 포함하는가."""
+    if not readme_text or len(readme_text) < 200:
+        return False
+    paras = [p.strip() for p in readme_text.split("\n\n") if p.strip()][:5]
+    head = "\n".join(paras).lower()
+    return any(kw.lower() in head for kw in _PURPOSE_KEYWORDS)
+
+
+def _signal(label: str, present: bool, evidence: str = "") -> dict[str, Any]:
+    return {"label": label, "present": present, "evidence": evidence}
+
+
+# --- intent 축 sub-categories ---
+
+_AI_GUIDE_FILES = (
+    "CLAUDE.md",
+    "AGENTS.md",
+    ".cursorrules",
+    ".windsurfrules",
+    ".aider.conf.yml",
+    ".github/copilot-instructions.md",
+)
+_AI_GUIDE_DIRS = (".cursor/rules", ".continue", ".windsurf")
+
+
+def _check_ai_guide_doc(root: Path) -> dict[str, Any]:
+    """Sub-cat 1 of intent: AI 지속 지시 문서 1종 이상 + 충실도."""
+    found: list[str] = []
+    for path in _AI_GUIDE_FILES:
+        if _file_exists(root, path) and _file_size(root, path) >= _MIN_GUIDE_SIZE:
+            found.append(path)
+    for d in _AI_GUIDE_DIRS:
+        if _dir_exists(root, d):
+            found.append(f"{d}/")
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "AI 지속 지시 문서 없음"
+    return _signal("AI 지속 지시 문서", present, evidence)
+
+
+_PROJECT_INTENT_FILES = (
+    "docs/intent.md",
+    "VISION.md",
+    "ABOUT.md",
+    "PROJECT.md",
+    "OVERVIEW.md",
+    "openspec/project.md",
+)
+
+
+def _check_project_intent_doc(root: Path) -> dict[str, Any]:
+    """Sub-cat 2 of intent: 프로젝트 의도 문서 1종 이상 (README purpose 문단 포함)."""
+    found: list[str] = []
+    for path in _PROJECT_INTENT_FILES:
+        if _file_exists(root, path):
+            found.append(path)
+    if not found:
+        readme_text = _read_text_safe(root, "README.md")
+        if _has_purpose_paragraph(readme_text):
+            found.append("README.md (purpose 문단)")
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "프로젝트 의도 문서 없음"
+    return _signal("프로젝트 의도 문서", present, evidence)
+
+
+def _check_intent_vs_non_intent(root: Path) -> dict[str, Any]:
+    """Sub-cat 3 of intent: 의도와 비의도(Not / Out of Scope / ADR / decision log)."""
+    found: list[str] = []
+    for intent_path in ("docs/intent.md", "openspec/project.md"):
+        if _file_exists(root, intent_path):
+            text = _read_text_safe(root, intent_path)
+            if re.search(
+                r"^##+\s*(Not|Non[- ]?Goals|Out of Scope|하지 않을)",
+                text,
+                re.MULTILINE | re.IGNORECASE,
+            ):
+                found.append(f"{intent_path} 의 Not 섹션")
+    if _dir_exists(root, "docs/adr") or _dir_exists(root, "docs/decisions"):
+        found.append("ADR / decisions 디렉토리")
+    if _file_exists(root, "CHANGELOG.md"):
+        text = _read_text_safe(root, "CHANGELOG.md")
+        if len(text) > 1000 and re.search(r"because|reason|이유|why", text, re.IGNORECASE):
+            found.append("CHANGELOG.md (reasoning)")
+    proposal_dir = root / "openspec" / "changes"
+    if proposal_dir.exists():
+        try:
+            for p in proposal_dir.rglob("proposal.md"):
+                text = p.read_text(encoding="utf-8", errors="replace")[:2000]
+                if re.search(r"^##\s*Why", text, re.MULTILINE):
+                    found.append("openspec proposal Why")
+                    break
+        except (OSError, ValueError):
+            pass
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "의도+비의도 명문화 없음"
+    return _signal("의도와 비의도 명문화", present, evidence)
+
+
+# --- verification 축 sub-categories ---
+
+def _check_manual_validation(root: Path) -> dict[str, Any]:
+    """Sub-cat 1 of verification: 손 검증 흔적."""
+    found: list[str] = []
+    if _dir_exists(root, "docs/validation"):
+        found.append("docs/validation/")
+    for d in ("screenshots", "screenshot", "demo", "docs/demo", "docs/screenshots"):
+        if _dir_exists(root, d):
+            found.append(f"{d}/")
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "손 검증 흔적 없음"
+    return _signal("손 검증 흔적", present, evidence)
+
+
+_TEST_DIRS = ("tests", "test", "__tests__", "spec")
+_CI_PATHS = (
+    (".github/workflows", True),
+    (".gitlab-ci.yml", False),
+    (".circleci", True),
+    ("Jenkinsfile", False),
+    ("azure-pipelines.yml", False),
+)
+
+
+def _check_test_and_ci(root: Path) -> dict[str, Any]:
+    """Sub-cat 2 of verification: 자동 테스트 + CI."""
+    found: list[str] = []
+    for d in _TEST_DIRS:
+        if _dir_exists(root, d):
+            found.append(f"{d}/")
+            break
+    for path, is_dir in _CI_PATHS:
+        if (is_dir and _dir_exists(root, path)) or (not is_dir and _file_exists(root, path)):
+            found.append(path + ("/" if is_dir else ""))
+            break
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "자동 테스트 / CI 없음"
+    return _signal("자동 테스트와 CI", present, evidence)
+
+
+def _check_runnable_path(root: Path) -> dict[str, Any]:
+    """Sub-cat 3 of verification: 재현 가능 실행 경로."""
+    found: list[str] = []
+    readme = _read_text_safe(root, "README.md")
+    if re.search(
+        r"```(?:bash|sh|shell)?\s*\n[^`]*?(?:npm|pnpm|yarn|pip|poetry|cargo|make|go|python|node)\s+\w+",
+        readme,
+    ):
+        found.append("README 명령 블록")
+    pkg_text = _read_text_safe(root, "package.json", max_chars=2000)
+    if pkg_text and '"scripts"' in pkg_text:
+        found.append("package.json scripts")
+    pyproject = _read_text_safe(root, "pyproject.toml", max_chars=3000)
+    if pyproject and ("[project.scripts]" in pyproject or "[tool.poetry.scripts]" in pyproject):
+        found.append("pyproject.toml scripts")
+    if _file_exists(root, "Makefile"):
+        found.append("Makefile")
+    if _file_exists(root, "justfile") or _file_exists(root, ".justfile"):
+        found.append("justfile")
+    if _file_exists(root, "Dockerfile"):
+        found.append("Dockerfile")
+    if _file_exists(root, "docker-compose.yml") or _file_exists(root, "docker-compose.yaml"):
+        found.append("docker-compose")
+    for env in (".env.example", ".env.sample", "env.example"):
+        if _file_exists(root, env):
+            found.append(env)
+            break
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "재현 가능 실행 경로 없음"
+    return _signal("재현 가능 실행 경로", present, evidence)
+
+
+# --- continuity 축 sub-categories ---
+
+def _check_small_continuity(root: Path, history: Any) -> dict[str, Any]:
+    """Sub-cat 1 of continuity: 작게 쪼개고 이어갈 수 있다."""
+    found: list[str] = []
+    for p in ("openspec/changes", "PLANS.md", "TODO.md", "ROADMAP.md", ".github/ISSUE_TEMPLATE"):
+        if _dir_exists(root, p) or _file_exists(root, p):
+            found.append(p)
+    if history.available and history.commit_count >= 5:
+        found.append(f"git history ({history.commit_count}개 커밋)")
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "작게 이어가기 흔적 없음"
+    return _signal("작게 이어가기", present, evidence)
+
+
+def _check_learning_capture(root: Path, history: Any) -> dict[str, Any]:
+    """Sub-cat 2 of continuity: 실패에서 배운 흔적이 다음 변경에 반영."""
+    found: list[str] = []
+    for d in ("docs/retro", "docs/postmortem", "docs/lessons", "docs/vibe-coding"):
+        if _dir_exists(root, d):
+            found.append(f"{d}/")
+    if _file_exists(root, "CHANGELOG.md"):
+        found.append("CHANGELOG.md")
+    if history.available and history.process_commits:
+        process_count = len(history.process_commits)
+        if process_count > 0:
+            found.append(f"프로세스 커밋 ({process_count}개)")
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "학습 반영 흔적 없음"
+    return _signal("학습 반영", present, evidence)
+
+
+def _check_handoff_doc(root: Path) -> dict[str, Any]:
+    """Sub-cat 3 of continuity: 핸드오프 문서."""
+    found: list[str] = []
+    for path in ("HANDOFF.md", "ONBOARDING.md", "CONTRIBUTING.md", "docs/handoff"):
+        if _file_exists(root, path) or _dir_exists(root, path):
+            found.append(path)
+    present = len(found) > 0
+    evidence = ", ".join(found[:3]) if found else "핸드오프 문서 없음"
+    return _signal("핸드오프 문서", present, evidence)
+
+
+# --- State derivation ---
+
+def _state_from_signals(
+    signals: list[dict[str, Any]],
+    *,
+    core_satisfied: bool,
+) -> tuple[str, int, int, float]:
+    """Compute (state, signal_count, pool_size, ratio).
+
+    state: strong (ratio ≥ 0.7 AND core_satisfied) > moderate (≥ 0.4) >
+    weak (≥ 0.1) > unknown (0 or empty pool).
+    """
+    pool_size = len(signals)
+    if pool_size == 0:
+        return "unknown", 0, 0, 0.0
+    signal_count = sum(1 for s in signals if s["present"])
+    ratio = signal_count / pool_size
+    if signal_count == 0:
+        return "unknown", 0, pool_size, 0.0
+    if ratio >= _STRONG_RATIO and core_satisfied:
+        return "strong", signal_count, pool_size, ratio
+    if ratio >= _MODERATE_RATIO:
+        return "moderate", signal_count, pool_size, ratio
+    if ratio >= _WEAK_RATIO:
+        return "weak", signal_count, pool_size, ratio
+    return "weak", signal_count, pool_size, ratio
+
+
+def _build_axis(
+    *,
+    name: str,
+    label: str,
+    signals: list[dict[str, Any]],
+    core_satisfied: bool,
+) -> dict[str, Any]:
+    state, count, pool, ratio = _state_from_signals(signals, core_satisfied=core_satisfied)
+    top_signals = [s["evidence"] for s in signals if s["present"]][:3]
+    weaknesses = [s["label"] for s in signals if not s["present"]]
     return {
-        "name": "environment",
-        "label": "환경 구축",
-        "score": score,
-        "weaknesses": weaknesses[:3],
-        "breakdown": breakdown,
-        "score_band": _score_band("environment", score),
+        "name": name,
+        "label": label,
+        "state": state,
+        "signal_count": count,
+        "signal_pool_size": pool,
+        "signal_ratio": round(ratio, 2),
+        "top_signals": top_signals,
+        "weaknesses": weaknesses,
+        "breakdown": signals,
+        "_raw_score": int(ratio * 100),
     }
 
 
-def _confidence_score(confidence: str) -> tuple[str, int]:
-    if confidence == "high":
-        return "높음", 15
-    if confidence == "medium":
-        return "중간", 8
-    return "낮음", 0
+# --- Public axes API ---
+
+def axis_intent(*, root: Path) -> dict[str, Any]:
+    """의도 축 — 외부화된 의도가 있는가."""
+    signals = [
+        _check_ai_guide_doc(root),
+        _check_project_intent_doc(root),
+        _check_intent_vs_non_intent(root),
+    ]
+    # 핵심 신호: AI 지속 지시 문서 + 프로젝트 의도 문서 — 둘 다 있어야 strong 가능.
+    core = signals[0]["present"] and signals[1]["present"]
+    return _build_axis(name="intent", label="의도", signals=signals, core_satisfied=core)
 
 
-def axis_process(*, history: Any, hotspots: Any, quality: Any) -> dict[str, Any]:
-    """Score whether AI development stayed on track during build."""
-    breakdown: list[dict[str, Any]] = []
-    weaknesses: list[str] = []
-    score = 50  # baseline
-    breakdown.append(
-        _item(
-            "기본 점수",
-            50,
-            True,
-            "git history가 없어도 기본 50점에서 시작",
-        )
-    )
+def axis_verification(*, root: Path) -> dict[str, Any]:
+    """검증 축 — 결과를 독립적으로 확인할 수 있는가."""
+    signals = [
+        _check_manual_validation(root),
+        _check_test_and_ci(root),
+        _check_runnable_path(root),
+    ]
+    # 핵심 신호: 자동 테스트+CI + 재현 가능 실행 경로 — 둘 다 있어야 strong 가능.
+    core = signals[1]["present"] and signals[2]["present"]
+    return _build_axis(name="verification", label="검증", signals=signals, core_satisfied=core)
+
+
+def axis_continuity(*, root: Path, history: Any) -> dict[str, Any]:
+    """이어받기 축 — 다음 세션이 이어갈 수 있는가."""
+    signals = [
+        _check_small_continuity(root, history),
+        _check_learning_capture(root, history),
+        _check_handoff_doc(root),
+    ]
+    # 핵심 신호: 작게 이어가기 sub-cat (saved plans) — strong 의 필수.
+    core = signals[0]["present"]
+    return _build_axis(name="continuity", label="이어받기", signals=signals, core_satisfied=core)
+
+
+# --- Process proxies (Decision 8) ---
+
+def build_process_proxies(*, history: Any, hotspots: Any) -> dict[str, Any]:
+    """약한 process proxy 정보를 보조 정보로 분리.
+
+    feat/fix 비율, 프로세스 커밋 비율, hotspot 누적 — Goodhart 위험이 있는 약한
+    proxy. 축 상태 결정에는 사용하지 않고 사용자에게 *참고용* 으로만 노출.
+    """
+    items: list[dict[str, Any]] = []
 
     if history.available and history.commit_count > 0:
         process_ratio = len(history.process_commits) / max(1, history.commit_count)
-        if process_ratio >= 0.15:
-            breakdown.append(
-                _item(
-                    f"프로세스 커밋 비율 충분 ({process_ratio*100:.0f}%)",
-                    25,
-                    True,
-                    "명세·검증·회고 같은 프로세스 커밋이 전체의 15% 이상",
-                )
-            )
-            score += 25
-        elif process_ratio >= 0.05:
-            breakdown.append(
-                _item(
-                    f"프로세스 커밋 비율 부분적 ({process_ratio*100:.0f}%)",
-                    10,
-                    True,
-                    "5~15% 사이 — 시작은 했지만 더 자주 누적되어야 함",
-                )
-            )
-            score += 10
-        else:
-            breakdown.append(
-                _item(
-                    f"프로세스 커밋 비율 낮음 ({process_ratio*100:.0f}%)",
-                    25,
-                    False,
-                    "15% 이상이면 가산. 명세/검증/회고 커밋이 거의 없으면 0",
-                )
-            )
-            weaknesses.append("프로세스 커밋 비율이 매우 낮음")
-
+        items.append(
+            {
+                "label": "프로세스 커밋 비율",
+                "value": f"{process_ratio*100:.0f}%",
+                "raw": round(process_ratio, 3),
+            }
+        )
         type_dist = {e.label: int(e.value) for e in history.type_distribution}
         feat_count = type_dist.get("feat", 0)
         fix_count = type_dist.get("fix", 0)
         if feat_count > 0:
-            fix_ratio = fix_count / feat_count
-            if fix_ratio > 0.6:
-                breakdown.append(
-                    _item(
-                        f"fix 비율 과도 (fix {fix_count}/feat {feat_count})",
-                        -20,
-                        True,
-                        "fix가 feat의 60%를 넘으면 AI가 자주 빗나갔다는 신호",
-                    )
-                )
-                score -= 20
-                weaknesses.append(
-                    f"fix 대비 feat 비율이 높음 (fix {fix_count}/feat {feat_count})"
-                )
-            elif fix_ratio > 0.3:
-                breakdown.append(
-                    _item(
-                        f"fix 비율 보통 (fix {fix_count}/feat {feat_count})",
-                        -8,
-                        True,
-                        "30~60% 사이 — 큰 문제는 아니지만 회고 거리",
-                    )
-                )
-                score -= 8
-            else:
-                breakdown.append(
-                    _item(
-                        f"fix 비율 양호 (fix {fix_count}/feat {feat_count})",
-                        0,
-                        True,
-                        "30% 미만이면 AI가 의도대로 잘 달린 신호",
-                    )
-                )
-    else:
-        breakdown.append(
-            _item(
-                "git history 없음",
-                -10,
-                False,
-                "히스토리가 있어야 과정 추론 가능",
+            items.append(
+                {
+                    "label": "fix/feat 비율",
+                    "value": (
+                        f"{fix_count}/{feat_count} ({fix_count/feat_count*100:.0f}%)"
+                    ),
+                    "raw": round(fix_count / feat_count, 3),
+                }
             )
-        )
-        weaknesses.append("git history 없음 — 과정 추론 불가")
-        score -= 10
 
-    if hotspots.summary.hotspot >= 10:
-        breakdown.append(
-            _item(
-                f"Hotspot 누적 ({hotspots.summary.hotspot}개)",
-                -15,
-                True,
-                "Hotspot이 10개 이상이면 자주 변경 + 결합 높은 파일이 누적된 상태",
-            )
-        )
-        score -= 15
-        weaknesses.append(f"Hotspot {hotspots.summary.hotspot}개 누적")
-    else:
-        breakdown.append(
-            _item(
-                f"Hotspot 적음 ({hotspots.summary.hotspot}개)",
-                0,
-                True,
-                "10개 미만 — 변경이 분산되어 있다는 신호",
-            )
+    if hotspots.summary.hotspot > 0:
+        items.append(
+            {
+                "label": "Hotspot 개수",
+                "value": str(hotspots.summary.hotspot),
+                "raw": hotspots.summary.hotspot,
+            }
         )
 
-    score = max(0, min(score, 100))
-    _ = quality  # reserved for future quality-driven adjustments
     return {
-        "name": "process",
-        "label": "개발 과정 깔끔함",
-        "score": score,
-        "weaknesses": weaknesses[:3],
-        "breakdown": breakdown,
-        "score_band": _score_band("process", score),
+        "available": len(items) > 0,
+        "items": items,
+        "note": "참고용 — 단독 판정 근거 아님",
     }
 
 
-def axis_handoff(*, root: Path, quality: Any) -> dict[str, Any]:
-    """Score whether the next AI session can take over without context loss."""
-    breakdown: list[dict[str, Any]] = []
-    weaknesses: list[str] = []
+# --- Blind spots (Decision 6) ---
 
-    has_validation = (root / "docs" / "validation").exists()
-    breakdown.append(
-        _item(
-            "docs/validation/ (검증 문서)",
-            30,
-            has_validation,
-            "이 코드가 진짜 동작하는지 다음 세션이 확인할 수 있게 하는 핵심 문서",
-        )
-    )
-    if not has_validation:
-        weaknesses.append("검증 문서(docs/validation/) 없음")
+BLIND_SPOTS: tuple[str, ...] = (
+    "사용자(나)가 What/Why/Next 를 자기 입으로 설명할 수 있는가",
+    "다음 행동의 우선순위를 사람이 정하고 있는가",
+    "손으로 한 검증이 실제로 매번 굴러가는가",
+    (
+        "외부 도구(Notion, Confluence, Slack, Linear 등)와 README 같은 문서의 "
+        "질적 깊이는 자동 판단 못 합니다"
+    ),
+)
 
-    has_retro = (root / "docs" / "vibe-coding").exists()
-    breakdown.append(
-        _item(
-            "docs/vibe-coding/ (회고 문서)",
-            25,
-            has_retro,
-            "어떤 결정을 왜 했는지 다음 세션이 알 수 있게 함",
-        )
-    )
-    if not has_retro:
-        weaknesses.append("회고 문서(docs/vibe-coding/) 없음")
 
-    has_handoff = (root / "docs" / "handoff").exists()
-    breakdown.append(
-        _item(
-            "docs/handoff/ (인수인계 문서)",
-            15,
-            has_handoff,
-            "현재 어디까지 했고 다음에 뭘 해야 하는지의 메모",
-        )
-    )
-
-    has_intent = (root / "docs" / "intent.md").exists()
-    breakdown.append(
-        _item(
-            "docs/intent.md (의도 문서)",
-            15,
-            has_intent,
-            "Why를 명문화한 문서. 의도 drift 방지의 핵심",
-        )
-    )
-    if not has_intent:
-        weaknesses.append("의도 문서(docs/intent.md) 없음")
-
-    test_dim = quality.dimensions.get("test")
-    test_grade = test_dim.grade if test_dim else None
-    if test_grade in {"A", "B"}:
-        breakdown.append(
-            _item(
-                f"테스트 등급 양호 ({test_grade})",
-                15,
-                True,
-                "다음 세션이 수정해도 깨졌는지 자동 확인 가능",
-            )
-        )
-    elif test_grade in {"D", "F"}:
-        breakdown.append(
-            _item(
-                f"테스트 등급 낮음 ({test_grade})",
-                15,
-                False,
-                "A/B면 가산. 테스트가 부실하면 다음 세션이 안전하게 이어받기 어려움",
-            )
-        )
-        weaknesses.append(f"테스트 등급 {test_grade}")
-    else:
-        breakdown.append(
-            _item(
-                "테스트 차원 미감지",
-                15,
-                False,
-                "테스트 분석 결과 없음",
-            )
-        )
-
-    score = sum(item["delta"] for item in breakdown if item["satisfied"])
-    score = max(0, min(score, 100))
-    return {
-        "name": "handoff",
-        "label": "이어받기 가능성",
-        "score": score,
-        "weaknesses": weaknesses[:3],
-        "breakdown": breakdown,
-        "score_band": _score_band("handoff", score),
-    }
+def get_blind_spots() -> list[str]:
+    """평가 결과와 무관하게 항상 함께 노출되는 사각지대 4 항목."""
+    return list(BLIND_SPOTS)

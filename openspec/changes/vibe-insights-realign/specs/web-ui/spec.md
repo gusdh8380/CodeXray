@@ -53,6 +53,33 @@ The web UI SHALL display a fixed "이 도구가 못 본 것" block in the Briefi
 - **WHEN** blind spot 블록이 렌더링되면
 - **THEN** 본문 톤은 *자가 점검 체크리스트* 이며 "이 도구가 못 미덥다" 인상이 아닌 *사용자 책임 환기* 표현을 사용한다
 
+### Requirement: 평가 철학 토글
+The web UI SHALL display a collapsible "이 도구가 바이브코딩을 어떻게 평가하나요?" toggle at the bottom of the Briefing area, defaulting to collapsed, that exposes the evaluation philosophy and methodology to the user when expanded.
+
+#### Scenario: 토글 위치와 기본 상태
+- **WHEN** Briefing 화면이 렌더링되면
+- **THEN** vibe coding 섹션 최하단 (blind spot 블록 아래) 또는 Briefing 화면 footer 영역에 "이 도구가 바이브코딩을 어떻게 평가하나요?" 라벨의 토글이 표시되고, 기본 상태는 *접힘* 이다
+
+#### Scenario: 펼침 콘텐츠 구조
+- **WHEN** 사용자가 토글을 펼치면
+- **THEN** 다음 8 섹션이 순서대로 노출된다:
+  1. 슬로건 한 줄 — "주인이 있는 프로젝트"
+  2. 운영 정의 3 구조 — 외부화된 의도 / 독립 검증 / 인간 최종 판단
+  3. 8 운영 신호 — 흔적 6 + 사각지대 2
+  4. 3축 매핑 — 어느 신호가 어느 축에 매핑되는지
+  5. 4 단계 상태 의미 — strong / moderate / weak / unknown 각각의 뜻과 임계
+  6. 카드 수 정책 — 왜 0-3 동적인가
+  7. 사각지대 4 항목 재명시
+  8. 출처 — 리서치에서 인용한 핵심 자료
+
+#### Scenario: 토글은 모든 화면에 일관되게 노출
+- **WHEN** 사용자가 분석 결과를 새로 받거나 같은 결과를 다시 볼 때
+- **THEN** 토글의 *콘텐츠는 동일하게* 표시된다 (분석 결과에 따라 변하지 않음 — 평가 *방법론* 자체이므로)
+
+#### Scenario: 토글 콘텐츠 톤
+- **WHEN** 토글 콘텐츠가 렌더링되면
+- **THEN** 본문은 비개발자 100% 청자 톤을 유지하며 (codebase-briefing 의 "Plain-language technical translation" 요구사항 준수), 출처 인용은 영어 원문 그대로 OK
+
 ### Requirement: 약한 process proxy 보조 패널 분리
 The web UI SHALL display weak process proxies (feat/fix ratio, spec commit timing, hotspot accumulation) only in a clearly separated supplementary panel, not as primary axis evidence.
 

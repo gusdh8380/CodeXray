@@ -30,7 +30,7 @@ uv run codexray serve --no-browser
 
 ## Current Sprint
 
-활성 OpenSpec 변경 없음. **briefing-rebuild** 2026-04-30 archive 완료 (5섹션 SPA + 바이브코딩 3축 + 비개발자 학습 도구 v1 모두 main spec에 흡수). 다음 변경 propose 시 archive 사례 참고.
+활성 OpenSpec 변경 없음. **briefing-rebuild** + **categorized-next-actions** 2026-04-30 archive 완료. 후자는 다음 행동 3 카테고리(코드/구조/바이브코딩) + 검토 경고 배너 + Codex review 사이클 도입. 다음 변경 후보: cross-platform-distribution (Windows/Linux 지원 + 설치 가이드 + AI 어댑터 graceful degradation).
 
 ## Load on Demand
 

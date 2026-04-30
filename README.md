@@ -121,10 +121,22 @@ src/codexray/
 
 ```bash
 uv sync
-uv run pytest -q          # 233 tests
+uv run pytest -q          # 295 tests
 uv run ruff check
 uv run codexray report .  # 자기 자신에게 적용 (현재 D(57))
 ```
+
+### Web UI (React SPA)
+
+`uv run codexray serve` 가 띄우는 웹 UI는 React + Vite + Tailwind v4. 백엔드 변경 후 정적 자산만 다시 빌드하면 됨:
+
+```bash
+cd frontend
+npm install        # 최초 1회
+npm run build      # frontend/dist 생성 → FastAPI가 정적 서빙
+```
+
+`frontend/dist`가 없으면 `/` 라우트는 SPA를 제공하지 않으므로 빌드를 한 번은 실행해야 한다. 개발 중 핫리로드가 필요하면 별도 터미널에서 `npm run dev` (Vite dev server, 백엔드 API는 8080으로 프록시).
 
 ## 프로젝트 규약
 

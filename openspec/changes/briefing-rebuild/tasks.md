@@ -5,16 +5,16 @@
 - [x] 1.3 shadcn 친화 컴포넌트 직접 작성 (Card, Button, Input, Badge, Progress) + cn() 헬퍼
 - [x] 1.4 `frontend/.gitignore`에 `node_modules`, `dist` 포함됨 (Vite 기본값)
 - [x] 1.5 `frontend/vite.config.ts`에 `outDir: 'dist'` 설정
-- [ ] 1.6 README에 프론트엔드 빌드 절차(`cd frontend && npm install && npm run build`) 추가
+- [x] 1.6 README에 프론트엔드 빌드 절차(`cd frontend && npm install && npm run build`) 추가
 
 ## 2. FastAPI를 JSON API로 전환
 
-- [x] 2.1 `src/codexray/web/api_v2.py`에 9개 JSON endpoint 추가 (briefing, inventory, graph, metrics, entrypoints, quality, hotspots, vibe-coding, dashboard, report, review, browse-folder). 레거시 htmx routes는 overview만 잔존
-- [ ] 2.2 `src/codexray/web/render.py` 의 HTML 생성 로직 제거 (overview 외 모두 JSON으로 흡수됨, 후속 세션 정리)
-- [x] 2.3 `src/codexray/web/jobs.py` AIBriefingJob/ReviewJob 모두 JSON status로 노출
+- [x] 2.1 `src/codexray/web/api_v2.py`에 9개 JSON endpoint 추가 (briefing, inventory, graph, metrics, entrypoints, quality, hotspots, vibe-coding, dashboard, report, review, browse-folder)
+- [x] 2.2 `src/codexray/web/render.py` + `routes.py` 삭제 (모든 overview 경로 JSON으로 흡수됨)
+- [x] 2.3 `src/codexray/web/jobs.py` AIBriefingJob/ReviewJob 모두 JSON status로 노출 (InsightsJob 폐기)
 - [x] 2.4 `src/codexray/web/server.py` 에서 `frontend/dist/`를 정적 자산으로 마운트하고 `GET /` 가 `index.html` 반환
-- [ ] 2.5 `src/codexray/web/templates/`, `src/codexray/web/static/` 디렉토리 삭제 (overview 잔존 의존, 후속)
-- [x] 2.6 `tests/test_web_ui.py` 의 어서션을 JSON 응답 어서션으로 교체 (322 passing)
+- [x] 2.5 `src/codexray/web/templates/`, `src/codexray/web/static/`, `web/insights.py`, `tests/test_insights.py` 삭제
+- [x] 2.6 `tests/test_web_ui.py` 의 어서션을 JSON 응답 어서션으로 교체 (295 passing)
 
 ## 3. AI 입력을 원본 코드 번들로 교체
 
@@ -24,7 +24,7 @@
 - [x] 3.4 AI 프롬프트 재작성 — "직접 코드를 읽고" + 행동/왜/증거 트리플 강제
 - [x] 3.5 `parse_ai_briefing_response()` AINextAction 구조 + 레거시 string 호환
 - [x] 3.6 PROMPT_VERSION = "v3-action-reason-evidence", schema_version=3 자동 무효화
-- [ ] 3.7 codex 우선, claude 폴백 동작 검증 테스트 추가
+- [x] 3.7 codex 우선, claude 폴백 동작 검증 테스트 (`tests/test_ai_adapters.py::test_select_auto_prefers_codex` + `test_select_auto_falls_back_to_claude`)
 
 ## 4. 바이브코딩 인사이트 모듈 (백엔드)
 
@@ -45,7 +45,7 @@
 - [x] 5.3 vibe_insights 섹션은 4번 모듈 결과를 그대로 포함
 - [x] 5.4 결정론적 부분의 직렬화 안정성 테스트 (test_vibe_insights.py)
 - [x] 5.5 AI 서술 파트는 ai_briefing 캐시에서 가져와 합치는 헬퍼
-- [ ] 5.6 `tests/test_briefing.py` 의 어서션을 새 5섹션 구조로 교체 (briefing 모델은 그대로 두고 payload 어댑터에서만 변환됨)
+- [x] 5.6 `tests/test_briefing.py` 에 5섹션 + schema_version + 직렬화 어서션 2개 추가 (briefing 모델은 그대로 두고 payload 어댑터에서만 변환됨)
 
 ## 6. 진행 상태 UX
 
@@ -80,9 +80,9 @@
 ## 10. 미시 분석 영역 포팅
 
 - [x] 10.1 `MicroAnalysisArea.tsx` — collapsible "상세 분석" 영역
-- [ ] 10.2 OverviewTab — overview는 briefing의 what 섹션이 대체 (별도 탭 불필요로 판단)
+- [x] 10.2 OverviewTab — 별도 탭 불필요(briefing의 what 섹션이 대체)로 결론, 스킵 확정
 - [x] 10.3 InventoryTab — 언어/파일 목록 + LoC 규모 비중
-- [ ] 10.4 GraphTab — 별도 데이터 표 미구현, 구조 그래프(10.11)가 시각화 담당
+- [x] 10.4 GraphTab — 별도 데이터 표 스킵, 구조 그래프(10.11)가 4-view 시각화로 대체
 - [x] 10.5 MetricsTab — 결합도 표 + 위험도 레이블 + fan-in/out 보조 설명
 - [x] 10.6 QualityTab — 등급 + 한 줄 해석 + 차원별 카드
 - [x] 10.7 HotspotsTab — 한국어 카테고리 라벨
@@ -106,7 +106,7 @@
 
 ## 13. 검증 및 자기 적용
 
-- [x] 13.1 `uv run pytest tests/` 전체 통과 (322 tests)
+- [x] 13.1 `uv run pytest tests/` 전체 통과 (295 tests, 레거시 htmx 제거 후)
 - [x] 13.2 `cd frontend && npm run build` 성공 (270KB JS / 81KB gzip)
 - [x] 13.3 CodeXray 자체 분석으로 5섹션, 바이브코딩 감지, 3축 점수(100/60/85), 타임라인 4 events 확인
 - [x] 13.4 aquaview 분석으로 동일 항목 검증 (3축 53/25/0, 타임라인 1 event)

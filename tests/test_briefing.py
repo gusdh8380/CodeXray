@@ -6,6 +6,7 @@ from pathlib import Path
 
 from codexray.briefing import build_codebase_briefing, to_json
 from codexray.briefing.git_history import build_git_history
+from codexray.web.briefing_payload import SCHEMA_VERSION, build_briefing_payload
 
 
 def _make_tree(root: Path) -> None:
@@ -122,3 +123,44 @@ def test_git_history_unavailable_for_non_git_path(tmp_path: Path) -> None:
 
     assert not history.available
     assert history.unavailable_reason == "not a git repository"
+
+
+def test_briefing_payload_has_five_sections_and_schema_version(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+
+    payload = build_briefing_payload(tmp_path, ai=None)
+
+    assert payload["schema_version"] == SCHEMA_VERSION
+    assert payload["path"] == str(tmp_path.resolve())
+    assert payload["ai_used"] is False
+
+    for section_id in ("what", "how_built", "current_state"):
+        section = payload[section_id]
+        assert section["id"] == section_id
+        assert section["title"]
+        assert section["narrative"]
+        assert isinstance(section["metrics"], list) and section["metrics"]
+
+    vibe_insights = payload["vibe_insights"]
+    assert "detected" in vibe_insights
+    assert "axes" in vibe_insights
+
+    next_actions = payload["next_actions"]
+    assert isinstance(next_actions, list) and next_actions
+    for action in next_actions:
+        assert action["action"]
+        assert action["reason"]
+        assert action["evidence"]
+
+
+def test_briefing_payload_serializes_as_json(tmp_path: Path) -> None:
+    _make_tree(tmp_path)
+
+    payload = build_briefing_payload(tmp_path, ai=None)
+    serialized = json.dumps(payload)
+    roundtrip = json.loads(serialized)
+
+    assert roundtrip["schema_version"] == SCHEMA_VERSION
+    assert {"what", "how_built", "current_state", "vibe_insights", "next_actions"}.issubset(
+        roundtrip.keys()
+    )

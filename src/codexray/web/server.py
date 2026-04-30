@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import threading
 import webbrowser
-from importlib import resources
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from .api_v2 import create_v2_router
-from .routes import create_router
 
 
 def _frontend_dist() -> Path | None:
@@ -28,15 +25,9 @@ def _frontend_dist() -> Path | None:
 
 
 def create_app() -> FastAPI:
-    package_root = resources.files("codexray.web")
-    template_dir = str(package_root.joinpath("templates"))
-    static_dir = Path(str(package_root.joinpath("static")))
-
     app = FastAPI(title="CodeXray Web UI")
     dist = _frontend_dist()
 
-    # SPA route MUST be registered before the legacy router so its `GET /`
-    # matches first and the React shell is served instead of the htmx index.
     if dist is not None:
 
         @app.get("/", include_in_schema=False)
@@ -50,9 +41,6 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(create_v2_router())
-    app.include_router(create_router(Jinja2Templates(directory=template_dir)))
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
     return app
 
 

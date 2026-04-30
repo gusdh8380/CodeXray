@@ -7,10 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..ai import AIAdapterError, build_review, select_adapter
-from ..ai.adapters import AIAdapter
 from ..ai.types import ReviewResult
 from .ai_briefing import AIBriefingResult, build_ai_briefing, build_evidence_bundle
-from .insights import InsightResult, build_insights, cache_put
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,22 +20,8 @@ class ReviewJob:
     error: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
-class InsightsJob:
-    id: str
-    root: Path
-    tab: str
-    status: str  # "running" | "done" | "cancelled" | "failed" | "skipped"
-    cache_key: str
-    result: InsightResult | None = None
-    error: str | None = None
-    skip_reason: str | None = None
-
-
 _JOBS: dict[str, ReviewJob] = {}
 _LOCK = threading.Lock()
-_INSIGHTS_JOBS: dict[str, InsightsJob] = {}
-_INSIGHTS_LOCK = threading.Lock()
 
 
 def start_review_job(root: Path) -> ReviewJob:
@@ -93,111 +77,6 @@ def _set_job(job: ReviewJob) -> None:
 def _is_cancelled(job_id: str) -> bool:
     with _LOCK:
         job = _JOBS.get(job_id)
-        return job is not None and job.status == "cancelled"
-
-
-def start_insights_job(
-    root: Path,
-    tab: str,
-    raw_json: str,
-    adapter: AIAdapter,
-    cache_key: str,
-) -> InsightsJob:
-    job_id = uuid.uuid4().hex
-    job = InsightsJob(
-        id=job_id, root=root, tab=tab, status="running", cache_key=cache_key
-    )
-    with _INSIGHTS_LOCK:
-        _INSIGHTS_JOBS[job_id] = job
-    thread = threading.Thread(
-        target=_run_insights,
-        args=(job_id, root, tab, raw_json, adapter, cache_key),
-        daemon=True,
-    )
-    thread.start()
-    return job
-
-
-def get_insights_job(job_id: str) -> InsightsJob | None:
-    with _INSIGHTS_LOCK:
-        return _INSIGHTS_JOBS.get(job_id)
-
-
-def cancel_insights_job(job_id: str) -> InsightsJob | None:
-    with _INSIGHTS_LOCK:
-        job = _INSIGHTS_JOBS.get(job_id)
-        if job is None:
-            return None
-        cancelled = InsightsJob(
-            id=job.id,
-            root=job.root,
-            tab=job.tab,
-            status="cancelled",
-            cache_key=job.cache_key,
-        )
-        _INSIGHTS_JOBS[job_id] = cancelled
-        return cancelled
-
-
-def _run_insights(
-    job_id: str,
-    root: Path,
-    tab: str,
-    raw_json: str,
-    adapter: AIAdapter,
-    key: str,
-) -> None:
-    try:
-        result, reason = build_insights(tab, raw_json, adapter)
-    except Exception as exc:  # noqa: BLE001 — background job must report any failure.
-        if _is_insights_cancelled(job_id):
-            return
-        _set_insights_job(
-            InsightsJob(
-                id=job_id,
-                root=root,
-                tab=tab,
-                status="failed",
-                cache_key=key,
-                error=str(exc),
-            )
-        )
-        return
-    if _is_insights_cancelled(job_id):
-        return
-    if result is None:
-        _set_insights_job(
-            InsightsJob(
-                id=job_id,
-                root=root,
-                tab=tab,
-                status="skipped",
-                cache_key=key,
-                skip_reason=reason,
-            )
-        )
-        return
-    cache_put(key, result)
-    _set_insights_job(
-        InsightsJob(
-            id=job_id,
-            root=root,
-            tab=tab,
-            status="done",
-            cache_key=key,
-            result=result,
-        )
-    )
-
-
-def _set_insights_job(job: InsightsJob) -> None:
-    with _INSIGHTS_LOCK:
-        _INSIGHTS_JOBS[job.id] = job
-
-
-def _is_insights_cancelled(job_id: str) -> bool:
-    with _INSIGHTS_LOCK:
-        job = _INSIGHTS_JOBS.get(job_id)
         return job is not None and job.status == "cancelled"
 
 

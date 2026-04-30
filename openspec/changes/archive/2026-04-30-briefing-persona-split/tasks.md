@@ -51,4 +51,4 @@
 
 - [x] 9.1 `openspec validate briefing-persona-split --strict` 통과 확인
 - [x] 9.2 `frontend && npm run build` 통과 확인 (TypeScript 컴파일)
-- [ ] 9.3 자기 적용 결과 문서화 완료 후 `openspec archive briefing-persona-split`
+- [x] 9.3 자기 적용 결과 문서화 완료 후 `openspec archive briefing-persona-split`

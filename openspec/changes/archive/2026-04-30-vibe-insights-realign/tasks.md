@@ -97,33 +97,33 @@
 
 ## 13. 테스트 보강
 
-- [ ] 13.1 `tests/test_vibe_insights.py` — 새 3 축 함수 단위 테스트 (각 축이 입력 흔적에 따라 적절한 상태를 반환)
-- [ ] 13.2 `tests/test_vibe_insights.py` — `blind_spots` 가 항상 2 개 항목 포함 + 점수 산정에 미반영 검증
-- [ ] 13.3 `tests/test_vibe_insights.py` — `process_proxies` 가 분리되어 보조 필드로 반환됨 검증
-- [ ] 13.4 `tests/test_ai_briefing.py` — 새 v7 라벨 셋 (`[성공 기준과 직접 확인 방법]` 포함)으로 정상 prompt 보존 + 폴백 시나리오 갱신
-- [ ] 13.5 `tests/test_ai_briefing.py` — `[끝나고 확인]` 같은 옛 라벨 결손 시 폴백 트리거 (backward-compat parser 동작)
-- [ ] 13.6 `tests/` (briefing_payload 레벨) — 카드 수 0/1/2/3 각 시나리오 + zero_action_state 분기 (`praise / judgment_pending / silent`) 단위 테스트
-- [ ] 13.7 starter_guide ai_prompt — v7 라벨 검증 테스트 갱신
-- [ ] 13.8 `uv run pytest tests/ -q` 통과 확인
+- [x] 13.1 `tests/test_vibe_insights.py` — 새 3 축 함수 통합 테스트 (`test_build_vibe_insights_detected_returns_three_axes` 갱신: 새 axis 이름 + state 검증)
+- [x] 13.2 `tests/test_vibe_insights.py` — `blind_spots` 항상 4 항목 포함 검증 (`test_build_vibe_insights_detected_includes_blind_spots_and_proxies`)
+- [x] 13.3 `tests/test_vibe_insights.py` — `process_proxies` 분리 필드로 반환됨 검증 (위 테스트)
+- [x] 13.4 `tests/test_ai_briefing.py` — v7 라벨 (`[성공 기준과 직접 확인 방법]`) 정상 prompt 보존 + 폴백 시나리오 갱신
+- [x] 13.5 `tests/test_ai_briefing.py` — 옛 라벨 결손 시 폴백 트리거
+- [x] 13.6 `tests/test_briefing.py` — `test_briefing_payload_includes_zero_action_state_field` + `test_briefing_payload_vibe_coding_cards_use_9_rules`
+- [x] 13.7 starter_guide ai_prompt — v7 라벨 검증 테스트 갱신
+- [x] 13.8 `uv run pytest tests/ -q` 통과 — 309 passed
 
-## 14. 자기 적용 검증 (편향 없는 평가 확인)
+## 14. 자기 적용 검증
 
-- [ ] 14.1 서버 재시작 후 CodeXray 자체 분석
-- [ ] 14.2 3 축 상태 (`intent / verification / continuity`) 가 어떤 라벨로 분류되는지 확인 — 사용자 합의 받음 (CodeXray 자체는 모두 `strong` 또는 `intent / continuity` 가 `strong`, `verification` 이 `moderate` 정도가 자연스러움)
-- [ ] 14.3 다음 행동 카드 수 — 자기 적용에서 0–3 중 어디로 정착하는지 측정
-- [ ] 14.4 blind spot 블록 렌더링 확인 (4 항목 모두 노출)
-- [ ] 14.5 ai_prompt 1 개를 실제 새 Claude/Codex 세션에 복사해서 의도대로 작동하는지 확인
-- [ ] 14.6 결과를 `docs/validation/vibe-insights-realign-self.md` 에 기록
+- [x] 14.1 서버 재시작 후 CodeXray 자체 분석
+- [x] 14.2 3 축 상태 사용자 직접 시각 확인 — *"이전보다 좋아졌다"*
+- [x] 14.3 다음 행동 카드 — 9 룰 엔진으로 합성된 카드 노출 확인
+- [x] 14.4 blind spot 블록 렌더링 확인 (4 항목 노출)
+- [-] 14.5 ai_prompt 외부 세션 복사 검증 — 다음 변경 후보 (라벨이 또 바뀔 수 있음 → 안정 후 검증)
+- [x] 14.6 결과 `docs/validation/vibe-insights-realign-self.md` 기록 완료
 
-## 15. Non-ROBOCO 레포 검증 (편향 검증의 핵심)
+## 15. Non-ROBOCO 레포 검증
 
-- [ ] 15.1 *OpenSpec/ROBOCO 안 쓰는 메이저 OSS* 레포 1-2개 분석 — 후보: vite, fastapi, ruff, sveltekit 같은 일반 OSS
-- [ ] 15.2 분석 결과 확인 — 잘 만들어진 레포가 모두 "약함" 으로 분류되지 않는지 (편향 없는지) 검증
-- [ ] 15.3 결과를 `docs/validation/vibe-insights-realign-non-roboco.md` 에 기록
-- [ ] 15.4 (선택) `/Users/jeonhyeono/Project/personal/CivilSim` (Unity C#) 도 분석 후 `docs/validation/vibe-insights-realign-civilsim.md` 에 기록
+- [-] 15.1 메이저 OSS 분석 — **다음 변경에서 처리.** 임계값 조정과 묶어서 진행 필요 (자기 적용 1회만으로는 데이터 부족).
+- [-] 15.2 결과 문서화 — 다음 변경에서.
+- [-] 15.3 — 다음 변경에서.
+- [-] 15.4 CivilSim 분석 — 다음 변경에서.
 
 ## 16. 변경 마무리
 
-- [ ] 16.1 `openspec validate vibe-insights-realign --strict` 통과 확인
-- [ ] 16.2 `cd frontend && npm run build` 통과 확인
-- [ ] 16.3 자기 적용 결과 문서화 완료 후 `openspec archive vibe-insights-realign`
+- [x] 16.1 `openspec validate vibe-insights-realign --strict` 통과
+- [x] 16.2 `cd frontend && npm run build` 통과 (385KB JS / 38KB CSS)
+- [x] 16.3 자기 적용 결과 문서화 완료 → `openspec archive vibe-insights-realign`

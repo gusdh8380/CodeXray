@@ -30,11 +30,16 @@ uv run codexray serve --no-browser
 
 ## Current Sprint
 
-활성 OpenSpec 변경: **`vibe-insights-realign`** (proposal 단계, 2026-05-01 시작). 3 축 재설계 (environment/process/handoff → intent/verification/continuity), 점수 0-100 → 4 단계 상태, 카드 수 동적 0-3, blind spot 상시 노출, ai_prompt 라벨 두 개 갱신.
+활성 OpenSpec 변경 없음.
 
-직전 archive: **briefing-persona-split** (2026-04-30) — 페르소나 분리 + ai_prompt 6 라벨 3단 구조 + 폴백 파서. 본 변경의 기반.
+직전 archive (2026-05-01): **`vibe-insights-realign`** — 3축 재설계 (intent/verification/continuity), 점수 0-100 → 4단계 상태, 카드 수 동적 0-3, 9 룰 엔진, blind spot 상시 노출, ai_prompt v7 라벨, 평가 철학 토글 (8 섹션, 출처 인용).
 
-이전 archive: **briefing-rebuild** + **categorized-next-actions** (2026-04-30).
+다음 변경 후보:
+- **non-roboco-validation**: 일반 OSS (vite/fastapi/ruff) 분석 → 편향·임계값 조정
+- **bundle-composition-rebalance**: Python·AI 상호 검증 관계 (앵커링·long-tail·과번역 위험 — `docs/flow.md` 미래 섹션 참조)
+- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드
+
+이전 archive (2026-04-30): briefing-persona-split, briefing-rebuild, categorized-next-actions.
 
 ## Load on Demand
 

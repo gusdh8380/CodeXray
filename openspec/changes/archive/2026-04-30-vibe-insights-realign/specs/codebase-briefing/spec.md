@@ -34,6 +34,17 @@ The Briefing area SHALL always display a "이 도구가 못 본 것" block that 
 - **WHEN** blind spot 블록이 렌더링되면
 - **THEN** 본문은 *자가 점검 체크리스트* 톤을 따른다 ("이 셋은 코드만 봐서는 판단 못 합니다. 화면 상태와 무관하게 자가 점검해 주세요"). "이 도구가 못 미덥다" 는 인상이 아니라 *사용자 책임을 환기* 하는 어조.
 
+### Requirement: AI 해석 결과 구조
+The system SHALL parse and validate AI interpretation results with the new schema (axis state + blind_spots + process_proxies + 4-level state per axis).
+
+#### Scenario: AI 해석 결과 구조 — 새 SCHEMA_VERSION
+- **WHEN** AI 호출이 성공하고 결과가 직렬화되면
+- **THEN** 결과는 `schema_version: 6` 을 포함하고, vibe coding 섹션은 새 3 축(`intent / verification / continuity`)의 상태(`strong / moderate / weak / unknown`) + 신호 개수 + 대표 근거 + `blind_spots` + `process_proxies` 를 분리해 포함한다
+
+#### Scenario: 카테고리 필드 유지
+- **WHEN** next_actions 가 직렬화되면
+- **THEN** 각 항목은 여전히 `category` 필드를 포함하며 값은 `code`, `structural`, `vibe_coding` 중 하나이다 (직전 변경 동작 유지). vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서 합성한다.
+
 ## MODIFIED Requirements
 
 ### Requirement: Next action AI 프롬프트 3단 구조
@@ -66,14 +77,3 @@ The system SHALL ensure that every non-empty `ai_prompt` value in the briefing p
 #### Scenario: prompt version bump
 - **WHEN** ai_prompt 형식 규칙이 v6-persona-split 에서 v7-realign 으로 변경 적용되면
 - **THEN** `PROMPT_VERSION` 값이 `v7-realign` 으로 갱신되어 기존 캐시가 자동 무효화된다
-
-### Requirement: AI 해석 결과 구조
-The system SHALL parse and validate AI interpretation results with the new schema (axis state + blind_spots + process_proxies + 4-level state per axis).
-
-#### Scenario: AI 해석 결과 구조 — 새 SCHEMA_VERSION
-- **WHEN** AI 호출이 성공하고 결과가 직렬화되면
-- **THEN** 결과는 `schema_version: 6` 을 포함하고, vibe coding 섹션은 새 3 축(`intent / verification / continuity`)의 상태(`strong / moderate / weak / unknown`) + 신호 개수 + 대표 근거 + `blind_spots` + `process_proxies` 를 분리해 포함한다
-
-#### Scenario: 카테고리 필드 유지
-- **WHEN** next_actions 가 직렬화되면
-- **THEN** 각 항목은 여전히 `category` 필드를 포함하며 값은 `code`, `structural`, `vibe_coding` 중 하나이다 (직전 변경 동작 유지). vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서 합성한다.

@@ -41,6 +41,7 @@ uv run codexray serve --no-browser
 세부 문서는 필요할 때 읽기:
 
 - `docs/intent.md` — 프로젝트 Why / What / Not (의도공학 1차 자료)
+- `docs/flow.md` — 5 단계 동작 흐름 (결정론 분석 → 번들 → AI 호출 → 합성 → SPA)
 - `AGENTS.md` — 에이전트별 역할 분리 (176줄)
 - `openspec/changes/archive/2026-04-30-briefing-rebuild/` — 직전 대형 변경 (proposal/design/specs/tasks)
 - `openspec/specs/` — 현재 capability spec (codebase-briefing, web-ui, react-frontend, vibe-coding-insights 등)

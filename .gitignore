@@ -24,3 +24,7 @@ htmlcov/
 
 # Local Claude settings (user-specific)
 .claude/settings.local.json
+
+# vibe-token-tune local artifacts
+CLAUDE.md.bak
+TOKEN_TUNE_REPORT.md

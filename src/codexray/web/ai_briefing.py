@@ -25,17 +25,21 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 
-PROMPT_VERSION = "v6-persona-split"
-SCHEMA_VERSION = 5
+PROMPT_VERSION = "v7-realign"
+SCHEMA_VERSION = 6
 
 # vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서만 합성한다.
 # AI 응답에 vibe_coding 이 들어와도 code 로 강등 — design.md D2 결정 일관 적용.
 _AI_ALLOWED_CATEGORIES = {"code", "structural"}
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
-# briefing-persona-split: ai_prompt 3단 구조의 필수 라벨 셋. AI 응답이 이 셋 중
+# vibe-insights-realign (v7): ai_prompt 3단 구조의 필수 라벨 셋. AI 응답이 이 셋 중
 # 하나라도 빠뜨리면 결정론적 템플릿으로 통째로 교체한다.
-_REQUIRED_PROMPT_LABELS = ("[현재 프로젝트]", "[해줄 일]", "[끝나고 확인]")
+_REQUIRED_PROMPT_LABELS = (
+    "[현재 프로젝트]",
+    "[해줄 일]",
+    "[성공 기준과 직접 확인 방법]",
+)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
 # for Korean prose + code keeps us safely under that budget while leaving
@@ -261,7 +265,7 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
       "action": "구체적이고 실행 가능한 행동 한 줄",
       "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에'로 인과 연결",
       "evidence": "분석에서 인용한 근거 (등급/파일명/수치/커밋)",
-      "ai_prompt": "[현재 프로젝트] {{레포가 뭐 하는지 한두 줄}}\\n[지금 상황] {{evidence를 평어로 풀어 쓴 한두 문장}}\\n[해줄 일] {{action을 실행 가능한 단계로 — 1) 2) 3) 형태 OK}}\\n[작업 전 읽을 것] {{관련 파일/문서 경로 — 있으면}}\\n[끝나고 확인] {{비개발자가 사용자 시점에서 확인할 수 있는 항목 1~2개 + 기존 동작이 깨지지 않았는지 회귀 체크}}\\n[건드리지 말 것] {{스코프 제약 — 있으면}}",
+      "ai_prompt": "[현재 프로젝트] {{레포가 뭐 하는지 한두 줄}}\\n[이번 변경의 이유] {{evidence를 평어로 풀어 *왜* 지금 이 작업이 필요한지 한두 문장}}\\n[해줄 일] {{action을 실행 가능한 단계로 — 1) 2) 3) 형태 OK}}\\n[작업 전 읽을 것] {{관련 파일/문서 경로 — 있으면}}\\n[성공 기준과 직접 확인 방법] {{객관 완료 기준 1개 이상 + 비개발자가 코드 안 보고 확인하는 절차 1개 이상 + 기존 동작 회귀 체크}}\\n[건드리지 말 것] {{스코프 제약 — 있으면}}",
       "category": "code 또는 structural 중 하나. code는 함수/모듈 내부 변경(테스트 보강·에러 처리·로직 정리 등), structural은 모듈 분리·의존성 정리·아키텍처 변경"
     }},
     {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "...", "category": "code | structural" }},
@@ -287,10 +291,10 @@ ai_prompt 는 비개발자가 *컨텍스트 0인 새 AI 채팅창*에 그대로 
 필수 라벨 (반드시 포함, 이 셋이 빠지면 시스템이 통째로 결정론적 템플릿으로 교체합니다):
 - `[현재 프로젝트]` — 한두 줄로 무슨 프로젝트인지
 - `[해줄 일]` — action 을 실행 가능한 단계로 풀어쓰기. 비개발자가 읽어도 무슨 일을 시키는지 알 수 있게
-- `[끝나고 확인]` — 비개발자가 코드를 안 보고도 결과를 확인할 수 있는 항목 1개 이상 (화면 클릭, 파일 존재, 명령 실행 결과 등) + "기존 ~ 동작이 그대로인지" 회귀 체크
+- `[성공 기준과 직접 확인 방법]` — (1) 작업이 *끝났다* 고 판단할 객관 기준 1 개 이상 (파일 존재, 명령 실행 결과, 화면 동작 등) + (2) 비개발자가 코드를 안 보고 확인할 수 있는 *직접 확인 절차* 1 개 이상 + (3) 기존 동작 회귀 체크
 
 옵션 라벨 (있으면 더 좋음):
-- `[지금 상황]` — evidence 를 평어로 풀어 쓴 한두 문장
+- `[이번 변경의 이유]` — evidence 를 평어로 풀어 *왜* 지금 이 작업이 필요한지 한두 문장 (단순 상태 서술 아닌 *동기*)
 - `[작업 전 읽을 것]` — AI 가 먼저 읽어야 할 파일/문서 경로
 - `[건드리지 말 것]` — 이번 작업 스코프 제약
 
@@ -363,9 +367,9 @@ def _synthesize_deterministic_prompt(
     )
     return (
         f"[현재 프로젝트] {project_line}\n"
-        f"[지금 상황] {evidence}\n"
+        f"[이번 변경의 이유] {evidence} — 이 상태가 사용자 다음 변경의 위험을 키웁니다.\n"
         f"[해줄 일] {action}\n"
-        f"[끝나고 확인] 작업이 끝나면 1) 위 변경이 의도대로 적용됐는지, "
+        f"[성공 기준과 직접 확인 방법] 작업이 끝나면 1) 위 변경이 의도대로 적용됐는지, "
         f"2) 기존에 잘 동작하던 화면·기능이 그대로 작동하는지 직접 확인해 주세요. "
         f"이상이 보이면 작업 결과를 되돌려 달라고 AI 에게 말하세요."
     )

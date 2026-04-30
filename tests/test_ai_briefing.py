@@ -122,7 +122,7 @@ def test_parse_next_actions_vibe_coding_category_demoted_to_code() -> None:
 _VALID_3STAGE_PROMPT = (
     "[현재 프로젝트] 로컬 코드베이스 분석 도구입니다.\n"
     "[해줄 일] api_v2.py 를 두 부분으로 나누세요.\n"
-    "[끝나고 확인] 기존 API 엔드포인트가 그대로 응답하는지 확인해 주세요."
+    "[성공 기준과 직접 확인 방법] 기존 API 엔드포인트가 그대로 응답하는지 확인해 주세요."
 )
 
 
@@ -148,9 +148,9 @@ def test_parse_next_actions_keeps_valid_3stage_prompt_unchanged() -> None:
 
 
 def test_parse_next_actions_missing_required_label_replaced_with_template() -> None:
-    # AI returned a non-empty ai_prompt but skipped [끝나고 확인]. Parser must
-    # replace the whole text with a deterministic 3-stage template that uses
-    # the parsed executive as the project context.
+    # AI returned a non-empty ai_prompt but skipped [성공 기준과 직접 확인 방법].
+    # Parser must replace the whole text with a deterministic 3-stage template
+    # that uses the parsed executive as the project context.
     bad_prompt = (
         "[현재 프로젝트] 로컬 분석 도구.\n"
         "[해줄 일] api_v2.py 를 분할하세요."
@@ -181,7 +181,7 @@ def test_parse_next_actions_missing_required_label_replaced_with_template() -> N
     assert rewritten != bad_prompt
     assert "[현재 프로젝트]" in rewritten
     assert "[해줄 일]" in rewritten
-    assert "[끝나고 확인]" in rewritten
+    assert "[성공 기준과 직접 확인 방법]" in rewritten
     assert "로컬 코드 분석 도구" in rewritten  # executive 가 project_context 로 인용됨
     assert "split api router" in rewritten
 

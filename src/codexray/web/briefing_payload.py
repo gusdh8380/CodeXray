@@ -33,7 +33,7 @@ _PER_CATEGORY_LIMIT = 3
 def _build_hotspot_review_prompt(top_hotspot: str, hotspot_count: int) -> str:
     return (
         "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
-        f"[지금 상황] 자주 바뀌고 위험도가 높은 파일이 {hotspot_count}개 있고, "
+        f"[이번 변경의 이유] 자주 바뀌고 위험도가 높은 파일이 {hotspot_count}개 있고, "
         f"그 중 가장 위험한 것은 `{top_hotspot}` 입니다.\n"
         f"[해줄 일] `{top_hotspot}` 파일을 한 번 같이 읽어 주세요. "
         "1) 이 파일이 무엇을 하는 파일인지 한 단락으로 요약, "
@@ -41,7 +41,7 @@ def _build_hotspot_review_prompt(top_hotspot: str, hotspot_count: int) -> str:
         "3) 다음 변경 시 가장 깨질 가능성이 높은 부분 한 곳을 짚어 주세요. "
         "이번 세션에서는 코드 변경은 하지 마세요 — 분석만.\n"
         f"[작업 전 읽을 것] {top_hotspot}\n"
-        "[끝나고 확인] 1) 위 세 가지 분석 결과를 채팅으로 받았는지, "
+        "[성공 기준과 직접 확인 방법] 1) 위 세 가지 분석 결과를 채팅으로 받았는지, "
         "2) 어떤 파일도 수정되지 않았는지 확인해 주세요.\n"
         "[건드리지 말 것] 코드 변경 금지 — 다음 세션에서 별도로 합니다."
     )
@@ -50,14 +50,14 @@ def _build_hotspot_review_prompt(top_hotspot: str, hotspot_count: int) -> str:
 def _build_low_grade_prompt(grade: str) -> str:
     return (
         "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
-        f"[지금 상황] 종합 품질 등급이 {grade} 로 낮습니다. "
+        f"[이번 변경의 이유] 종합 품질 등급이 {grade} 로 낮습니다. "
         "어디부터 손대야 가장 효과적인지 우선 식별이 필요합니다.\n"
         "[해줄 일] CodeXray 의 상세 분석 토글을 펼친 다음 "
         "1) Code Quality 탭에서 가장 점수가 낮은 차원 한 개 식별, "
         "2) 그 차원의 정의를 평어로 설명, "
         "3) 그 차원을 올리려면 어떤 종류의 변경이 필요한지 한 단락으로 알려주세요. "
         "이번 세션에서는 코드 변경 없이 진단만.\n"
-        "[끝나고 확인] 1) 가장 약한 차원 이름과 점수를 받았는지, "
+        "[성공 기준과 직접 확인 방법] 1) 가장 약한 차원 이름과 점수를 받았는지, "
         "2) 그 차원을 올릴 변경 방향을 받았는지 확인해 주세요.\n"
         "[건드리지 말 것] 코드 변경 금지 — 분석·추천만."
     )
@@ -68,13 +68,13 @@ def _build_vibe_axis_weakness_prompt(
 ) -> str:
     return (
         "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
-        f"[지금 상황] 바이브코딩 진단에서 '{axis_label}' 축이 가장 약합니다 "
+        f"[이번 변경의 이유] 바이브코딩 진단에서 '{axis_label}' 축이 가장 약합니다 "
         f"(상태 {state}). 그 축에서 빠진 항목 중 하나가 '{weakness}' 입니다.\n"
         f"[해줄 일] '{weakness}' 를 보완해 주세요. "
         "어떻게 보완할지 모르겠으면 먼저 'CodeXray 가 이 항목을 왜 지적했는지, "
         "구체적으로 무엇을 만들거나 고쳐야 하는지 설명해줘' 라고 AI 에게 물어 "
         "이해부터 잡고 시작하세요.\n"
-        "[끝나고 확인] 1) 빠진 항목에 해당하는 새 파일/설정이 생겼거나 기존 항목이 "
+        "[성공 기준과 직접 확인 방법] 1) 빠진 항목에 해당하는 새 파일/설정이 생겼거나 기존 항목이 "
         "보완됐는지, 2) 기존 코드/문서는 어떤 것도 의도치 않게 변경되지 않았는지 "
         "확인해 주세요.\n"
         "[건드리지 말 것] 이번 항목 외 다른 영역은 다음 세션에서 다루세요."
@@ -151,6 +151,10 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
             "intent_present": (resolved / "docs" / "intent.md").exists(),
         }
 
+    zero_action_state = (
+        _build_zero_action_state(vibe_insights) if not next_actions else None
+    )
+
     return {
         "schema_version": SCHEMA_VERSION,
         "path": str(resolved),
@@ -159,6 +163,7 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         "current_state": current_state,
         "vibe_insights": vibe_insights,
         "next_actions": next_actions,
+        "zero_action_state": zero_action_state,
         "ai_used": ai is not None and not ai.fallback,
     }
 
@@ -381,6 +386,21 @@ _AXIS_LABEL = {
 
 _STATE_RANK = {"unknown": 0, "weak": 1, "moderate": 2, "strong": 3}
 
+# vibe-insights-realign Decision 4: 9 룰. 결손 sub-cat 1개당 룰 1개.
+# 사용자가 axis 의 weakness 리스트에서 sub-cat 라벨을 찾으면 그 룰의 작업이 카드.
+_VIBE_RULES: tuple[tuple[str, str, str], ...] = (
+    # (axis_name, sub_cat_label, action_title)
+    ("intent", "AI 지속 지시 문서", "AI 지침 문서 셋업"),
+    ("intent", "프로젝트 의도 문서", "프로젝트 의도 문서화"),
+    ("intent", "의도와 비의도 명문화", "비의도·근거 명문화"),
+    ("verification", "손 검증 흔적", "수동 검증 흔적 도입"),
+    ("verification", "자동 테스트와 CI", "자동 테스트와 CI 도입"),
+    ("verification", "재현 가능 실행 경로", "실행 경로 셋업"),
+    ("continuity", "작게 이어가기", "작게 쪼개는 워크플로우 도입"),
+    ("continuity", "학습 반영", "회고-학습 사이클 도입"),
+    ("continuity", "핸드오프 문서", "핸드오프 문서 추가"),
+)
+
 
 def _synthesize_vibe_coding_actions(
     vibe_insights: dict[str, Any],
@@ -402,25 +422,119 @@ def _synthesize_vibe_coding_actions(
     axes = vibe_insights.get("axes") or []
     if not axes:
         return []
-    weakest = min(axes, key=lambda ax: _STATE_RANK.get(ax.get("state", "unknown"), 0))
-    weaknesses = list(weakest.get("weaknesses") or [])
-    if not weaknesses:
+
+    axis_by_name = {ax.get("name"): ax for ax in axes}
+
+    # 9 룰 매칭 — 결손 sub-cat 마다 fired rule 한 개.
+    fired_by_axis: dict[str, list[dict[str, Any]]] = {}
+    for axis_name, sub_cat, action_title in _VIBE_RULES:
+        axis = axis_by_name.get(axis_name)
+        if not axis:
+            continue
+        weaknesses = axis.get("weaknesses") or []
+        if sub_cat not in weaknesses:
+            continue
+        fired_by_axis.setdefault(axis_name, []).append(
+            {
+                "axis_name": axis_name,
+                "axis_label": axis.get("label", _AXIS_LABEL.get(axis_name, axis_name)),
+                "axis_state": axis.get("state", "unknown"),
+                "sub_cat": sub_cat,
+                "action_title": action_title,
+            }
+        )
+
+    if not fired_by_axis:
         return []
-    axis_name = str(weakest.get("name") or "")
-    axis_label = _AXIS_LABEL.get(axis_name, axis_name or "바이브코딩 축")
-    state = weakest.get("state", "unknown")
-    return [
-        {
-            "action": f"{weakness} 보완",
-            "reason": (
-                f"{axis_label} 축이 가장 약합니다 (상태 {state}). "
-                "이 항목을 채우면 바이브코딩 진단의 가장 큰 갭이 좁혀집니다."
-            ),
-            "evidence": f"바이브코딩 3축 — {axis_label} 빠진 항목",
-            "ai_prompt": _build_vibe_axis_weakness_prompt(
-                weakness=weakness, axis_label=axis_label, state=state
-            ),
-            "category": "vibe_coding",
+
+    # 가장 약한 축부터 (상태 기준), 동률 시 intent > verification > continuity 우선.
+    declaration_order = {"intent": 0, "verification": 1, "continuity": 2}
+    sorted_axis_names = sorted(
+        fired_by_axis.keys(),
+        key=lambda name: (
+            _STATE_RANK.get(axis_by_name.get(name, {}).get("state", "unknown"), 0),
+            declaration_order.get(name, 99),
+        ),
+    )
+
+    # 축당 최대 1 카드 (해당 축의 첫 결손 sub-cat 룰 사용 — declaration order 그대로).
+    cards: list[dict[str, Any]] = []
+    for axis_name in sorted_axis_names:
+        if len(cards) >= _PER_CATEGORY_LIMIT:
+            break
+        rule = fired_by_axis[axis_name][0]
+        cards.append(
+            {
+                "action": rule["action_title"],
+                "reason": (
+                    f"{rule['axis_label']} 축이 약함 (상태 {rule['axis_state']}). "
+                    f"'{rule['sub_cat']}' 가 빠져 있어 다음 변경의 위험이 커집니다."
+                ),
+                "evidence": (
+                    f"바이브코딩 진단 — {rule['axis_label']} 축의 "
+                    f"'{rule['sub_cat']}' 부재"
+                ),
+                "ai_prompt": _build_vibe_axis_weakness_prompt(
+                    weakness=rule["sub_cat"],
+                    axis_label=rule["axis_label"],
+                    state=rule["axis_state"],
+                ),
+                "category": "vibe_coding",
+            }
+        )
+
+    return cards
+
+
+def _build_zero_action_state(vibe_insights: dict[str, Any]) -> dict[str, Any]:
+    """Decision 5: 카드 0개일 때 분기 (praise / judgment_pending / silent).
+
+    next_actions 가 빈 리스트일 때만 의미 있음. UI 가 이 필드 보고 분기.
+    """
+    if not vibe_insights.get("detected"):
+        return {"kind": "silent", "message": ""}
+    axes = vibe_insights.get("axes") or []
+    if not axes:
+        return {"kind": "silent", "message": ""}
+
+    strong_axes = [ax for ax in axes if ax.get("state") == "strong"]
+    all_unknown = all(ax.get("state") == "unknown" for ax in axes)
+
+    if strong_axes:
+        return {
+            "kind": "praise",
+            "message": _build_praise_message(strong_axes),
         }
-        for weakness in weaknesses[:_PER_CATEGORY_LIMIT]
-    ]
+    if all_unknown:
+        return {
+            "kind": "judgment_pending",
+            "message": (
+                "코드만 봐선 추가 진단 어려움 — 사용자 대화·시연이 필요합니다."
+            ),
+        }
+    return {"kind": "silent", "message": ""}
+
+
+def _build_praise_message(strong_axes: list[dict[str, Any]]) -> str:
+    """카드 0 + 강한 긍정 신호 ≥ 1 일 때 칭찬 메시지."""
+    if len(strong_axes) >= 3:
+        return (
+            "의도 / 검증 / 이어받기 세 축이 모두 강함. "
+            "다음 변경에 자신감 가지세요."
+        )
+    if len(strong_axes) == 2:
+        labels = " + ".join(
+            ax.get("label", ax.get("name", "")) for ax in strong_axes
+        )
+        per_axis_lines = []
+        for ax in strong_axes:
+            sigs = ", ".join(ax.get("top_signals", [])[:2])
+            per_axis_lines.append(f"{ax.get('label', '')} ({sigs})")
+        return (
+            f"{labels} 두 축이 강함. "
+            + " · ".join(per_axis_lines)
+            + ". 이 패턴을 유지하세요."
+        )
+    ax = strong_axes[0]
+    sigs = ", ".join(ax.get("top_signals", [])[:2])
+    return f"{ax.get('label', '')} 축이 강함 ({sigs}). 이 습관을 유지하세요."

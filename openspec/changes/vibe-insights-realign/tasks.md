@@ -30,29 +30,29 @@
 
 ## 5. ai_prompt 라벨 v7 갱신 (`ai_briefing.py` + 합성 함수들)
 
-- [ ] 5.1 `build_ai_briefing_prompt` 의 6 라벨 예시·규칙에서 `[지금 상황]` → `[이번 변경의 이유]`, `[끝나고 확인]` → `[성공 기준과 직접 확인 방법]` 로 교체
-- [ ] 5.2 같은 함수의 ai_prompt 작성 규칙 본문 — 새 라벨 두 개의 *목적과 작성 가이드* 정확히 반영 (이유 = 동기 강조, 성공 기준 = 객관 완료 + 직접 확인)
-- [ ] 5.3 `_REQUIRED_PROMPT_LABELS` 상수를 `("[현재 프로젝트]", "[해줄 일]", "[성공 기준과 직접 확인 방법]")` 로 교체
-- [ ] 5.4 `_synthesize_deterministic_prompt` 폴백 템플릿 — 새 6 라벨 본문으로 다시 작성
-- [ ] 5.5 `briefing_payload.py` 의 `_build_hotspot_review_prompt`, `_build_low_grade_prompt`, `_build_vibe_axis_weakness_prompt` — 새 라벨 6 개로 다시 작성
-- [ ] 5.6 `vibe_insights/starter_guide.py` 의 3 항목 ai_prompt — 새 라벨 6 개로 다시 작성
-- [ ] 5.7 `PROMPT_VERSION` v6-persona-split → **v7-realign** bump
+- [x] 5.1 `build_ai_briefing_prompt` 6 라벨 예시·규칙 교체 — `[지금 상황]` → `[이번 변경의 이유]`, `[끝나고 확인]` → `[성공 기준과 직접 확인 방법]`
+- [x] 5.2 같은 함수의 ai_prompt 작성 규칙 — 새 라벨 두 개의 목적·가이드 반영 (이유=동기, 성공 기준=객관 완료 + 직접 확인)
+- [x] 5.3 `_REQUIRED_PROMPT_LABELS` 새 라벨 셋으로 교체
+- [x] 5.4 `_synthesize_deterministic_prompt` 폴백 템플릿 — v7 라벨로 재작성
+- [x] 5.5 `briefing_payload.py` 의 합성 함수 3개 — v7 라벨로 재작성
+- [x] 5.6 `vibe_insights/starter_guide.py` 3 항목 ai_prompt — v7 라벨로 재작성
+- [x] 5.7 `PROMPT_VERSION` v6-persona-split → **v7-realign**, `SCHEMA_VERSION` 5 → **6**
 
-## 6. 카드 수 동적 정책 (`briefing_payload.py:_build_next_actions` + `_synthesize_vibe_coding_actions`)
+## 6. 카드 수 동적 정책 + 9 룰 엔진
 
-- [ ] 6.1 약점 → 카드 강제 매핑 로직 제거 (`weaknesses[:_PER_CATEGORY_LIMIT]` 식 제거)
-- [ ] 6.2 레버리지 합성 헬퍼 — 결손 신호들의 *공통 root* 기반으로 카드를 합성하는 함수 추가. 같은 작업으로 둘 이상 신호 해결 가능하면 하나의 카드로
-- [ ] 6.3 카드 수 정책: 가장 큰 root 1 개 → 카드 1, 독립 root 2 → 카드 2, 독립 고확신 root 3 → 카드 3, 고확신 root 0 → 카드 0
-- [ ] 6.4 카테고리당 최대 3 개 제한(`_PER_CATEGORY_LIMIT`) 폐지 — 전체 0–3 한도만 유지
-- [ ] 6.5 0개 카드 분기 — `praise / judgment_pending / silent` 셋 중 하나로 zero-action 상태 반환
+- [x] 6.1 `_VIBE_RULES` 상수 9 룰 박음 (axis_name, sub_cat_label, action_title)
+- [x] 6.2 `_synthesize_vibe_coding_actions` 재작성 — 결손 sub-cat 매칭 → 룰 작업으로 카드 1개씩, 축당 최대 1
+- [x] 6.3 가장 약한 축부터 정렬 (state rank → declaration order tiebreak: intent > verification > continuity)
+- [x] 6.4 카드 cap = `_PER_CATEGORY_LIMIT` (3) 유지. 코드/구조 카테고리는 AI가 자체 처리. 전체 카드 cap 은 Phase 3 에서 추가 검토.
+- [x] 6.5 0개 카드 분기는 7.x 그룹에서 처리
 
 ## 7. 침묵·칭찬·판단 보류 분기
 
-- [ ] 7.1 `_zero_action_state(insights)` 헬퍼 신설 — 입력: vibe_insights 결과 + axis states + signals. 출력: `praise (with one-line message)` 또는 `judgment_pending (with reason)` 또는 `silent`
-- [ ] 7.2 칭찬 메시지 템플릿 — 강한 긍정 신호 ≥ 1 일 때 그 신호를 인용한 한 줄 (예: "validation 디렉토리에 N 개 문서가 매 변경마다 갱신되고 있습니다 — 이 습관 유지하세요")
-- [ ] 7.3 판단 보류 메시지 — 결손이 모두 사각지대일 때 "코드만 봐선 추가 진단 어려움 — 사용자 대화·시연이 필요합니다"
-- [ ] 7.4 침묵 — 메시지 없음 (드문 케이스, 빈도 측정 위해 로그 한 줄 남김)
-- [ ] 7.5 payload 에 `zero_action_state` 필드 추가 (위 셋 중 하나, next_actions 가 빈 경우에만 의미 있음)
+- [x] 7.1 `_build_zero_action_state(vibe_insights)` 헬퍼 신설 — `praise / judgment_pending / silent` 분기
+- [x] 7.2 `_build_praise_message` — 강한 축 1·2·3개 케이스별 메시지 + top_signals 인용
+- [x] 7.3 판단 보류 메시지 — 모든 축 unknown 일 때 발동
+- [x] 7.4 침묵 — 메시지 빈 문자열
+- [x] 7.5 payload 에 `zero_action_state` 필드 추가 (next_actions 빈 경우에만 의미)
 
 ## 8. 프론트엔드 — 4단계 상태 표시
 

@@ -84,7 +84,7 @@ def test_starter_guide_ai_prompts_follow_3stage_structure(tmp_path: Path) -> Non
         assert prompt, f"starter guide item missing ai_prompt: {item.get('action')}"
         assert "[현재 프로젝트]" in prompt
         assert "[해줄 일]" in prompt
-        assert "[끝나고 확인]" in prompt
+        assert "[성공 기준과 직접 확인 방법]" in prompt
 
 
 def test_build_vibe_insights_uses_ai_key_insight_when_provided(tmp_path: Path) -> None:

@@ -163,6 +163,47 @@ def test_briefing_payload_has_five_sections_and_schema_version(tmp_path: Path) -
     )
 
 
+def test_briefing_payload_includes_zero_action_state_field(tmp_path: Path) -> None:
+    # vibe-insights-realign Decision 5: payload 에 zero_action_state 필드 추가.
+    # next_actions 가 비어있을 때만 의미 있는 값 (praise / judgment_pending / silent),
+    # 아니면 None.
+    _make_tree(tmp_path)
+    payload = build_briefing_payload(tmp_path, ai=None)
+    assert "zero_action_state" in payload
+    if payload["next_actions"]:
+        assert payload["zero_action_state"] is None
+    else:
+        zas = payload["zero_action_state"]
+        assert zas is not None
+        assert zas["kind"] in {"praise", "judgment_pending", "silent"}
+        assert "message" in zas
+
+
+def test_briefing_payload_vibe_coding_cards_use_9_rules(tmp_path: Path) -> None:
+    # vibe-insights-realign Decision 4: 9 룰 엔진. 카드 action 이 룰의 작업 제목
+    # ("AI 지침 문서 셋업", "수동 검증 흔적 도입" 등) 중 하나여야 함.
+    _make_tree(tmp_path)
+    payload = build_briefing_payload(tmp_path, ai=None)
+    vibe_cards = [a for a in payload["next_actions"] if a["category"] == "vibe_coding"]
+    rule_titles = {
+        "AI 지침 문서 셋업",
+        "프로젝트 의도 문서화",
+        "비의도·근거 명문화",
+        "수동 검증 흔적 도입",
+        "자동 테스트와 CI 도입",
+        "실행 경로 셋업",
+        "작게 쪼개는 워크플로우 도입",
+        "회고-학습 사이클 도입",
+        "핸드오프 문서 추가",
+    }
+    if vibe_cards:
+        # 감지된 레포 — 카드는 룰 작업 제목을 사용
+        for card in vibe_cards:
+            assert card["action"] in rule_titles or card["action"]  # starter_guide 도 OK
+        # 축당 최대 1 카드 (Decision 4)
+        assert len(vibe_cards) <= 3
+
+
 def test_briefing_payload_serializes_as_json(tmp_path: Path) -> None:
     _make_tree(tmp_path)
 

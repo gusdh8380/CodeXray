@@ -52,6 +52,21 @@ def test_build_vibe_insights_not_detected_returns_starter_guide(tmp_path: Path) 
     assert all("action" in item and "reason" in item for item in guide)
 
 
+def test_starter_guide_ai_prompts_follow_3stage_structure(tmp_path: Path) -> None:
+    # briefing-persona-split: starter_guide 의 ai_prompt 도 codebase-briefing 의
+    # 3단 구조 (필수 라벨 셋: [현재 프로젝트], [해줄 일], [끝나고 확인]) 를 따라야 한다.
+    _make_simple_tree(tmp_path)
+    payload = _run(tmp_path)
+    guide = payload["starter_guide"]
+    assert len(guide) >= 3  # CLAUDE.md, intent.md, openspec 도입
+    for item in guide:
+        prompt = item.get("ai_prompt", "")
+        assert prompt, f"starter guide item missing ai_prompt: {item.get('action')}"
+        assert "[현재 프로젝트]" in prompt
+        assert "[해줄 일]" in prompt
+        assert "[끝나고 확인]" in prompt
+
+
 def test_build_vibe_insights_uses_ai_key_insight_when_provided(tmp_path: Path) -> None:
     _make_simple_tree(tmp_path)
     (tmp_path / "CLAUDE.md").write_text("# agent\n")

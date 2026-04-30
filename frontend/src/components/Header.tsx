@@ -53,10 +53,10 @@ export function Header({ path, onPathChange, onSubmit, isAnalyzing }: HeaderProp
           <Input
             value={path}
             onChange={(e) => onPathChange(e.target.value)}
-            placeholder="레포 경로를 입력하고 Enter"
+            placeholder="프로젝트 경로를 입력하고 Enter"
             className="flex-1"
             disabled={isAnalyzing}
-            aria-label="레포 경로"
+            aria-label="프로젝트 경로"
           />
           <Button
             type="button"

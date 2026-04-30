@@ -74,7 +74,7 @@ function Welcome() {
           로컬 코드베이스 분석
         </div>
         <h2 className="text-4xl font-bold tracking-tight mb-4">
-          레포 경로를 입력하고 Enter
+          프로젝트 경로를 입력하고 Enter
         </h2>
         <p className="text-muted-foreground leading-relaxed text-lg">
           CodeXray는 코드를 읽고{" "}

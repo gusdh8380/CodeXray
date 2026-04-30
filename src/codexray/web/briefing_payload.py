@@ -21,10 +21,64 @@ from ..vibe import build_vibe_coding_report
 from ..vibe_insights import build_vibe_insights
 from .ai_briefing import AIBriefingResult
 
-
 SCHEMA_VERSION = 3
 
 _PER_CATEGORY_LIMIT = 3
+
+
+# briefing-persona-split: 결정론적 합성 ai_prompt — AI 가 만들지 않은 다음 행동
+# 항목들에도 비개발자가 다음 AI 세션에 그대로 복사할 수 있는 6 라벨 prompt 가
+# 들어가야 한다. 빈 문자열로 두면 카드에서 prompt 영역이 사라져 사용성이 깨진다.
+
+def _build_hotspot_review_prompt(top_hotspot: str, hotspot_count: int) -> str:
+    return (
+        "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
+        f"[지금 상황] 자주 바뀌고 위험도가 높은 파일이 {hotspot_count}개 있고, "
+        f"그 중 가장 위험한 것은 `{top_hotspot}` 입니다.\n"
+        f"[해줄 일] `{top_hotspot}` 파일을 한 번 같이 읽어 주세요. "
+        "1) 이 파일이 무엇을 하는 파일인지 한 단락으로 요약, "
+        "2) 가장 큰 책임 두 개를 식별, "
+        "3) 다음 변경 시 가장 깨질 가능성이 높은 부분 한 곳을 짚어 주세요. "
+        "이번 세션에서는 코드 변경은 하지 마세요 — 분석만.\n"
+        f"[작업 전 읽을 것] {top_hotspot}\n"
+        "[끝나고 확인] 1) 위 세 가지 분석 결과를 채팅으로 받았는지, "
+        "2) 어떤 파일도 수정되지 않았는지 확인해 주세요.\n"
+        "[건드리지 말 것] 코드 변경 금지 — 다음 세션에서 별도로 합니다."
+    )
+
+
+def _build_low_grade_prompt(grade: str) -> str:
+    return (
+        "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
+        f"[지금 상황] 종합 품질 등급이 {grade} 로 낮습니다. "
+        "어디부터 손대야 가장 효과적인지 우선 식별이 필요합니다.\n"
+        "[해줄 일] CodeXray 의 상세 분석 토글을 펼친 다음 "
+        "1) Code Quality 탭에서 가장 점수가 낮은 차원 한 개 식별, "
+        "2) 그 차원의 정의를 평어로 설명, "
+        "3) 그 차원을 올리려면 어떤 종류의 변경이 필요한지 한 단락으로 알려주세요. "
+        "이번 세션에서는 코드 변경 없이 진단만.\n"
+        "[끝나고 확인] 1) 가장 약한 차원 이름과 점수를 받았는지, "
+        "2) 그 차원을 올릴 변경 방향을 받았는지 확인해 주세요.\n"
+        "[건드리지 말 것] 코드 변경 금지 — 분석·추천만."
+    )
+
+
+def _build_vibe_axis_weakness_prompt(
+    weakness: str, axis_label: str, score: int
+) -> str:
+    return (
+        "[현재 프로젝트] 위 화면 상단의 정체 섹션에 설명된 프로젝트입니다.\n"
+        f"[지금 상황] 바이브코딩 진단에서 '{axis_label}' 축이 가장 약합니다 "
+        f"(점수 {score}/100). 그 축의 약점 중 하나가 '{weakness}' 입니다.\n"
+        f"[해줄 일] '{weakness}' 를 보완해 주세요. "
+        "어떻게 보완할지 모르겠으면 먼저 'CodeXray 가 이 약점을 왜 지적했는지, "
+        "구체적으로 무엇을 만들거나 고쳐야 하는지 설명해줘' 라고 AI 에게 물어 "
+        "이해부터 잡고 시작하세요.\n"
+        "[끝나고 확인] 1) 약점에 해당하는 새 파일/설정이 생겼거나 기존 항목이 "
+        "보완됐는지, 2) 기존 코드/문서는 어떤 것도 의도치 않게 변경되지 않았는지 "
+        "확인해 주세요.\n"
+        "[건드리지 말 것] 이번 약점 외 다른 영역은 다음 세션에서 다루세요."
+    )
 
 
 def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str, Any]:
@@ -292,7 +346,7 @@ def _build_next_actions(
                         "있는 파일입니다."
                     ),
                     "evidence": f"Hotspot {hotspot_count}개 중 최상위, 우선순위 1위",
-                    "ai_prompt": "",
+                    "ai_prompt": _build_hotspot_review_prompt(top_hotspot, hotspot_count),
                     "category": "code",
                 }
             )
@@ -305,7 +359,7 @@ def _build_next_actions(
                         "노력으로 평균을 올릴 수 있습니다."
                     ),
                     "evidence": f"종합 등급 {grade}",
-                    "ai_prompt": "",
+                    "ai_prompt": _build_low_grade_prompt(grade),
                     "category": "structural",
                 }
             )
@@ -361,7 +415,9 @@ def _synthesize_vibe_coding_actions(
                 "이 항목을 채우면 바이브코딩 진단의 가장 큰 갭이 좁혀집니다."
             ),
             "evidence": f"바이브코딩 3축 — {axis_label} 약점",
-            "ai_prompt": "",
+            "ai_prompt": _build_vibe_axis_weakness_prompt(
+                weakness=weakness, axis_label=axis_label, score=score
+            ),
             "category": "vibe_coding",
         }
         for weakness in weaknesses[:_PER_CATEGORY_LIMIT]

@@ -25,13 +25,17 @@ from ..inventory import aggregate
 from ..metrics import build_metrics
 from ..quality import build_quality
 
-PROMPT_VERSION = "v5-categorized-actions"
+PROMPT_VERSION = "v6-persona-split"
 SCHEMA_VERSION = 5
 
 # vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서만 합성한다.
 # AI 응답에 vibe_coding 이 들어와도 code 로 강등 — design.md D2 결정 일관 적용.
 _AI_ALLOWED_CATEGORIES = {"code", "structural"}
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
+
+# briefing-persona-split: ai_prompt 3단 구조의 필수 라벨 셋. AI 응답이 이 셋 중
+# 하나라도 빠뜨리면 결정론적 템플릿으로 통째로 교체한다.
+_REQUIRED_PROMPT_LABELS = ("[현재 프로젝트]", "[해줄 일]", "[끝나고 확인]")
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token
 # for Korean prose + code keeps us safely under that budget while leaving
@@ -241,7 +245,9 @@ def _enforce_budget(text: str, limit: int) -> str:
 
 
 def build_ai_briefing_prompt(bundle_markdown: str) -> str:
-    return f"""당신은 시니어 개발자이자 바이브코딩 코치입니다. **독자는 코드를 모르는 비개발자(바이브코더)**입니다. 아래에 레포의 메타데이터, 구조 요약, 핵심 소스 파일이 직접 첨부되어 있습니다. 직접 코드를 읽고 한국어로 종합 브리핑을 작성하십시오.
+    return f"""당신은 시니어 개발자이자 바이브코딩 코치입니다. **이 브리핑의 청자는 코드를 못 읽는 비개발자(바이브코더) 100%입니다.** 시니어 개발자도 같은 화면을 볼 수 있지만, 그들은 화면 아래 "상세 분석 토글"에서 메트릭·그래프를 직접 봅니다. 따라서 브리핑 본문은 비개발자만 청자로 두고 작성하십시오. "혹시 시니어가 읽을지 모르니까"를 핑계로 메트릭 용어를 끼워넣지 마십시오.
+
+아래에 레포의 메타데이터, 구조 요약, 핵심 소스 파일이 직접 첨부되어 있습니다. 직접 코드를 읽고 한국어로 종합 브리핑을 작성하십시오.
 
 다음 JSON 형식으로만 답하십시오. 다른 설명 없이 JSON 블록만:
 
@@ -255,7 +261,7 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
       "action": "구체적이고 실행 가능한 행동 한 줄",
       "reason": "왜 이 행동이 필요한지 한 문장 — '~기 때문에'로 인과 연결",
       "evidence": "분석에서 인용한 근거 (등급/파일명/수치/커밋)",
-      "ai_prompt": "비개발자가 Claude/Codex CLI에 그대로 복사·붙여넣기 할 수 있는 자연어 명령. 예: 'src/foo.py를 두 부분으로 나누세요. 1) 데이터 가져오기 2) 화면 그리기. 변경 후 기존 동작이 그대로 유지되어야 합니다.'",
+      "ai_prompt": "[현재 프로젝트] {{레포가 뭐 하는지 한두 줄}}\\n[지금 상황] {{evidence를 평어로 풀어 쓴 한두 문장}}\\n[해줄 일] {{action을 실행 가능한 단계로 — 1) 2) 3) 형태 OK}}\\n[작업 전 읽을 것] {{관련 파일/문서 경로 — 있으면}}\\n[끝나고 확인] {{비개발자가 사용자 시점에서 확인할 수 있는 항목 1~2개 + 기존 동작이 깨지지 않았는지 회귀 체크}}\\n[건드리지 말 것] {{스코프 제약 — 있으면}}",
       "category": "code 또는 structural 중 하나. code는 함수/모듈 내부 변경(테스트 보강·에러 처리·로직 정리 등), structural은 모듈 분리·의존성 정리·아키텍처 변경"
     }},
     {{ "action": "...", "reason": "...", "evidence": "...", "ai_prompt": "...", "category": "code | structural" }},
@@ -266,14 +272,30 @@ def build_ai_briefing_prompt(bundle_markdown: str) -> str:
 }}
 ```
 
-**중요한 작성 규칙 (비개발자가 독자):**
+**중요한 작성 규칙 (브리핑 청자는 비개발자 100%):**
 1. 메트릭 용어 (DAG, SCC, fan-in, fan-out, coupling, hotspot priority, p90 등) **직접 사용 금지**. 대신 '순환 없는 흐름', '한 파일에 의존이 몰림', '자주 바뀌고 위험한 파일' 같은 평어 사용
 2. 등급 (A/B/C/D/F)과 파일 경로는 그대로 인용 OK
 3. 수치 (예: 'Hotspot 23개', '테스트 0점')는 인용하되 의미를 함께 풀어줄 것
-4. next_actions의 ai_prompt 필드는 비개발자가 그대로 AI에게 복사해서 보낼 수 있는 자연어 작업 지시여야 함 (코드 작성 지침)
-5. intent_alignment는 의도 문서가 있을 때만 채우고, 의도와 코드 사이의 구체적 갭을 짚을 것
-6. next_actions의 category 필드는 반드시 "code" 또는 "structural" 중 하나로 채울 것. "vibe_coding" 카테고리는 시스템이 별도로 채우니 **절대 생성하지 말 것**
-7. next_actions는 카테고리당 최대 3개, 합쳐서 최대 6개 (vibe_coding은 시스템이 별도로 추가). 카테고리가 비어있어도 OK (해당 카테고리에 추천할 게 없으면 그 카테고리 항목 자체를 생략)
+4. intent_alignment는 의도 문서가 있을 때만 채우고, 의도와 코드 사이의 구체적 갭을 짚을 것
+5. next_actions의 category 필드는 반드시 "code" 또는 "structural" 중 하나로 채울 것. "vibe_coding" 카테고리는 시스템이 별도로 채우니 **절대 생성하지 말 것**
+6. next_actions는 카테고리당 최대 3개, 합쳐서 최대 6개 (vibe_coding은 시스템이 별도로 추가). 카테고리가 비어있어도 OK (해당 카테고리에 추천할 게 없으면 그 카테고리 항목 자체를 생략)
+
+**ai_prompt 필드 작성 규칙 (가장 중요 — 비개발자가 다음 AI 세션에 그대로 복사해서 씁니다):**
+
+ai_prompt 는 비개발자가 *컨텍스트 0인 새 AI 채팅창*에 그대로 붙여넣어 쓰는 텍스트입니다. 새 AI 는 이 레포를 모른다고 가정하십시오. 6 라벨 3단 구조를 따르십시오:
+
+필수 라벨 (반드시 포함, 이 셋이 빠지면 시스템이 통째로 결정론적 템플릿으로 교체합니다):
+- `[현재 프로젝트]` — 한두 줄로 무슨 프로젝트인지
+- `[해줄 일]` — action 을 실행 가능한 단계로 풀어쓰기. 비개발자가 읽어도 무슨 일을 시키는지 알 수 있게
+- `[끝나고 확인]` — 비개발자가 코드를 안 보고도 결과를 확인할 수 있는 항목 1개 이상 (화면 클릭, 파일 존재, 명령 실행 결과 등) + "기존 ~ 동작이 그대로인지" 회귀 체크
+
+옵션 라벨 (있으면 더 좋음):
+- `[지금 상황]` — evidence 를 평어로 풀어 쓴 한두 문장
+- `[작업 전 읽을 것]` — AI 가 먼저 읽어야 할 파일/문서 경로
+- `[건드리지 말 것]` — 이번 작업 스코프 제약
+
+ai_prompt 내부에서도 메트릭 용어 (coupling, hotspot, fan-in 등) 직접 사용 금지. 평어로 풀어 쓰십시오.
+ai_prompt 는 JSON 문자열이므로 라벨 사이는 `\\n` 으로 구분하십시오 (실제 줄바꿈 아니라 두 글자 `\\n`).
 
 레포 자료:
 
@@ -301,7 +323,10 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
     quality_risk = str(data.get("quality_risk", "")).strip()
     key_insight = str(data.get("key_insight", "")).strip()
     intent_alignment = str(data.get("intent_alignment", "")).strip()
-    next_actions = _parse_next_actions(data.get("next_actions", []))
+    next_actions = _parse_next_actions(
+        data.get("next_actions", []),
+        project_context=executive,
+    )
 
     if not executive or not quality_risk or not next_actions:
         return None
@@ -319,7 +344,36 @@ def parse_ai_briefing_response(text: str, backend: str) -> AIBriefingResult | No
     )
 
 
-def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
+def _has_required_labels(text: str) -> bool:
+    return all(label in text for label in _REQUIRED_PROMPT_LABELS)
+
+
+def _synthesize_deterministic_prompt(
+    *, action: str, reason: str, evidence: str, project_context: str
+) -> str:
+    """비개발자가 새 AI 세션에 그대로 복사해서 쓸 수 있는 결정론적 6 라벨 템플릿.
+
+    AI 응답의 ai_prompt 가 필수 라벨 셋을 빠뜨렸을 때 이 함수가 반환하는 텍스트로
+    교체한다. project_context 는 같은 응답에서 파싱된 executive 요약을 넘긴다.
+    """
+    project_line = (
+        project_context
+        if project_context
+        else "이 레포는 위 화면 상단의 'Executive Summary' 에 설명된 프로젝트입니다."
+    )
+    return (
+        f"[현재 프로젝트] {project_line}\n"
+        f"[지금 상황] {evidence}\n"
+        f"[해줄 일] {action}\n"
+        f"[끝나고 확인] 작업이 끝나면 1) 위 변경이 의도대로 적용됐는지, "
+        f"2) 기존에 잘 동작하던 화면·기능이 그대로 작동하는지 직접 확인해 주세요. "
+        f"이상이 보이면 작업 결과를 되돌려 달라고 AI 에게 말하세요."
+    )
+
+
+def _parse_next_actions(
+    raw: Any, *, project_context: str = ""
+) -> tuple[AINextAction, ...]:
     if not isinstance(raw, list):
         return ()
     actions: list[AINextAction] = []
@@ -334,11 +388,20 @@ def _parse_next_actions(raw: Any) -> tuple[AINextAction, ...]:
                 category = "code"
             if not action:
                 continue
+            resolved_reason = reason or "AI 해석에서 도출된 우선 행동입니다."
+            resolved_evidence = evidence or "근거 인용 없음"
+            if ai_prompt and not _has_required_labels(ai_prompt):
+                ai_prompt = _synthesize_deterministic_prompt(
+                    action=action,
+                    reason=resolved_reason,
+                    evidence=resolved_evidence,
+                    project_context=project_context,
+                )
             actions.append(
                 AINextAction(
                     action=action,
-                    reason=reason or "AI 해석에서 도출된 우선 행동입니다.",
-                    evidence=evidence or "근거 인용 없음",
+                    reason=resolved_reason,
+                    evidence=resolved_evidence,
                     ai_prompt=ai_prompt,
                     category=category,
                 )

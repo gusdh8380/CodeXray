@@ -77,9 +77,10 @@ function ReviewWarningBanner() {
         <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
         <p className="leading-relaxed">
           <span className="font-semibold">검토 후 진행하세요. </span>
-          AI가 자동 생성한 추천이라 그대로 적용하면 부적절할 수 있습니다.
-          특히 결합도/Hotspot 같은 메트릭은 CLI/API 진입점 같은 파일에서 자연스럽게
-          높을 수 있으니 맥락을 함께 판단하세요.
+          AI가 자동 생성한 추천입니다. 어떤 파일은 원래 자주 바뀌고 의존이 많이
+          몰리는 게 자연스러운 자리(예: 시작 지점·외부 API 진입점)일 수 있어요.
+          추천을 그대로 받기 전에 "이게 정말 내 프로젝트에 맞는 일인가" 한 번
+          멈춰서 판단해 주세요.
         </p>
       </div>
     </div>

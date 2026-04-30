@@ -30,7 +30,7 @@ SCHEMA_VERSION = 5
 
 # vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서만 합성한다.
 # AI 응답에 vibe_coding 이 들어와도 code 로 강등 — design.md D2 결정 일관 적용.
-_AI_AI_ALLOWED_CATEGORIES = {"code", "structural"}
+_AI_ALLOWED_CATEGORIES = {"code", "structural"}
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 
 # Bundle budgets (chars). codex/claude CLIs accept ~200K tokens; ~3 chars/token

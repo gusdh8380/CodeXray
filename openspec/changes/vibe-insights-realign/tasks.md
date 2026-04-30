@@ -1,10 +1,11 @@
 ## 1. axes.py 3축 재설계
 
 - [ ] 1.1 `src/codexray/vibe_insights/axes.py` 의 `environment / process / handoff` 3 함수 → `intent / verification / continuity` 로 함수 시그니처·이름 교체
-- [ ] 1.2 각 축의 신호 수집을 8 운영 정의 매핑대로 재정의:
-      `intent` = 의도 글(CLAUDE.md / AGENTS.md / docs/intent.md / openspec/project.md / .cursorrules / .github/copilot-instructions.md) + 의도+비의도 먼저(Not 섹션 / decision log / openspec proposal Why 추출)
-- [ ] 1.3 `verification` = 손 검증(docs/validation/ / screenshots / demo step) + 재현 가능 실행 경로(`package.json`/`pyproject.toml` 의 build/test/run 스크립트, README 명령어 블록 추출, env sample 존재)
-- [ ] 1.4 `continuity` = 학습 반영(회고 문서 + 후속 변경 인용 패턴) + 작게 이어가기(작은 PR/commit 빈도, saved plans 디렉토리, openspec/changes tasks 형태)
+- [ ] 1.2 각 축의 신호 수집을 design.md Decision 1 의 *broadened 신호 풀* 대로 구현:
+      `intent` = (a) AI 지속 지시 문서 1종 이상 (CLAUDE.md / AGENTS.md / .cursorrules / .github/copilot-instructions.md / .windsurf/* / .aider.conf.yml / .continue/* — 어느 것이든) + 충실도(≥500 chars + 헤더 ≥2), (b) 프로젝트 의도 문서 1종 이상 (README purpose 문단 / docs/intent.md / VISION.md / ABOUT.md / PROJECT.md / OVERVIEW.md / openspec/project.md), (c) 의도+비의도 명문화 (Not 섹션 / docs/adr/ / docs/decisions/ / CHANGELOG reasoning / openspec proposal Why)
+- [ ] 1.3 `verification` = (a) 손 검증 흔적 (docs/validation/ / screenshots/ / demo/ / 수동 테스트 체크리스트), (b) 자동 테스트 (tests/ / __tests__/ / *_test.py / *.test.ts 등 언어별 표준) + CI (.github/workflows/ / .gitlab-ci.yml / .circleci/ 등), (c) 재현 가능 실행 경로 (README 명령어 블록 / package.json scripts / pyproject scripts / Makefile / justfile / Dockerfile / docker-compose.yml / .env.sample)
+- [ ] 1.4 `continuity` = (a) 작게 이어가기 (작은 PR/commit 빈도 + saved plans: openspec tasks / PLANS.md / TODO.md / ROADMAP.md / .github/ISSUE_TEMPLATE), (b) 학습 반영 (docs/retro/ / docs/postmortem/ / docs/lessons/ / CHANGELOG 갱신 빈도 / 지시 문서 git log 갱신), (c) 핸드오프 문서 (HANDOFF.md / ONBOARDING.md / CONTRIBUTING.md)
+- [ ] 1.4a README purpose 문단 감지 휴리스틱 구현 — 첫 1-3 단락 안에 "what / purpose / why / 이 프로젝트는 / 이 도구는" 키워드 + 단락 길이 ≥ 200 chars
 - [ ] 1.5 점수 산정 결과를 4 단계 상태(`strong / moderate / weak / unknown`) + `signal_count` + `top_signals` 로 변환하는 헬퍼 추가
 - [ ] 1.6 임계값 초안 적용: `strong` ≥ 4 + 핵심 신호 모두 충족, `moderate` ≥ 2, `weak` ≥ 1, `unknown` 데이터 부족
 - [ ] 1.7 가장 약한 축 선택 — 동률 시 `intent > verification > continuity` 우선순위 적용
@@ -17,9 +18,11 @@
 
 ## 3. 사각지대(blind_spots) 명시
 
-- [ ] 3.1 vibe_insights builder 에서 `blind_spots` 필드 신규 — 다음 두 항목 고정:
+- [ ] 3.1 vibe_insights builder 에서 `blind_spots` 필드 신규 — 다음 4 항목 고정:
       "사용자(나)가 What/Why/Next 를 자기 입으로 설명할 수 있는가",
-      "다음 행동의 우선순위를 사람이 정하고 있는가"
+      "다음 행동의 우선순위를 사람이 정하고 있는가",
+      "손으로 한 검증이 실제로 매번 굴러가는가",
+      "외부 도구(Notion, Confluence, Slack, Linear 등)와 README 같은 문서의 질적 깊이 는 자동 판단 못 합니다"
 - [ ] 3.2 사각지대는 평가에 따라 동적으로 변하지 않고 *항상 고정 노출*. 단, 결손 카운트나 점수 산정에는 합산하지 않음
 
 ## 4. SCHEMA_VERSION + 직렬화 갱신
@@ -97,19 +100,21 @@
 - [ ] 13.7 starter_guide ai_prompt — v7 라벨 검증 테스트 갱신
 - [ ] 13.8 `uv run pytest tests/ -q` 통과 확인
 
-## 14. 자기 적용 검증
+## 14. 자기 적용 검증 (편향 없는 평가 확인)
 
 - [ ] 14.1 서버 재시작 후 CodeXray 자체 분석
 - [ ] 14.2 3 축 상태 (`intent / verification / continuity`) 가 어떤 라벨로 분류되는지 확인 — 사용자 합의 받음 (CodeXray 자체는 모두 `strong` 또는 `intent / continuity` 가 `strong`, `verification` 이 `moderate` 정도가 자연스러움)
 - [ ] 14.3 다음 행동 카드 수 — 자기 적용에서 0–3 중 어디로 정착하는지 측정
-- [ ] 14.4 blind spot 블록 렌더링 확인
+- [ ] 14.4 blind spot 블록 렌더링 확인 (4 항목 모두 노출)
 - [ ] 14.5 ai_prompt 1 개를 실제 새 Claude/Codex 세션에 복사해서 의도대로 작동하는지 확인
 - [ ] 14.6 결과를 `docs/validation/vibe-insights-realign-self.md` 에 기록
 
-## 15. CivilSim 검증 (선택)
+## 15. Non-ROBOCO 레포 검증 (편향 검증의 핵심)
 
-- [ ] 15.1 `/Users/jeonhyeono/Project/personal/CivilSim` 분석 후 결과 캡처
-- [ ] 15.2 결과를 `docs/validation/vibe-insights-realign-civilsim.md` 에 기록 (Unity C# 레포에서 새 3 축이 의미 있게 작동하는지)
+- [ ] 15.1 *OpenSpec/ROBOCO 안 쓰는 메이저 OSS* 레포 1-2개 분석 — 후보: vite, fastapi, ruff, sveltekit 같은 일반 OSS
+- [ ] 15.2 분석 결과 확인 — 잘 만들어진 레포가 모두 "약함" 으로 분류되지 않는지 (편향 없는지) 검증
+- [ ] 15.3 결과를 `docs/validation/vibe-insights-realign-non-roboco.md` 에 기록
+- [ ] 15.4 (선택) `/Users/jeonhyeono/Project/personal/CivilSim` (Unity C#) 도 분석 후 `docs/validation/vibe-insights-realign-civilsim.md` 에 기록
 
 ## 16. 변경 마무리
 

@@ -43,10 +43,11 @@ The web UI SHALL display a fixed "이 도구가 못 본 것" block in the Briefi
 
 #### Scenario: 블록 내용
 - **WHEN** blind spot 블록이 렌더링되면
-- **THEN** 다음 셋이 최소한 포함되고, codebase-briefing 의 "blind spot 상시 노출" 요구사항과 일치한다:
+- **THEN** 다음 4 항목이 최소한 포함되고, codebase-briefing 의 "blind spot 상시 노출" 요구사항과 일치한다:
   1. 사용자(나)가 What/Why/Next 를 자기 입으로 설명할 수 있는가
   2. 손으로 한 검증이 *실제로 매번* 굴러가는가
   3. 다음 행동의 우선순위를 사람이 정하고 있는가
+  4. 외부 도구(Notion, Confluence, Slack, Linear 등)에 있는 의도·결정 흔적과 README 같은 문서의 *질적 깊이* 는 자동 판단 못 합니다
 
 #### Scenario: 블록 톤은 자가 점검
 - **WHEN** blind spot 블록이 렌더링되면

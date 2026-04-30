@@ -3,21 +3,25 @@
 ### Requirement: 8 운영 정의와 측정 가능성 분리
 The system SHALL define vibe coding quality with eight operational signals, and explicitly separate the six that can be inferred from repository artifacts from the two that require user conversation or observation.
 
-#### Scenario: 흔적 기반 6개 신호 정의
+#### Scenario: 흔적 기반 6개 신호 정의 (원칙 수준)
 - **WHEN** 시스템이 바이브코딩 평가를 수행하면
-- **THEN** 다음 6개 신호를 흔적 기반(`evidence-based`) 측정 대상으로 사용한다:
-  1. 의도가 글로 박혀 작동한다 (CLAUDE.md / AGENTS.md / docs/intent.md / openspec/project.md / .cursorrules 같은 지속 지시 문서)
-  2. 의도와 비의도가 먼저 적힌다 (Not 섹션, decision log, rationale, openspec proposal Why)
-  3. 손으로 검증한 흔적 (docs/validation/, screenshots, demo step 문서)
-  4. 재현 가능한 실행 경로 (build/test/run 스크립트, README 명령어 블록, env sample, Makefile)
-  5. 실패에서 배운 흔적이 다음 변경에 반영 (회고 문서 + 후속 변경에서 그 학습 인용)
-  6. 작게 쪼개고 이어갈 수 있다 (작은 PR/commit 빈도, saved plans, openspec/changes/<name>/tasks.md 형태 plan)
+- **THEN** 다음 6개 신호를 흔적 기반(`evidence-based`) 측정 대상으로 사용한다 (각 신호의 *구체 파일·패턴 매칭은 design.md Decision 1 의 broadened 풀을 따른다*. 특정 도구·프로젝트 컨벤션을 표준처럼 강제하지 않는다):
+  1. 의도가 글로 박혀 작동한다 — AI 지속 지시 문서가 *어떤 도구 표준이든* 1종 이상 존재하고 충실도 임계 충족
+  2. 의도와 비의도가 먼저 적힌다 — 프로젝트 의도 문서 또는 decision log / ADR 등에 의도와 비의도가 명문화
+  3. 손으로 검증한 흔적 — 검증 디렉토리·문서·screenshot·demo *어떤 형식이든* 존재
+  4. 재현 가능한 실행 경로 — README 명령어 블록 / 패키지 매니페스트 scripts / Makefile 등 *어떤 형식이든* 존재
+  5. 실패에서 배운 흔적이 다음 변경에 반영 — 회고 디렉토리 / CHANGELOG reasoning / 지시 문서 갱신 빈도 *어떤 형식이든*
+  6. 작게 쪼개고 이어갈 수 있다 — 작은 PR/commit 빈도 / saved plans (TODO·ROADMAP·tasks 등) *어떤 형식이든*
 
 #### Scenario: 대화·관찰 2개 신호 명시
 - **WHEN** 시스템이 바이브코딩 평가를 수행하면
 - **THEN** 다음 2개 신호는 흔적으로 측정하지 *않고*, 결과 payload 의 `blind_spots` 필드로 분리해 사용자에게 자가 점검 항목으로 노출한다:
   1. 사용자가 What/Why/Next 를 자기 입으로 설명할 수 있는가
   2. 다음 행동의 우선순위를 사람이 정하고 있는가
+
+#### Scenario: 외부 도구 사각지대 명시
+- **WHEN** blind_spots 필드가 직렬화되면
+- **THEN** 위 2개 신호 외에 다음 한 줄을 *항상 함께* 포함한다: "외부 도구(Notion, Confluence, Slack, Linear 등)에 있는 의도·결정 흔적과 README 같은 문서의 *질적 깊이* 는 자동 판단 못 합니다."
 
 #### Scenario: 신호 수집 결과 payload 분리
 - **WHEN** 평가 결과가 직렬화되면
@@ -66,15 +70,15 @@ The system SHALL evaluate vibe coding quality on three axes — `intent` (의도
 
 #### Scenario: intent 축 평가
 - **WHEN** 바이브코딩이 감지된 레포를 평가하면
-- **THEN** 시스템은 intent 축의 상태를 "의도가 글로 박혀 작동한다" + "의도와 비의도가 먼저 적힌다" 신호의 충족도로 결정한다 (CLAUDE.md / AGENTS.md / docs/intent.md / openspec/project.md / .cursorrules / Not 섹션 / decision log 등)
+- **THEN** 시스템은 intent 축의 상태를 (a) AI 지속 지시 문서 1종 이상 존재 + 충실도 충족, (b) 프로젝트 의도 문서 1종 이상 존재, (c) 의도와 비의도 명문화 — 셋의 충족도로 결정한다. *구체 파일/패턴 매칭은 design.md Decision 1 의 broadened 풀을 따른다.*
 
 #### Scenario: verification 축 평가
 - **WHEN** 바이브코딩이 감지된 레포를 평가하면
-- **THEN** 시스템은 verification 축의 상태를 "손으로 검증한 흔적" + "재현 가능한 실행 경로" 신호의 충족도로 결정한다 (docs/validation/ / tests/ / screenshots / demo / build·test·run 스크립트 / README 명령어 블록 / env sample 등)
+- **THEN** 시스템은 verification 축의 상태를 (a) 손 검증 흔적 1종 이상 존재, (b) 자동 테스트와 CI 1종 이상 존재, (c) 재현 가능 실행 경로 1종 이상 존재 — 셋의 충족도로 결정한다. *구체 파일/패턴 매칭은 design.md Decision 1 의 broadened 풀을 따른다.*
 
 #### Scenario: continuity 축 평가
 - **WHEN** 바이브코딩이 감지된 레포를 평가하면
-- **THEN** 시스템은 continuity 축의 상태를 "실패에서 배운 흔적이 다음 변경에 반영" + "작게 쪼개고 이어갈 수 있다" 신호의 충족도로 결정한다 (회고 문서 + 후속 변경 / 작은 PR 빈도 / saved plans / openspec tasks.md 등)
+- **THEN** 시스템은 continuity 축의 상태를 (a) 작게 이어가기 흔적 (작은 PR + saved plans 등), (b) 학습 반영 흔적 (회고 + CHANGELOG + 지시 문서 갱신 등), (c) 핸드오프 문서 — 셋의 충족도로 결정한다. *구체 파일/패턴 매칭은 design.md Decision 1 의 broadened 풀을 따른다.*
 
 #### Scenario: 4단계 상태 매핑
 - **WHEN** 어떤 축의 신호 수집이 완료되면

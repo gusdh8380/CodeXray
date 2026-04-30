@@ -35,16 +35,58 @@ GPT Deep Research(2026-05-01)가 답을 운영 가능한 형태로 가져왔다.
 
 ### Decision 1: 새 3축 정의와 측정 신호 매핑
 
-채택:
-- **intent (의도)** — "이 프로젝트의 의도가 외부 AI 세션에 전달 가능한가". 8 운영 정의 중:
-  - 의도가 글로 박혀 작동한다 → `CLAUDE.md`, `AGENTS.md`, `docs/intent.md`, `openspec/project.md`, `.cursorrules`, `.github/copilot-instructions.md` 등 *지속 지시 문서*가 충분히 채워져 있는가
-  - 의도와 비의도가 먼저 적힌다 → Not 섹션, decision log, rationale, openspec proposal 의 Why 등
-- **verification (검증)** — "결과를 인간이 독립적으로 확인할 수 있는가":
-  - 손으로 검증한 흔적 → `docs/validation/`, `tests/`, screenshot 디렉토리, demo step 문서
-  - 재현 가능한 실행 경로 → `package.json`/`pyproject.toml` 의 build/test/run 스크립트, README의 명령어 블록, `Makefile`, env sample 파일
-- **continuity (이어받기)** — "다음 세션이 이어받을 수 있는가":
-  - 실패에서 배운 흔적이 다음 변경에 반영 → 회고 문서 + 그 다음 변경 커밋 패턴 (회고 후 CLAUDE.md/AGENTS.md 갱신, 후속 fix 커밋 등)
-  - 작게 쪼개고 이어갈 수 있다 → 작은 PR 빈도, 저장된 plan 문서(`PLANS.md`, `openspec/changes/<name>/tasks.md`), one-item-per-loop 패턴 (commit 메시지 길이 분포)
+**중요**: 신호 리스트는 *공통 분모*로 작성한다 (특정 도구·프로젝트의 컨벤션을 표준처럼 박지 않음). ROBOCO/OMC/OpenSpec 컨벤션은 *옵션 중 하나*로만 등장한다. 그래야 OpenSpec 안 쓰는 일반 오픈소스 레포도 공정하게 평가된다.
+
+#### intent (의도) 축
+
+"이 프로젝트의 의도가 외부 AI 세션에 전달 가능한가". 3 sub-category 의 충족도로 측정:
+
+**(a) AI 지속 지시 문서가 1종 이상 존재 + 충실도 임계 충족**
+- 인정 후보 (어느 것이든 1 신호): `CLAUDE.md` (Anthropic), `AGENTS.md` (OpenAI Codex), `.cursorrules` 또는 `.cursor/rules/*` (Cursor), `.github/copilot-instructions.md` (Copilot), `.windsurf/*` (Windsurf), `.aider.conf.yml` (Aider), `.continue/*` (Continue) 등
+- 충실도 임계: 파일 크기 ≥ 500 chars + 항목 헤더 ≥ 2 (단순 빈 파일 방지)
+
+**(b) 프로젝트 의도 문서가 1종 이상 존재**
+- 인정 후보 (어느 것이든 1 신호): README 의 *purpose 문단* (단순 설치 지시가 아닌 "what / why" 설명), `docs/intent.md`, `VISION.md`, `ABOUT.md`, `PROJECT.md`, `OVERVIEW.md`, `openspec/project.md`
+- README purpose 감지 휴리스틱: README 첫 1-3 단락 안에 "what", "purpose", "why", "이 프로젝트는", "이 도구는" 같은 키워드 포함 + 단락 길이 ≥ 200 chars
+
+**(c) 의도와 비의도가 먼저 적혀 있는 흔적**
+- 인정 후보: 의도 문서의 `Not` / `Out of Scope` / `Non-Goals` 섹션, `docs/adr/` 또는 `docs/decisions/` (ADR), CHANGELOG.md 가 *reasoning* 포함 (단순 변경 목록 아님), openspec proposal Why
+
+#### verification (검증) 축
+
+"결과를 인간이 독립적으로 확인할 수 있는가". 3 sub-category:
+
+**(a) 손 검증 흔적**
+- 인정 후보: `docs/validation/` (또는 비슷한 검증 디렉토리), `screenshots/` 또는 `screenshot/`, `demo/` 또는 `docs/demo/`, 수동 테스트 체크리스트 문서
+
+**(b) 자동 테스트와 CI**
+- 자동 테스트 풀: `tests/`, `__tests__/`, `*_test.py`, `*.test.ts`/`*.test.js`, `spec/` (Ruby), `t/` (Perl) 등 언어별 표준 위치
+- CI 풀: `.github/workflows/`, `.gitlab-ci.yml`, `.circleci/`, `azure-pipelines.yml`, `Jenkinsfile`
+
+**(c) 재현 가능 실행 경로**
+- 인정 후보: README 의 명령어 블록 (\`\`\` 안 build/test/run), `package.json` scripts 필드, `pyproject.toml` 의 `[project.scripts]` 또는 `[tool.poetry.scripts]`, `Makefile`, `justfile`, `Dockerfile`, `docker-compose.yml`, `.env.sample`/`.env.example`
+
+#### continuity (이어받기) 축
+
+"다음 세션이 이어받을 수 있는가". 3 sub-category:
+
+**(a) 작게 이어가기**
+- 인정 후보: 작은 PR/commit 빈도 (git history 분석 — 평균 commit 크기 임계 이하), saved plans (`openspec/changes/*/tasks.md`, `PLANS.md`, `TODO.md`, `ROADMAP.md`), GitHub issue 템플릿 (`.github/ISSUE_TEMPLATE`)
+
+**(b) 학습 반영**
+- 인정 후보: 회고 디렉토리 (`docs/retro/`, `docs/postmortem/`, `docs/lessons/`), CHANGELOG.md 갱신 빈도 ≥ 임계, `AGENTS.md`/`CLAUDE.md` 주기적 업데이트 (git log — 최근 N개 커밋에 갱신 흔적)
+
+**(c) 핸드오프**
+- 인정 후보: `HANDOFF.md`, `ONBOARDING.md`, `CONTRIBUTING.md`
+
+#### 우리가 못 보는 것 (blind spot 추가)
+
+- Notion / Confluence / 사내 위키 — 코드 외부에 의도가 있을 수 있음
+- Slack / Linear / Jira — 외부 도구의 결정 로그
+- README purpose 문단 — 키워드 매칭만으로 *진짜로 의도가 담겨있는지* 못 판단
+
+이 셋은 사각지대 블록에 한 줄 추가:
+> "외부 도구(Notion, Slack, Linear 등)와 README 의 *질적 깊이* 는 자동 판단 못 합니다."
 
 대안: 4축(detect/intent/verify/continuity) — detect를 별도 축으로. 반려: 감지는 *전제*이지 평가 차원이 아님. 현재 처럼 전제 게이트로 둠.
 

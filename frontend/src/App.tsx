@@ -84,7 +84,7 @@ function Welcome() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3 mt-12">
-        <FlowStep step="1" title="이게 뭐야" desc="AI가 원본 코드를 읽고 프로젝트 정체와 도메인을 한 문단으로 요약" />
+        <FlowStep step="1" title="개요" desc="AI가 원본 코드를 읽고 프로젝트 정체와 도메인을 한 문단으로 요약" />
         <FlowStep step="2" title="지금 상태" desc="품질 등급, 위험 파일, 결합도 표를 인라인으로 함께 표시" />
         <FlowStep step="3" title="다음 행동" desc="행동 / 왜 그게 필요한지 / 분석 증거 인용 — 세 필드로 명확하게" />
       </div>

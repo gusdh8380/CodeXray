@@ -35,7 +35,6 @@ export function BriefingScreen({ data }: Props) {
         narrative={data.how_built.narrative}
         metrics={data.how_built.metrics}
         details={data.how_built.details}
-        deepLink={data.how_built.deep_link}
       />
 
       <SectionShell
@@ -44,7 +43,6 @@ export function BriefingScreen({ data }: Props) {
         narrative={data.current_state.narrative}
         metrics={data.current_state.metrics}
         details={data.current_state.details}
-        deepLink={data.current_state.deep_link}
       />
 
       <VibeInsightsSection data={data.vibe_insights} />

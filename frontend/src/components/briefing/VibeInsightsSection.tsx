@@ -187,9 +187,6 @@ function Timeline({
                 <Badge variant="outline" className="text-[10px] uppercase">
                   {TIMELINE_TYPE_LABEL[entry.type] || entry.type}
                 </Badge>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  Day {entry.day}
-                </span>
               </div>
               <div className="font-medium leading-snug">{entry.title}</div>
               {entry.evidence && (

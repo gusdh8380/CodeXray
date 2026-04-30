@@ -133,7 +133,7 @@ def _build_what(
     ]
     return {
         "id": "what",
-        "title": "이게 뭐야",
+        "title": "개요",
         "narrative": narrative,
         "metrics": [
             {"label": "파일 수", "value": str(total_files)},

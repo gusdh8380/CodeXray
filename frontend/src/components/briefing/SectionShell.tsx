@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { SectionDetailsView } from "@/components/briefing/SectionDetailsView"
 import { cn } from "@/lib/utils"
@@ -10,7 +9,6 @@ interface Props {
   narrative: string
   metrics?: { label: string; value: string }[]
   details?: SectionDetails
-  deepLink?: { label: string; tab: string }
   variant?: "hero" | "default" | "highlight"
   children?: React.ReactNode
 }
@@ -21,7 +19,6 @@ export function SectionShell({
   narrative,
   metrics,
   details,
-  deepLink,
   variant = "default",
   children,
 }: Props) {
@@ -67,14 +64,6 @@ export function SectionShell({
         )}
         {details && <SectionDetailsView details={details} />}
         {children}
-        {deepLink && (
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 text-sm text-primary hover:underline pt-2"
-          >
-            {deepLink.label} <ArrowRight className="h-3 w-3" />
-          </button>
-        )}
       </CardContent>
     </Card>
   )

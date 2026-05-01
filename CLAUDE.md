@@ -32,14 +32,15 @@ uv run codexray serve --no-browser
 
 활성 OpenSpec 변경 없음.
 
-직전 archive (2026-05-01): **`vibe-insights-realign`** — 3축 재설계 (intent/verification/continuity), 점수 0-100 → 4단계 상태, 카드 수 동적 0-3, 9 룰 엔진, blind spot 상시 노출, ai_prompt v7 라벨, 평가 철학 토글 (8 섹션, 출처 인용).
+직전 archive (2026-05-02): **`non-roboco-validation`** — 외부 OSS 9 개 결정론 분석. 핵심 발견: (1) fastapi NOT DETECTED — detection 게이트(`CLAUDE.md/AGENTS.md/.claude/.omc/openspec`) 가 일반 OSS 를 평가에서 떨어뜨림, (2) CodeXray 자기 100%/100%/100% — 신호 풀이 자기 컨벤션에 과적합, (3) 임계값 70/40/10 자체는 분포가 합리적이라 시급한 조정 불필요. 데이터 raw: `docs/validation/non-roboco-data/*.json`, 결과 문서: `docs/validation/non-roboco-validation-results.md`.
 
 다음 변경 후보:
-- **non-roboco-validation**: 일반 OSS (vite/fastapi/ruff) 분석 → 편향·임계값 조정
-- **bundle-composition-rebalance**: Python·AI 상호 검증 관계 (앵커링·long-tail·과번역 위험 — `docs/flow.md` 미래 섹션 참조)
-- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드
+- **vibe-detection-rebalance** (1순위): detection 게이트 옵션 A(현 유지) / B(게이트 제거) / C(이중 모드) 결정 + 구현. fastapi NOT DETECTED 이슈 해소.
+- **vibe-signal-pool-expand** (2순위): pyproject description / examples / MAINTAINERS 등 신호 풀 확장. detection 결정 후 진입.
+- **bundle-composition-rebalance**: Python·AI 상호 검증 관계 (앵커링·long-tail·과번역 위험 — `docs/flow.md` 미래 섹션 참조).
+- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드.
 
-이전 archive (2026-04-30): briefing-persona-split, briefing-rebuild, categorized-next-actions.
+이전 archive: 2026-05-01 `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
 
 ## Load on Demand
 

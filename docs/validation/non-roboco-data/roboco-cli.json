@@ -1,0 +1,146 @@
+{
+  "ai_narrative": "이어받기 축이 'strong' 로 가장 잘 갖춰져 있고, 의도 축이 'weak' 로 가장 약합니다. 다음 행동은 약한 축부터 메우는 방향이 효과적입니다.",
+  "axes": [
+    {
+      "_raw_score": 33,
+      "breakdown": [
+        {
+          "evidence": "CLAUDE.md",
+          "label": "AI 지속 지시 문서",
+          "present": true
+        },
+        {
+          "evidence": "프로젝트 의도 문서 없음",
+          "label": "프로젝트 의도 문서",
+          "present": false
+        },
+        {
+          "evidence": "의도+비의도 명문화 없음",
+          "label": "의도와 비의도 명문화",
+          "present": false
+        }
+      ],
+      "label": "의도",
+      "name": "intent",
+      "signal_count": 1,
+      "signal_pool_size": 3,
+      "signal_ratio": 0.33,
+      "state": "weak",
+      "top_signals": [
+        "CLAUDE.md"
+      ],
+      "weaknesses": [
+        "프로젝트 의도 문서",
+        "의도와 비의도 명문화"
+      ]
+    },
+    {
+      "_raw_score": 66,
+      "breakdown": [
+        {
+          "evidence": "손 검증 흔적 없음",
+          "label": "손 검증 흔적",
+          "present": false
+        },
+        {
+          "evidence": "tests/, .github/workflows/",
+          "label": "자동 테스트와 CI",
+          "present": true
+        },
+        {
+          "evidence": "README 명령 블록, package.json scripts",
+          "label": "재현 가능 실행 경로",
+          "present": true
+        }
+      ],
+      "label": "검증",
+      "name": "verification",
+      "signal_count": 2,
+      "signal_pool_size": 3,
+      "signal_ratio": 0.67,
+      "state": "moderate",
+      "top_signals": [
+        "tests/, .github/workflows/",
+        "README 명령 블록, package.json scripts"
+      ],
+      "weaknesses": [
+        "손 검증 흔적"
+      ]
+    },
+    {
+      "_raw_score": 100,
+      "breakdown": [
+        {
+          "evidence": "git history (31개 커밋)",
+          "label": "작게 이어가기",
+          "present": true
+        },
+        {
+          "evidence": "CHANGELOG.md, 프로세스 커밋 (5개)",
+          "label": "학습 반영",
+          "present": true
+        },
+        {
+          "evidence": "CONTRIBUTING.md",
+          "label": "핸드오프 문서",
+          "present": true
+        }
+      ],
+      "label": "이어받기",
+      "name": "continuity",
+      "signal_count": 3,
+      "signal_pool_size": 3,
+      "signal_ratio": 1.0,
+      "state": "strong",
+      "top_signals": [
+        "git history (31개 커밋)",
+        "CHANGELOG.md, 프로세스 커밋 (5개)",
+        "CONTRIBUTING.md"
+      ],
+      "weaknesses": []
+    }
+  ],
+  "blind_spots": [
+    "사용자(나)가 What/Why/Next 를 자기 입으로 설명할 수 있는가",
+    "다음 행동의 우선순위를 사람이 정하고 있는가",
+    "손으로 한 검증이 실제로 매번 굴러가는가",
+    "외부 도구(Notion, Confluence, Slack, Linear 등)와 README 같은 문서의 질적 깊이는 자동 판단 못 합니다"
+  ],
+  "detected": true,
+  "process_proxies": {
+    "available": true,
+    "items": [
+      {
+        "label": "프로세스 커밋 비율",
+        "raw": 0.161,
+        "value": "16%"
+      },
+      {
+        "label": "Hotspot 개수",
+        "raw": 14,
+        "value": "14"
+      }
+    ],
+    "note": "참고용 — 단독 판정 근거 아님"
+  },
+  "timeline": [
+    {
+      "day": 1,
+      "evidence": "d8a4a0b Initial commit: PRD, research, design docs, and project skil",
+      "title": "에이전트 지침 도입",
+      "type": "agent"
+    },
+    {
+      "day": 1,
+      "evidence": "d8a4a0b Initial commit: PRD, research, design docs, and project skil",
+      "title": "OpenSpec 명세 도입",
+      "type": "spec"
+    },
+    {
+      "day": 2,
+      "evidence": "b37210a Add harness configuration and Harness plugin to PRD",
+      "title": "에이전트 지침 도입",
+      "type": "agent"
+    }
+  ]
+}

@@ -45,6 +45,6 @@
 
 ## 7. Archive
 
-- [ ] 7.1 `openspec archive non-roboco-validation` (실패 시 incomplete 태스크 점검 후 재시도)
-- [ ] 7.2 archive 후 main spec 동기화 확인 (`openspec/specs/vibe-coding-insights/spec.md` 에 ADDED 항목 3 개 반영됐는지)
-- [ ] 7.3 후속 변경 후보를 CLAUDE.md 와 결과 문서에 최종 정리
+- [x] 7.1 `openspec archive non-roboco-validation` (실패 시 incomplete 태스크 점검 후 재시도)
+- [x] 7.2 archive 후 main spec 동기화 확인 (`openspec/specs/vibe-coding-insights/spec.md` 에 ADDED 항목 3 개 반영됐는지)
+- [x] 7.3 후속 변경 후보를 CLAUDE.md 와 결과 문서에 최종 정리

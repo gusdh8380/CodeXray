@@ -80,7 +80,7 @@
           "present": true
         },
         {
-          "evidence": "CONTRIBUTING.md",
+          "evidence": "CONTRIBUTING.md, .github/CODEOWNERS",
           "label": "핸드오프 문서",
           "present": true
         }
@@ -94,7 +94,7 @@
       "top_signals": [
         ".github/ISSUE_TEMPLATE, git history (34608개 커밋)",
         "CHANGELOG.md",
-        "CONTRIBUTING.md"
+        "CONTRIBUTING.md, .github/CODEOWNERS"
       ],
       "weaknesses": []
     }

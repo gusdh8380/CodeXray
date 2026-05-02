@@ -77,6 +77,98 @@ def test_build_vibe_insights_uses_ai_key_insight_when_provided(tmp_path: Path) -
     assert payload["ai_narrative"] == "AI가 작성한 종합 해석"
 
 
+# --- vibe-signal-pool-expand: 신규 신호별 단위 테스트 ---
+
+
+def test_pyproject_description_long_counts_as_intent_signal(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_project_intent_doc
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\ndescription = "A long enough description for the intent signal."\n',
+        encoding="utf-8",
+    )
+    sig = _check_project_intent_doc(tmp_path)
+    assert sig["present"] is True
+    assert "pyproject" in sig["evidence"]
+
+
+def test_pyproject_description_empty_does_not_count(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_project_intent_doc
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "x"\ndescription = ""\n',
+        encoding="utf-8",
+    )
+    sig = _check_project_intent_doc(tmp_path)
+    assert sig["present"] is False
+
+
+def test_package_json_description_with_keywords_counts(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_project_intent_doc
+
+    (tmp_path / "package.json").write_text(
+        '{"name":"x","description":"short","keywords":["cli","tool"]}',
+        encoding="utf-8",
+    )
+    sig = _check_project_intent_doc(tmp_path)
+    assert sig["present"] is True
+    assert "package.json" in sig["evidence"]
+
+
+def test_readme_what_section_header_counts_as_intent(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_project_intent_doc
+
+    # 첫 5 단락에 키워드 없음 — 섹션 헤더가 유일한 신호.
+    # _has_purpose_paragraph 의 len >= 200 가드 통과를 위해 padding.
+    pad = "neutral content with no signal here. " * 8  # ~ 280 chars
+    body = (
+        "# title\n\n"
+        + pad
+        + "\n\n"
+        + ("filler\n\n" * 6)
+        + "## What\n\nThis is what.\n"
+    )
+    (tmp_path / "README.md").write_text(body, encoding="utf-8")
+    sig = _check_project_intent_doc(tmp_path)
+    assert sig["present"] is True
+
+
+def test_examples_dir_nonempty_counts_as_validation(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_manual_validation
+
+    (tmp_path / "examples").mkdir()
+    (tmp_path / "examples" / "demo.py").write_text("print('hi')\n", encoding="utf-8")
+    sig = _check_manual_validation(tmp_path)
+    assert sig["present"] is True
+    assert "examples" in sig["evidence"]
+
+
+def test_examples_dir_empty_does_not_count(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_manual_validation
+
+    (tmp_path / "examples").mkdir()
+    sig = _check_manual_validation(tmp_path)
+    assert sig["present"] is False
+
+
+def test_maintainers_md_counts_as_handoff(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_handoff_doc
+
+    (tmp_path / "MAINTAINERS.md").write_text("- @alice\n", encoding="utf-8")
+    sig = _check_handoff_doc(tmp_path)
+    assert sig["present"] is True
+    assert "MAINTAINERS" in sig["evidence"]
+
+
+def test_docs_getting_started_counts_as_handoff(tmp_path: Path) -> None:
+    from codexray.vibe_insights.axes import _check_handoff_doc
+
+    (tmp_path / "docs" / "getting-started").mkdir(parents=True)
+    sig = _check_handoff_doc(tmp_path)
+    assert sig["present"] is True
+    assert "getting-started" in sig["evidence"]
+
+
 def _run(root: Path, ai_key_insight: str | None = None) -> dict[str, object]:
     vibe = build_vibe_coding_report(root)
     quality = build_quality(root)

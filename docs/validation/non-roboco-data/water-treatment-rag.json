@@ -10,7 +10,7 @@
           "present": true
         },
         {
-          "evidence": "README.md (purpose 문단)",
+          "evidence": "README.md (purpose 문단/섹션)",
           "label": "프로젝트 의도 문서",
           "present": true
         },
@@ -28,7 +28,7 @@
       "state": "moderate",
       "top_signals": [
         "CLAUDE.md",
-        "README.md (purpose 문단)"
+        "README.md (purpose 문단/섹션)"
       ],
       "weaknesses": [
         "의도와 비의도 명문화"

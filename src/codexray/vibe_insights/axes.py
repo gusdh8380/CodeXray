@@ -51,6 +51,65 @@ def _dir_exists(root: Path, path: str) -> bool:
     return p.exists() and p.is_dir()
 
 
+def _dir_nonempty(root: Path, path: str) -> bool:
+    """디렉토리 존재 + 내부 파일/디렉토리 1 개 이상.
+
+    빈 examples/ 같은 false positive 차단용.
+    """
+    p = root / path
+    if not p.exists() or not p.is_dir():
+        return False
+    try:
+        return any(p.iterdir())
+    except OSError:
+        return False
+
+
+# pyproject.toml / package.json description 충실도 임계 — 결정 1.
+_MIN_PKG_DESCRIPTION = 30
+
+
+def _check_pkg_description(root: Path) -> tuple[bool, str]:
+    """pyproject.toml 또는 package.json 의 description 이 의도 신호로 충분한가.
+
+    충분 조건: description 길이 >= 30 자, 또는 description 비어있지 않고 keywords ≥ 1 개.
+    Returns (matched, evidence_str).
+    """
+    import json
+    import tomllib
+
+    # pyproject.toml — Python
+    pyproject_text = _read_text_safe(root, "pyproject.toml", max_chars=10000)
+    if pyproject_text:
+        try:
+            data = tomllib.loads(pyproject_text)
+            project = data.get("project", {})
+            desc = (project.get("description") or "").strip()
+            keywords = project.get("keywords") or []
+            if len(desc) >= _MIN_PKG_DESCRIPTION:
+                return True, "pyproject.toml description"
+            if desc and len(keywords) >= 1:
+                return True, "pyproject.toml description + keywords"
+        except (ValueError, tomllib.TOMLDecodeError):
+            pass
+
+    # package.json — JS/TS
+    pkg_text = _read_text_safe(root, "package.json", max_chars=5000)
+    if pkg_text:
+        try:
+            data = json.loads(pkg_text)
+            desc = (data.get("description") or "").strip()
+            keywords = data.get("keywords") or []
+            if len(desc) >= _MIN_PKG_DESCRIPTION:
+                return True, "package.json description"
+            if desc and isinstance(keywords, list) and len(keywords) >= 1:
+                return True, "package.json description + keywords"
+        except (ValueError, json.JSONDecodeError):
+            pass
+
+    return False, ""
+
+
 def _file_size(root: Path, path: str) -> int:
     p = root / path
     if not p.exists() or not p.is_file():
@@ -71,13 +130,22 @@ def _read_text_safe(root: Path, path: str, *, max_chars: int = 5000) -> str:
         return ""
 
 
+_PURPOSE_HEADER_RE = re.compile(
+    r"^##+\s*(What|Why|Purpose|About|이\s*프로젝트|정체|역할|소개)",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+
 def _has_purpose_paragraph(readme_text: str) -> bool:
-    """README가 'what / why / 이 프로젝트는' 같은 의도 표현을 첫 단락에 포함하는가."""
+    """README가 의도 표현 (첫 단락 키워드 또는 명시 섹션 헤더) 을 포함하는가."""
     if not readme_text or len(readme_text) < 200:
         return False
     paras = [p.strip() for p in readme_text.split("\n\n") if p.strip()][:5]
     head = "\n".join(paras).lower()
-    return any(kw.lower() in head for kw in _PURPOSE_KEYWORDS)
+    if any(kw.lower() in head for kw in _PURPOSE_KEYWORDS):
+        return True
+    # 본문 어디에든 명시 섹션 헤더 (## What, ## Why 등) — 작성자가 섹션 제목까지 적었으면 강한 신호
+    return bool(_PURPOSE_HEADER_RE.search(readme_text))
 
 
 def _signal(label: str, present: bool, evidence: str = "") -> dict[str, Any]:
@@ -122,7 +190,11 @@ _PROJECT_INTENT_FILES = (
 
 
 def _check_project_intent_doc(root: Path) -> dict[str, Any]:
-    """Sub-cat 2 of intent: 프로젝트 의도 문서 1종 이상 (README purpose 문단 포함)."""
+    """Sub-cat 2 of intent: 프로젝트 의도 문서 1종 이상.
+
+    인정되는 형식: docs/intent.md, VISION.md 등 명시 파일, README purpose 문단/섹션,
+    pyproject.toml 또는 package.json 의 description (충실도 임계 충족).
+    """
     found: list[str] = []
     for path in _PROJECT_INTENT_FILES:
         if _file_exists(root, path):
@@ -130,7 +202,11 @@ def _check_project_intent_doc(root: Path) -> dict[str, Any]:
     if not found:
         readme_text = _read_text_safe(root, "README.md")
         if _has_purpose_paragraph(readme_text):
-            found.append("README.md (purpose 문단)")
+            found.append("README.md (purpose 문단/섹션)")
+    if not found:
+        pkg_match, pkg_evidence = _check_pkg_description(root)
+        if pkg_match:
+            found.append(pkg_evidence)
     present = len(found) > 0
     evidence = ", ".join(found[:3]) if found else "프로젝트 의도 문서 없음"
     return _signal("프로젝트 의도 문서", present, evidence)
@@ -172,13 +248,33 @@ def _check_intent_vs_non_intent(root: Path) -> dict[str, Any]:
 # --- verification 축 sub-categories ---
 
 def _check_manual_validation(root: Path) -> dict[str, Any]:
-    """Sub-cat 1 of verification: 손 검증 흔적."""
+    """Sub-cat 1 of verification: 손 검증 흔적.
+
+    인정 형식: docs/validation, screenshot 디렉토리, examples/demo/samples 디렉토리
+    (비어있지 않을 때), .storybook (UI 손 검증).
+    """
     found: list[str] = []
     if _dir_exists(root, "docs/validation"):
         found.append("docs/validation/")
-    for d in ("screenshots", "screenshot", "demo", "docs/demo", "docs/screenshots"):
+    for d in ("screenshots", "screenshot", "docs/demo", "docs/screenshots"):
         if _dir_exists(root, d):
             found.append(f"{d}/")
+    # 코드 demo / 예제 — 비어있지 않을 때만 (false positive 차단)
+    for d in ("examples", "demo", "samples"):
+        if _dir_nonempty(root, d):
+            found.append(f"{d}/")
+            break
+    # examples-* 패턴 (예: examples-react/, examples-vue/)
+    if not any(s.startswith("examples") for s in found):
+        try:
+            for child in root.iterdir():
+                if child.is_dir() and child.name.startswith("examples-") and any(child.iterdir()):
+                    found.append(f"{child.name}/")
+                    break
+        except OSError:
+            pass
+    if _dir_exists(root, ".storybook"):
+        found.append(".storybook/")
     present = len(found) > 0
     evidence = ", ".join(found[:3]) if found else "손 검증 흔적 없음"
     return _signal("손 검증 흔적", present, evidence)
@@ -275,11 +371,34 @@ def _check_learning_capture(root: Path, history: Any) -> dict[str, Any]:
 
 
 def _check_handoff_doc(root: Path) -> dict[str, Any]:
-    """Sub-cat 3 of continuity: 핸드오프 문서."""
+    """Sub-cat 3 of continuity: 핸드오프 문서.
+
+    인정 형식: HANDOFF / ONBOARDING / CONTRIBUTING (확장자 유무 무관),
+    MAINTAINERS / CODEOWNERS, docs/getting-started/onboarding/contributing/handoff
+    디렉토리.
+    """
     found: list[str] = []
-    for path in ("HANDOFF.md", "ONBOARDING.md", "CONTRIBUTING.md", "docs/handoff"):
-        if _file_exists(root, path) or _dir_exists(root, path):
+    files = (
+        "HANDOFF.md",
+        "ONBOARDING.md",
+        "CONTRIBUTING.md",
+        "MAINTAINERS.md",
+        "MAINTAINERS",
+        "CODEOWNERS",
+        ".github/CODEOWNERS",
+    )
+    for path in files:
+        if _file_exists(root, path):
             found.append(path)
+    dirs = (
+        "docs/handoff",
+        "docs/getting-started",
+        "docs/onboarding",
+        "docs/contributing",
+    )
+    for path in dirs:
+        if _dir_exists(root, path):
+            found.append(f"{path}/")
     present = len(found) > 0
     evidence = ", ".join(found[:3]) if found else "핸드오프 문서 없음"
     return _signal("핸드오프 문서", present, evidence)

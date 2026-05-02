@@ -1,8 +1,8 @@
 {
-  "ai_narrative": "이어받기 축이 'moderate' 로 가장 잘 갖춰져 있고, 의도 축이 'weak' 로 가장 약합니다. 다음 행동은 약한 축부터 메우는 방향이 효과적입니다.",
+  "ai_narrative": "이어받기 축이 'strong' 로 가장 잘 갖춰져 있고, 의도 축이 'moderate' 로 가장 약합니다. 다음 행동은 약한 축부터 메우는 방향이 효과적입니다.",
   "axes": [
     {
-      "_raw_score": 33,
+      "_raw_score": 66,
       "breakdown": [
         {
           "evidence": "AI 지속 지시 문서 없음",
@@ -10,9 +10,9 @@
           "present": false
         },
         {
-          "evidence": "프로젝트 의도 문서 없음",
+          "evidence": "README.md (purpose 문단/섹션)",
           "label": "프로젝트 의도 문서",
-          "present": false
+          "present": true
         },
         {
           "evidence": "openspec proposal Why",
@@ -22,16 +22,16 @@
       ],
       "label": "의도",
       "name": "intent",
-      "signal_count": 1,
+      "signal_count": 2,
       "signal_pool_size": 3,
-      "signal_ratio": 0.33,
-      "state": "weak",
+      "signal_ratio": 0.67,
+      "state": "moderate",
       "top_signals": [
+        "README.md (purpose 문단/섹션)",
         "openspec proposal Why"
       ],
       "weaknesses": [
-        "AI 지속 지시 문서",
-        "프로젝트 의도 문서"
+        "AI 지속 지시 문서"
       ]
     },
     {
@@ -68,7 +68,7 @@
       ]
     },
     {
-      "_raw_score": 66,
+      "_raw_score": 100,
       "breakdown": [
         {
           "evidence": "openspec/changes, git history (567개 커밋)",
@@ -81,24 +81,23 @@
           "present": true
         },
         {
-          "evidence": "핸드오프 문서 없음",
+          "evidence": "MAINTAINERS.md, .github/CODEOWNERS",
           "label": "핸드오프 문서",
-          "present": false
+          "present": true
         }
       ],
       "label": "이어받기",
       "name": "continuity",
-      "signal_count": 2,
+      "signal_count": 3,
       "signal_pool_size": 3,
-      "signal_ratio": 0.67,
-      "state": "moderate",
+      "signal_ratio": 1.0,
+      "state": "strong",
       "top_signals": [
         "openspec/changes, git history (567개 커밋)",
-        "CHANGELOG.md, 프로세스 커밋 (10개)"
+        "CHANGELOG.md, 프로세스 커밋 (10개)",
+        "MAINTAINERS.md, .github/CODEOWNERS"
       ],
-      "weaknesses": [
-        "핸드오프 문서"
-      ]
+      "weaknesses": []
     }
   ],
   "blind_spots": [

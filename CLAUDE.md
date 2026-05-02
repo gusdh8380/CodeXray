@@ -32,14 +32,14 @@ uv run codexray serve --no-browser
 
 활성 OpenSpec 변경 없음.
 
-직전 archive (2026-05-02): **`readme-vibe-coding-resources`** — README 에 "Vibe Coding 처음 시작하기" 섹션 추가. 외부 학습 자료 10 개 (Anthropic, OpenAI Codex, Karpathy, Simon Willison, Kent Beck, Geoffrey Huntley, Birgitta Böckeler, Will Larson, GitHub Spec Kit, Cursor/Cline/Aider) — `EvaluationPhilosophyToggle` Section 8 과 동기화. starter_guide 제거 (직전 변경) 의 학습 진입점 보강.
+직전 archive (2026-05-02): **`vibe-signal-pool-expand`** — 신호 풀에 일반 OSS 관행 추가 (pyproject/package.json description, README ## What 헤더, examples/demo/.storybook, MAINTAINERS/CODEOWNERS/getting-started). 9 외부 OSS 재분석 결과 5 셀 개선 (OpenSpec 의도 weak→moderate, OpenSpec 이어받기 moderate→strong, roboco-cli 의도 weak→moderate, CivilSim 의도 weak→moderate), 자기 적용 회귀 0. `docs/validation/vibe-signal-pool-expand-results.md`.
 
 다음 변경 후보:
-- **vibe-signal-pool-expand**: pyproject description / examples / MAINTAINERS 등 신호 풀 확장. ROBOCO 컨벤션 의존도 추가 완화.
 - **bundle-composition-validation**: Python 결정론 결과가 AI 출력에 미치는 앵커링·long-tail·과번역 사례 데이터 수집. bundle-composition-rebalance 진입 전 입증.
 - **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드. 별도 환경 마련 후 진행.
+- **vibe-thresholds-tune**: 70/40/10 임계값을 추가 데이터로 재검토 (n 확장 후).
 
-이전 archive: 2026-05-02 `vibe-detection-rebalance` (비감지 시 vibe insights 섹션 비노출 + starter_guide 완전 제거, 옵션 A'). 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
+이전 archive: 2026-05-02 `readme-vibe-coding-resources` (README 학습 자료 10 개), `vibe-detection-rebalance` (비감지 시 vibe insights 섹션 비노출 + starter_guide 완전 제거, 옵션 A'). 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
 
 ## Load on Demand
 

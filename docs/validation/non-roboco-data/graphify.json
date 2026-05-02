@@ -10,7 +10,7 @@
           "present": false
         },
         {
-          "evidence": "README.md (purpose 문단)",
+          "evidence": "README.md (purpose 문단/섹션)",
           "label": "프로젝트 의도 문서",
           "present": true
         },
@@ -27,7 +27,7 @@
       "signal_ratio": 0.67,
       "state": "moderate",
       "top_signals": [
-        "README.md (purpose 문단)",
+        "README.md (purpose 문단/섹션)",
         "CHANGELOG.md (reasoning)"
       ],
       "weaknesses": [

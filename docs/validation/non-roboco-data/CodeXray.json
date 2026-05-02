@@ -69,7 +69,7 @@
       "_raw_score": 100,
       "breakdown": [
         {
-          "evidence": "openspec/changes, git history (74개 커밋)",
+          "evidence": "openspec/changes, git history (80개 커밋)",
           "label": "작게 이어가기",
           "present": true
         },
@@ -91,7 +91,7 @@
       "signal_ratio": 1.0,
       "state": "strong",
       "top_signals": [
-        "openspec/changes, git history (74개 커밋)",
+        "openspec/changes, git history (80개 커밋)",
         "docs/vibe-coding/, 프로세스 커밋 (10개)",
         "HANDOFF.md"
       ],
@@ -110,18 +110,18 @@
     "items": [
       {
         "label": "프로세스 커밋 비율",
-        "raw": 0.135,
-        "value": "14%"
+        "raw": 0.125,
+        "value": "12%"
       },
       {
         "label": "fix/feat 비율",
-        "raw": 0.176,
-        "value": "6/34 (18%)"
+        "raw": 0.152,
+        "value": "5/33 (15%)"
       },
       {
         "label": "Hotspot 개수",
-        "raw": 94,
-        "value": "94"
+        "raw": 96,
+        "value": "96"
       }
     ],
     "note": "참고용 — 단독 판정 근거 아님"
@@ -129,21 +129,21 @@
   "timeline": [
     {
       "day": 1,
-      "evidence": "d9adb64 feat: briefing-persona-split — 페르소나 분리 + ai_prompt 6 라벨 3단 구",
+      "evidence": "e3c1e9b feat: vibe-insights-realign Phase 1 — axes 3축 재설계 (intent/ve",
       "title": "OpenSpec 명세 도입",
       "type": "spec"
     },
     {
-      "day": 1,
-      "evidence": "d9adb64 feat: briefing-persona-split — 페르소나 분리 + ai_prompt 6 라벨 3단 구",
-      "title": "검증 문서 도입",
-      "type": "validation"
-    },
-    {
-      "day": 3,
-      "evidence": "3550ddb docs: vibe-insights-realign proposal/design/specs/tasks",
+      "day": 4,
+      "evidence": "df7aa8b chore: archive vibe-insights-realign + main spec sync",
       "title": "에이전트 지침 도입",
       "type": "agent"
+    },
+    {
+      "day": 4,
+      "evidence": "df7aa8b chore: archive vibe-insights-realign + main spec sync",
+      "title": "검증 문서 도입",
+      "type": "validation"
     }
   ]
 }

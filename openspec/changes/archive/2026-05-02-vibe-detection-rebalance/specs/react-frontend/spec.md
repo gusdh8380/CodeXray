@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
-### Requirement: Briefing 매크로 화면 4–5개 섹션
-The system SHALL render the Briefing screen as four to five vertically-flowing sections optimized for first-time understanding and live presentation, where the vibe coding insights section is *conditionally rendered* based on detection.
+### Requirement: Briefing 매크로 화면 5개 섹션
+The system SHALL render the Briefing screen as four to five vertically-flowing sections optimized for first-time understanding and live presentation, where the vibe coding insights section is *conditionally rendered* based on detection. (Section count is 5 when vibe coding is detected, 4 otherwise.)
 
 #### Scenario: 섹션 순서와 정체성 — 감지 시 5개
 - **WHEN** Briefing 결과가 표시되고 vibe coding 이 *감지된* 경우

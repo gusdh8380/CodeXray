@@ -4,7 +4,7 @@
 The vibe-coding-insights capability automatically detects whether a repository was built using vibe coding (AI-assisted development), evaluates its vibe coding quality on three independent axes (environment setup, development process cleanliness, handover readiness), reconstructs a process timeline from git history, and produces action+reason+evidence next-step recommendations. When vibe coding is not detected, it provides a concrete starter guide. Results feed the Briefing's vibe coding section and the standalone Vibe Coding micro-tab.
 ## Requirements
 ### Requirement: 바이브코딩 자동 판별
-The system SHALL automatically determine whether a repository was built using vibe coding (AI-assisted development) based on weighted signals from files, git history, and documentation.
+The system SHALL automatically determine whether a repository was built using vibe coding (AI-assisted development) based on weighted signals from files, git history, and documentation. When vibe coding is *not* detected, the system SHALL return *no vibe insights payload at all* (the field is absent or null in serialized output) — neither a "전통 방식" classification nor a starter guide is produced.
 
 #### Scenario: 강한 신호로 감지
 - **WHEN** 레포에 `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.omc/`, `openspec/` 중 하나라도 존재하거나 git 커밋에 `Co-Authored-By: Claude` 패턴이 있으면
@@ -18,9 +18,9 @@ The system SHALL automatically determine whether a repository was built using vi
 - **WHEN** README의 Claude/GPT/Cursor 언급 같은 약한 신호만 있으면
 - **THEN** 시스템은 바이브코딩으로 분류하지 않는다
 
-#### Scenario: 미감지
+#### Scenario: 미감지 — vibe insights 페이로드 부재
 - **WHEN** 바이브코딩 신호가 임계 미만이면
-- **THEN** 시스템은 "전통 방식" 분류로 응답하고 시작 가이드를 위한 데이터를 함께 반환한다
+- **THEN** 시스템은 vibe insights 페이로드를 *생성하지 않는다*. `build_vibe_insights` 는 `None` 을 반환하고, briefing 페이로드의 `vibe_insights` 필드는 *부재* 또는 `null` 로 직렬화된다. 시작 가이드 / "전통 방식" 분류 / blind_spots / process_proxies 어떤 필드도 제공되지 않는다
 
 ### Requirement: 3축 진단 평가
 The system SHALL evaluate vibe coding quality on three axes — `intent` (의도), `verification` (검증), `continuity` (이어받기) — when vibe coding is detected. Each axis SHALL be presented as a 4-level state (`strong / moderate / weak / unknown`) with the count of recognized signals and 2–3 representative pieces of evidence, not as a 0–100 numeric score visible to the user.
@@ -103,21 +103,6 @@ The system SHALL produce next process action recommendations as quadruples of `a
 - **WHEN** 여러 결손 신호가 한 작업(예: `CLAUDE.md` 작성)으로 동시 해결 가능할 때
 - **THEN** 시스템은 그 신호들을 *하나의 카드* 로 합성하여 카드 수를 늘리지 않는다
 
-### Requirement: 바이브코딩 미감지 시 시작 가이드
-The system SHALL provide a starter guide when vibe coding is not detected, recommending concrete first steps. Each starter item SHALL include an `ai_prompt` that follows the v7 6-label structure so the non-developer user can paste it directly into the next AI session.
-
-#### Scenario: 시작 가이드 항목
-- **WHEN** 레포가 바이브코딩 미감지로 분류되면
-- **THEN** 결과는 "전통 방식. 바이브코딩 시작한다면 첫 걸음은?" 문구와 함께 첫 단계 추천 항목을 포함한다
-
-#### Scenario: 추천 첫 단계
-- **WHEN** 시작 가이드가 생성되면
-- **THEN** 추천은 최소 `CLAUDE.md` 작성, 의도 문서화, 명세 도입을 포함하며 각 항목은 행동+왜+해당 레포의 현재 상태 인용 형식을 따른다
-
-#### Scenario: 시작 가이드 ai_prompt — v7 라벨
-- **WHEN** 시작 가이드 항목의 `ai_prompt` 가 생성되면
-- **THEN** ai_prompt 텍스트는 codebase-briefing 의 "Next action AI 프롬프트 3단 구조" 요구사항 (필수 3 라벨: `[현재 프로젝트]`, `[해줄 일]`, `[성공 기준과 직접 확인 방법]`) 을 따른다
-
 ### Requirement: AI 해석 통합
 The system SHALL synthesize the three-axis results, timeline data, and detection result into one Korean narrative paragraph using the AI adapter, using the new axis names (`intent / verification / continuity`).
 
@@ -134,11 +119,11 @@ The system SHALL synthesize the three-axis results, timeline data, and detection
 - **THEN** 시스템은 결정론적 템플릿 서술을 사용하고 폴백 플래그를 포함한다
 
 ### Requirement: 결정론적 직렬화
-The system SHALL serialize vibe coding insights deterministically so the same inputs produce identical bytes. The serialization SHALL include the new axis structure, blind spot field, and process proxies field.
+The system SHALL serialize vibe coding insights deterministically so the same inputs produce identical bytes. The serialization SHALL include the new axis structure, blind spot field, and process proxies field. When vibe coding is not detected, *no insights payload is emitted at all*.
 
 #### Scenario: 동일 결과
 - **WHEN** 동일한 레포 상태에서 두 번 평가하면
-- **THEN** 결정론적 부분(축 신호·상태, 타임라인 데이터, 시작 가이드, blind_spots, process_proxies) 의 직렬화 결과는 byte-identical 이다
+- **THEN** 결정론적 부분(축 신호·상태, 타임라인 데이터, blind_spots, process_proxies) 의 직렬화 결과는 byte-identical 이다
 
 #### Scenario: AI 부분 분리
 - **WHEN** 결과가 직렬화되면
@@ -146,7 +131,11 @@ The system SHALL serialize vibe coding insights deterministically so the same in
 
 #### Scenario: 새 SCHEMA_VERSION
 - **WHEN** 결과가 직렬화되면
-- **THEN** schema_version 은 6 이며 (직전 5 에서 bump), 4단계 상태 + blind_spots + process_proxies 분리를 반영한다
+- **THEN** schema_version 은 7 이며 (직전 6 에서 bump), 비감지 시 페이로드 부재 + starter_guide 제거를 반영한다
+
+#### Scenario: 비감지 직렬화
+- **WHEN** 바이브코딩이 감지되지 않은 레포에 대해 직렬화가 실행되면
+- **THEN** vibe insights 응답 자체가 생성되지 않으며 (None), starter_guide 같은 어떤 보조 필드도 직렬화되지 않는다
 
 ### Requirement: 8 운영 정의와 측정 가능성 분리
 The system SHALL define vibe coding quality with eight operational signals, and explicitly separate the six that can be inferred from repository artifacts from the two that require user conversation or observation.

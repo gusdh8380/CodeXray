@@ -2,7 +2,6 @@
 
 ## Purpose
 The react-frontend capability defines the React + Vite + Tailwind + shadcn/ui single-page application that ships as CodeXray's user-facing UI. It auto-starts Briefing analysis on path entry, renders the five-section macro Briefing, preserves the legacy detailed analyzer tabs as a collapsible micro-analysis area, and communicates with the FastAPI backend exclusively through JSON endpoints.
-
 ## Requirements
 ### Requirement: React SPA 빌드 파이프라인
 The system SHALL provide a React + Vite + Tailwind + shadcn/ui frontend project that builds to a static `frontend/dist/` directory served by FastAPI.
@@ -73,11 +72,15 @@ The system SHALL communicate with the FastAPI backend exclusively through JSON e
 - **THEN** 응답은 HTML fragment가 아닌 JSON 데이터이며 SPA가 모든 마크업을 생성한다
 
 ### Requirement: Briefing 매크로 화면 5개 섹션
-The system SHALL render the Briefing screen as five vertically-flowing sections optimized for first-time understanding and live presentation.
+The system SHALL render the Briefing screen as four to five vertically-flowing sections optimized for first-time understanding and live presentation, where the vibe coding insights section is *conditionally rendered* based on detection. (Section count is 5 when vibe coding is detected, 4 otherwise.)
 
-#### Scenario: 섹션 순서와 정체성
-- **WHEN** Briefing 결과가 표시되면
+#### Scenario: 섹션 순서와 정체성 — 감지 시 5개
+- **WHEN** Briefing 결과가 표시되고 vibe coding 이 *감지된* 경우
 - **THEN** 화면은 위에서 아래로 "이게 뭐야 / 어떻게 만들어졌나 / 지금 상태 / 바이브코딩 인사이트 / 지금 뭘 해야 해" 순서로 다섯 섹션을 표시한다
+
+#### Scenario: 섹션 순서와 정체성 — 비감지 시 4개
+- **WHEN** Briefing 결과가 표시되고 vibe coding 이 *감지되지 않은* 경우 (응답에 `vibe_insights` 가 부재 또는 null)
+- **THEN** 화면은 위에서 아래로 "이게 뭐야 / 어떻게 만들어졌나 / 지금 상태 / 지금 뭘 해야 해" 순서로 네 섹션만 표시한다. 바이브코딩 인사이트 섹션은 렌더링되지 않으며 시작 가이드 같은 대체 콘텐츠도 노출되지 않는다
 
 #### Scenario: 섹션별 미시 탭 링크
 - **WHEN** "어떻게 만들어졌나" 섹션이 표시되면
@@ -168,3 +171,19 @@ The system SHALL display an explicit warning banner above the "지금 뭘 해야
 #### Scenario: 라이트/다크 시각 일관
 - **WHEN** 사용자가 라이트/다크 테마를 토글하면
 - **THEN** 경고 배너는 두 테마 모두에서 가독성을 유지한다 (amber 톤이지만 너무 자극적이지 않음)
+
+### Requirement: VibeInsightsSection 의 조건부 렌더링
+The frontend SHALL render the `VibeInsightsSection` component *only when* `data.vibe_insights` is present and truthy. When the field is absent or null (non-detected projects), the section is skipped entirely with no placeholder, no "not detected" message, and no starter-guide alternative.
+
+#### Scenario: vibe_insights 부재 시 컴포넌트 호출 자체 생략
+- **WHEN** `BriefingScreen` 의 데이터에서 `data.vibe_insights` 가 부재이거나 null/falsy 일 때
+- **THEN** `<VibeInsightsSection />` 컴포넌트는 *호출되지 않으며* DOM 에 어떤 흔적도 남기지 않는다 (placeholder 없음, "비감지" 텍스트 없음, starter guide 영역 없음)
+
+#### Scenario: vibe_insights 존재 시 정상 렌더링
+- **WHEN** `data.vibe_insights` 가 truthy 객체이고 `detected: true` 일 때
+- **THEN** `<VibeInsightsSection />` 가 정상 렌더링되고 3 축 카드 / blind spot / process proxies / 평가 철학 토글이 모두 노출된다
+
+#### Scenario: VibeInsightsSection 내부에 비감지 분기 없음
+- **WHEN** `VibeInsightsSection` 의 구현이 검사되면
+- **THEN** 컴포넌트는 `detected: false` 분기 / StarterGuide 컴포넌트 / StarterGuideCard 컴포넌트 / CopyPromptBox (시작 가이드용) 를 *포함하지 않는다*. 컴포넌트는 항상 detected=true 데이터만 받는다고 가정한다
+

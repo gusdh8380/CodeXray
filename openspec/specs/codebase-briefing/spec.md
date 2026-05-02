@@ -4,11 +4,14 @@
 The codebase-briefing capability composes CodeXray's deterministic analyzers into a presentation-like repository briefing that explains what the codebase is, its current status, how it was built, key risks, and next actions. It combines inventory, graph, metrics, entrypoints, quality, hotspots, summary, vibe-coding evidence, and git-history creation-process analysis, then feeds the web UI Briefing experience while preserving deep-dive access to the underlying analyzers.
 ## Requirements
 ### Requirement: Briefing composition
-The system SHALL build a codebase briefing model composed of five top-level sections that flow from "what is this" to "what to do next", combining deterministic analyzer results, vibe coding insights, and AI narrative interpretation.
+The system SHALL build a codebase briefing model composed of four to five top-level sections that flow from "what is this" to "what to do next", combining deterministic analyzer results, vibe coding insights (when detected), and AI narrative interpretation.
 
-#### Scenario: 5개 섹션이 결과에 포함됨
-- **WHEN** 유효한 레포 경로가 분석되면
+#### Scenario: 4 또는 5개 섹션이 결과에 포함됨
+- **WHEN** 유효한 레포 경로가 분석되고 바이브코딩이 *감지되면*
 - **THEN** briefing 결과는 다섯 섹션을 포함한다: 정체(what), 구조(how built), 현재 상태(current), 바이브코딩 인사이트(vibe), 다음 행동(next)
+
+- **WHEN** 유효한 레포 경로가 분석되고 바이브코딩이 *감지되지 않으면*
+- **THEN** briefing 결과는 네 섹션만 포함한다: 정체(what), 구조(how built), 현재 상태(current), 다음 행동(next). 바이브코딩 섹션의 페이로드는 부재 또는 null
 
 #### Scenario: 섹션 데이터 결합
 - **WHEN** briefing 결과가 빌드되면
@@ -16,7 +19,7 @@ The system SHALL build a codebase briefing model composed of five top-level sect
 
 #### Scenario: 바이브코딩 섹션은 인사이트 모듈로부터 채움
 - **WHEN** briefing 결과의 바이브코딩 섹션이 빌드되면
-- **THEN** 그 데이터는 vibe-coding-insights capability에서 정의된 구조(자동 판별, 3축 점수, 타임라인, 행동+왜)를 그대로 포함한다
+- **THEN** 그 데이터는 (감지된 경우에만) vibe-coding-insights capability에서 정의된 구조(자동 판별, 3축 상태, 타임라인, 행동+왜)를 포함한다. 비감지 시 섹션 페이로드는 부재 또는 null
 
 ### Requirement: Git-history creation process analysis
 The system SHALL analyze git history as evidence for how the repository was created, especially from a vibe-coding workflow perspective.
@@ -141,9 +144,12 @@ The system SHALL categorize each next-action recommendation into one of three bu
 - **WHEN** AI 해석이 다음 행동을 생성하면
 - **THEN** AI 는 `code`(코드 측면 — 함수/모듈 단위의 변경, 테스트 보강, 에러 처리)와 `structural`(구조 측면 — 모듈 분리, 의존성 정리, 아키텍처) 두 카테고리로 직접 분류해서 반환한다
 
-#### Scenario: vibe_coding 카테고리는 vibe_insights 에서 합성
-- **WHEN** briefing payload 가 빌드되면
-- **THEN** `vibe_coding` 카테고리 항목은 AI 가 직접 생성하지 않고 `vibe_insights.next_actions` 또는 `vibe_insights.starter_guide` 의 항목을 `category="vibe_coding"` 으로 표시해 평면 리스트에 합쳐진다
+#### Scenario: vibe_coding 카테고리는 vibe_insights 에서 합성 — 감지 시에만
+- **WHEN** briefing payload 가 빌드되고 vibe coding 이 *감지된 경우*
+- **THEN** `vibe_coding` 카테고리 항목은 AI 가 직접 생성하지 않고 `vibe_insights.next_actions` 의 항목을 `category="vibe_coding"` 으로 표시해 평면 리스트에 합쳐진다
+
+- **WHEN** briefing payload 가 빌드되고 vibe coding 이 *감지되지 않은 경우*
+- **THEN** `vibe_coding` 카테고리 카드는 *생성되지 않는다*. 평면 리스트는 `code` / `structural` 카드만 포함한다
 
 #### Scenario: 카테고리 누락 시 fallback
 - **WHEN** AI 응답에서 항목의 `category` 필드가 누락되거나 허용된 값이 아니면
@@ -219,13 +225,13 @@ The Briefing area SHALL always display a "이 도구가 못 본 것" block that 
 - **THEN** 본문은 *자가 점검 체크리스트* 톤을 따른다 ("이 셋은 코드만 봐서는 판단 못 합니다. 화면 상태와 무관하게 자가 점검해 주세요"). "이 도구가 못 미덥다" 는 인상이 아니라 *사용자 책임을 환기* 하는 어조.
 
 ### Requirement: AI 해석 결과 구조
-The system SHALL parse and validate AI interpretation results with the new schema (axis state + blind_spots + process_proxies + 4-level state per axis).
+The system SHALL parse and validate AI interpretation results with the new schema (axis state + blind_spots + process_proxies + 4-level state per axis, with vibe insights payload absent when not detected).
 
-#### Scenario: AI 해석 결과 구조 — 새 SCHEMA_VERSION
+#### Scenario: AI 해석 결과 구조 — SCHEMA_VERSION 7
 - **WHEN** AI 호출이 성공하고 결과가 직렬화되면
-- **THEN** 결과는 `schema_version: 6` 을 포함하고, vibe coding 섹션은 새 3 축(`intent / verification / continuity`)의 상태(`strong / moderate / weak / unknown`) + 신호 개수 + 대표 근거 + `blind_spots` + `process_proxies` 를 분리해 포함한다
+- **THEN** 결과는 `schema_version: 7` 을 포함하고, 바이브코딩 감지 시 vibe coding 섹션은 새 3 축(`intent / verification / continuity`)의 상태(`strong / moderate / weak / unknown`) + 신호 개수 + 대표 근거 + `blind_spots` + `process_proxies` 를 분리해 포함한다. 비감지 시 vibe coding 섹션은 *부재 또는 null* 이다
 
 #### Scenario: 카테고리 필드 유지
 - **WHEN** next_actions 가 직렬화되면
-- **THEN** 각 항목은 여전히 `category` 필드를 포함하며 값은 `code`, `structural`, `vibe_coding` 중 하나이다 (직전 변경 동작 유지). vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서 합성한다.
+- **THEN** 각 항목은 여전히 `category` 필드를 포함하며 값은 `code`, `structural`, `vibe_coding` 중 하나이다 (직전 변경 동작 유지). vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서 합성하며 비감지 시 합성하지 않는다.
 

@@ -1,10 +1,11 @@
 # CodeXray
 
 [![CI](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml/badge.svg)](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/codexray-wai.svg)](https://pypi.org/project/codexray-wai/)
 
 > 임의의 코드베이스를 입력하면 구조를 시각화하고 품질을 평가해, **"다음에 무엇을 할지"의 근거**를 제공한다.
 
-8개 CLI 명령으로 인벤토리·의존성 그래프·메트릭·진입점·정량 등급·핫스팟·종합 리포트·인터랙티브 대시보드·AI 정성 평가를 한 번에. 결정론적 정량 분석이 우선, AI는 그 위에 정성 권고만 더한다.
+10 개 CLI 명령 + 웹 UI (React SPA) 로 인벤토리·의존성 그래프·메트릭·진입점·정량 등급·핫스팟·종합 리포트·인터랙티브 대시보드·AI 정성 평가·바이브코딩 진단을 한 번에. 결정론적 정량 분석이 우선, AI는 그 위에 정성 권고만 더한다.
 
 ## 설치
 
@@ -49,21 +50,23 @@ uv run codexray dashboard /path/to/your/repo > dashboard.html
 open dashboard.html
 ```
 
-## 8개 명령
+## 10개 명령
 
 | 명령 | 출력 | 비용 |
 |---|---|---|
+| `codexray serve` | 웹 UI (React SPA) 띄움 — 5섹션 브리핑 + 미시 분석 + 그래프 + 바이브코딩 진단 | 즉시 |
+| `codexray dashboard <path>` | self-contained HTML 인터랙티브 대시보드 | 2.4s |
+| `codexray report <path>` | 1페이지 종합 Markdown + 룰 기반 권고 5개 | 2.4s |
+| `codexray review <path>` | AI 정성 평가 JSON (codex/claude CLI 셸아웃) | 1~5분 |
 | `codexray inventory <path>` | 언어·파일·LoC 표 | 0.5s |
 | `codexray graph <path>` | 의존성 그래프 JSON (Py/JS/TS/C# type-resolved) | 0.6s |
 | `codexray metrics <path>` | fan-in/out · SCC · is_dag JSON | 0.5s |
 | `codexray entrypoints <path>` | 진입점 식별 JSON (`__main__`, `Main`, MonoBehaviour, manifests) | 0.5s |
 | `codexray quality <path>` | 4차원(coupling/cohesion/documentation/test) A~F 등급 JSON | 1.0s |
 | `codexray hotspots <path>` | 변경빈도×결합도 4 카테고리 매트릭스 JSON | 0.7s |
-| `codexray report <path>` | 1페이지 종합 Markdown + 룰 기반 권고 5개 | 2.4s |
-| `codexray dashboard <path>` | self-contained HTML 인터랙티브 대시보드 | 2.4s |
-| `codexray review <path>` | AI 정성 평가 JSON (codex/claude CLI 셸아웃) | 1~5분 |
 
 대상 언어: **Python · JavaScript · TypeScript · C#** (Java는 후속).
+기본 사용법은 `codexray serve` 한 줄 — 화면이 알아서 분석·해석·다음 행동까지.
 
 ## 예시 출력 (Unity C# 게임 검증)
 
@@ -145,7 +148,7 @@ src/codexray/
 ├── report/            ← 6 builder 종합 + 룰 기반 권고 + Markdown
 ├── dashboard/         ← 6 builder 종합 + 단일 HTML + D3 force-directed
 ├── ai/                ← 어댑터 패턴 (Codex/Claude CLI 셸아웃) + 안전장치 강제 파서
-└── cli.py             ← typer 진입점 (8 서브커맨드)
+└── cli.py             ← typer 진입점 (10 서브커맨드)
 ```
 
 `graph` → `metrics`/`hotspots`/`report`/`dashboard`의 입력이고, `hotspots` → `review`의 우선순위 입력. 모든 하위 모듈은 결정론적 + frozen dataclass.
@@ -154,7 +157,7 @@ src/codexray/
 
 ```bash
 uv sync
-uv run pytest -q          # 295 tests
+uv run pytest -q          # 320 tests
 uv run ruff check
 uv run codexray report .  # 자기 자신에게 적용 (현재 D(57))
 ```
@@ -173,21 +176,25 @@ npm run build      # frontend/dist 생성 → FastAPI가 정적 서빙
 
 ## 프로젝트 규약
 
-`docs/`에 vision/intent/constraints + vibe-coding 5단계 + 검증 메모 + 회고. `openspec/`에 12개 archived change(매 변경의 proposal/design/spec/tasks). 모든 변경은 OpenSpec validate 게이트 통과 + CodeXray 자기 + CivilSim 두 트리에서 5초 내 의미 있는 결과 게이트 통과.
+`docs/`에 vision/intent/constraints + vibe-coding 5단계 + 검증 메모 + 회고. `openspec/`에 36개 archived change (매 변경의 proposal/design/spec/tasks). 모든 변경은 OpenSpec validate 게이트 통과 + CodeXray 자기 + 외부 OSS 검증 + 3 OS CI 게이트 통과.
 
 설계 원칙은 `docs/constraints.md`에 명시 — **로컬 실행 우선, AI는 opt-in, 근거 라인 인용 필수, 사용자가 거절·재평가 가능**.
 
 ## Status
 
-**MVP 1차 출하 완료** (2026-04-28). intent.md의 6개 핵심 feature 모두 동작. 후속 변경 후보:
+**Beta 단계** — PyPI 첫 publish 완료 (`codexray-wai 0.1.0`, 2026-05-02). 동료가 `pip install codexray-wai` 한 줄로 설치 가능. 3 OS CI 자동 검증 + 320 tests + 외부 OSS 9 개 검증 + 평가 신호 풀 일반화 완료.
 
-- `add-report-with-review` — Markdown 리포트에 AI 권고 통합
-- `add-dashboard-review-overlay` — 대시보드에 AI 리뷰 패널
-- `add-quality-complexity` — cyclomatic 복잡도 차원 추가
-- `add-graph-pipeline-cache` — graph 빌드 공유로 dashboard·report 가속
-- `add-graph-java` — Java import 추출
+**Phase 1 (2026-04-28) MVP 출하**: intent.md 의 6 개 핵심 feature 모두 동작.
+**Phase 2 (2026-04-30 ~ 05-02)**: 브리핑 화면 (5 섹션) + 비개발자 페르소나 분리 + 바이브코딩 인사이트 (3 축 진단·9 룰 카드 합성·평가 철학 토글) + 외부 OSS 검증 + 신호 풀 일반화 + 옵션 A' (비감지 시 vibe insights 비노출) + 3 OS CI + PyPI 배포.
 
-회고: [`docs/vibe-coding/retro-2026-04-28.md`](docs/vibe-coding/retro-2026-04-28.md)
+후속 변경 후보:
+- `release-workflow` — GitHub Actions tag-push 자동 PyPI publish
+- `bundle-composition-validation` — Python 결정론 ↔ AI 출력 상호 검증 데이터 수집
+- `vibe-thresholds-tune` — 70/40/10 임계값 재검토 (n 확장 후)
+- `frontend-ci` — CI matrix 에 npm build 추가
+- `add-graph-java` — Java import 추출 (Phase 1 의 잔여)
+
+회고: [`docs/vibe-coding/retro-2026-04-28.md`](docs/vibe-coding/retro-2026-04-28.md), 검증: [`docs/validation/`](docs/validation/), 변경 history: [`openspec/changes/archive/`](openspec/changes/archive/)
 
 ## Vibe Coding 처음 시작하기
 

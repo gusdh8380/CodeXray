@@ -1,5 +1,5 @@
 [project]
-name = "codexray"
+name = "codexray-wai"
 version = "0.1.0"
 description = "구조 분석 + 품질 평가 + 다음 행동 제안을 한 번에 주는 코드베이스 X-ray"
 readme = "README.md"

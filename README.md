@@ -11,13 +11,13 @@
 ### Windows / macOS / Linux 공통
 
 ```bash
-pip install codexray
+pip install codexray-wai
 ```
 
 또는 uv 사용자:
 
 ```bash
-uv tool install codexray
+uv tool install codexray-wai
 ```
 
 설치 후 첫 실행:

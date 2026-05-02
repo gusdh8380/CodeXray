@@ -6,12 +6,43 @@
 
 8개 CLI 명령으로 인벤토리·의존성 그래프·메트릭·진입점·정량 등급·핫스팟·종합 리포트·인터랙티브 대시보드·AI 정성 평가를 한 번에. 결정론적 정량 분석이 우선, AI는 그 위에 정성 권고만 더한다.
 
-## Quickstart
+## 설치
+
+### Windows / macOS / Linux 공통
+
+```bash
+pip install codexray
+```
+
+또는 uv 사용자:
+
+```bash
+uv tool install codexray
+```
+
+설치 후 첫 실행:
+
+```bash
+codexray --help
+codexray dashboard /path/to/your/repo > dashboard.html  # self-contained HTML
+codexray serve                                          # http://127.0.0.1:8080 SPA
+```
+
+### Prerequisite
+
+- **Python 3.11+** ([python.org](https://python.org) 또는 OS 패키지 매니저)
+- **선택**: AI 정성 평가용 CLI — 둘 중 하나
+  - **Codex CLI**: macOS `brew install --cask codex` · Windows `scoop install codex` 또는 [codex 공식 바이너리](https://github.com/openai/codex). ChatGPT Plus/Pro/Codex Plus 구독 활용
+  - **Claude Code**: macOS `brew install claude-code` · Windows `winget install anthropic.claude-code`. Claude Pro/Max 구독 활용
+- AI CLI 없으면 결정론 분석 (인벤토리·그래프·메트릭·hotspots·dashboard) 까지 동작. AI 정성 평가만 비활성.
+
+## 개발자용 — git clone 방식
 
 ```bash
 git clone https://github.com/gusdh8380/CodeXray.git
 cd CodeXray
 uv sync
+cd frontend && npm install && npm run build  # SPA 빌드 (선택, dashboard 만 쓰면 불필요)
 
 # 가장 의미 있는 한 줄 — 인터랙티브 대시보드
 uv run codexray dashboard /path/to/your/repo > dashboard.html

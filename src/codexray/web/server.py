@@ -13,9 +13,16 @@ from .api_v2 import create_v2_router
 
 
 def _frontend_dist() -> Path | None:
-    """Locate frontend/dist relative to repo root if present."""
+    """Locate frontend dist directory.
+
+    Two scenarios:
+    - 개발 환경 (git checkout): repo root 의 `frontend/dist`
+    - PyPI 설치: 패키지 안 `codexray/_frontend` (hatchling force-include)
+    """
+    package_root = Path(__file__).resolve().parent.parent  # codexray/
     candidates = [
-        Path(__file__).resolve().parents[3] / "frontend" / "dist",
+        package_root / "_frontend",  # PyPI 설치본
+        Path(__file__).resolve().parents[3] / "frontend" / "dist",  # 개발용
         Path.cwd() / "frontend" / "dist",
     ]
     for candidate in candidates:

@@ -66,6 +66,7 @@ codexray serve
 
 이 도구는 vibe coding 프로젝트의 *진단* 을 도울 뿐, vibe coding 자체를 배우려면 아래 권위 자료부터:
 
+- **ROBOCO — [roboco.io](https://roboco.io/)** · 한국어 vibe coding 자료·도구 모음. 비개발자 학습자 1순위 시작점.
 - **Anthropic — [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)** · `CLAUDE.md` 의 역할과 작성 원칙
 - **OpenAI Codex — [AGENTS.md guide](https://agents.md)** · `AGENTS.md` 형식 — CLAUDE.md 와 짝꿍 컨벤션
 - **Andrej Karpathy — [vibe coding 용어의 출처](https://x.com/karpathy/status/1886192184808149383)** · 본 분야 명명자의 원본 정의

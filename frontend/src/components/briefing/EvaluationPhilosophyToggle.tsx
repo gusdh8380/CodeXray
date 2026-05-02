@@ -154,6 +154,19 @@ export function EvaluationPhilosophyToggle() {
             </p>
             <ul className="text-xs space-y-0.5">
               <li>
+                <strong>
+                  <a
+                    href="https://roboco.io/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    ROBOCO (roboco.io)
+                  </a>
+                </strong>{" "}
+                — 한국어 vibe coding 자료·도구 모음. 비개발자 학습자 1순위 시작점
+              </li>
+              <li>
                 <strong>Anthropic</strong> — Claude Code Best Practices (CLAUDE.md 의 역할)
               </li>
               <li>

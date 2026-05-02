@@ -53,10 +53,11 @@ def minimal_repo(tmp_path: Path) -> Path:
 
 
 def test_collect_one_returns_payload(minimal_repo: Path) -> None:
+    # 작은 fixture 레포는 vibe coding 미감지 → {"detected": False} 만 옴
+    # (vibe-detection-rebalance: blind_spots 도 비감지 시 응답에 없음)
     payload = ver.collect_one(minimal_repo)
     assert isinstance(payload, dict)
-    assert "detected" in payload
-    assert "blind_spots" in payload
+    assert payload == {"detected": False}
 
 
 def test_main_writes_json(minimal_repo: Path, tmp_path: Path, capsys) -> None:

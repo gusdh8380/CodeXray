@@ -26,7 +26,7 @@ from ..metrics import build_metrics
 from ..quality import build_quality
 
 PROMPT_VERSION = "v7-realign"
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 # vibe_coding 카테고리는 시스템이 vibe_insights 데이터에서만 합성한다.
 # AI 응답에 vibe_coding 이 들어와도 code 로 강등 — design.md D2 결정 일관 적용.

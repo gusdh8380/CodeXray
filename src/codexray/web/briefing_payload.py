@@ -21,7 +21,7 @@ from ..vibe import build_vibe_coding_report
 from ..vibe_insights import build_vibe_insights
 from .ai_briefing import AIBriefingResult
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 _PER_CATEGORY_LIMIT = 3
 
@@ -144,12 +144,13 @@ def build_briefing_payload(root: Path, ai: AIBriefingResult | None) -> dict[str,
         vibe_insights=vibe_insights,
     )
 
-    intent_alignment = (ai.intent_alignment if ai else "").strip()
-    if intent_alignment:
-        vibe_insights["intent_alignment"] = {
-            "narrative": intent_alignment,
-            "intent_present": (resolved / "docs" / "intent.md").exists(),
-        }
+    if vibe_insights is not None:
+        intent_alignment = (ai.intent_alignment if ai else "").strip()
+        if intent_alignment:
+            vibe_insights["intent_alignment"] = {
+                "narrative": intent_alignment,
+                "intent_present": (resolved / "docs" / "intent.md").exists(),
+            }
 
     zero_action_state = (
         _build_zero_action_state(vibe_insights) if not next_actions else None
@@ -318,7 +319,7 @@ def _build_next_actions(
     grade: str,
     hotspot_count: int,
     top_hotspot: str,
-    vibe_insights: dict[str, Any],
+    vibe_insights: dict[str, Any] | None,
 ) -> list[dict[str, Any]]:
     by_category: dict[str, list[dict[str, Any]]] = {
         "code": [],
@@ -403,21 +404,10 @@ _VIBE_RULES: tuple[tuple[str, str, str], ...] = (
 
 
 def _synthesize_vibe_coding_actions(
-    vibe_insights: dict[str, Any],
+    vibe_insights: dict[str, Any] | None,
 ) -> list[dict[str, Any]]:
-    if not vibe_insights.get("detected"):
-        guide = vibe_insights.get("starter_guide", []) or []
-        return [
-            {
-                "action": item.get("action", ""),
-                "reason": item.get("reason", ""),
-                "evidence": "바이브코딩 신호 미감지 — 첫 걸음 추천",
-                "ai_prompt": item.get("ai_prompt", ""),
-                "category": "vibe_coding",
-            }
-            for item in guide[:_PER_CATEGORY_LIMIT]
-            if item.get("action")
-        ]
+    if not vibe_insights or not vibe_insights.get("detected"):
+        return []
 
     axes = vibe_insights.get("axes") or []
     if not axes:
@@ -486,12 +476,15 @@ def _synthesize_vibe_coding_actions(
     return cards
 
 
-def _build_zero_action_state(vibe_insights: dict[str, Any]) -> dict[str, Any]:
+def _build_zero_action_state(
+    vibe_insights: dict[str, Any] | None,
+) -> dict[str, Any]:
     """Decision 5: 카드 0개일 때 분기 (praise / judgment_pending / silent).
 
     next_actions 가 빈 리스트일 때만 의미 있음. UI 가 이 필드 보고 분기.
+    vibe_insights 가 None (비감지) 이면 silent — vibe coding 평가 자체가 없음.
     """
-    if not vibe_insights.get("detected"):
+    if not vibe_insights or not vibe_insights.get("detected"):
         return {"kind": "silent", "message": ""}
     axes = vibe_insights.get("axes") or []
     if not axes:

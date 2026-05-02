@@ -109,18 +109,11 @@ export interface IntentAlignment {
   intent_present: boolean
 }
 
-export interface StarterGuideItem {
-  action: string
-  reason: string
-  ai_prompt?: string
-}
-
 export interface VibeInsights {
   detected: boolean
   axes?: VibeAxis[]
   timeline?: TimelineEntry[]
   ai_narrative?: string
-  starter_guide?: StarterGuideItem[]
   intent_alignment?: IntentAlignment
   blind_spots?: string[]
   process_proxies?: ProcessProxies
@@ -142,7 +135,7 @@ export interface BriefingPayload {
   what: BriefingSection
   how_built: BriefingSection
   current_state: BriefingSection
-  vibe_insights: VibeInsights
+  vibe_insights: VibeInsights | null
   next_actions: NextAction[]
   zero_action_state: ZeroActionState | null
   ai_used: boolean

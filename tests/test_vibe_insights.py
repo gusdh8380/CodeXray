@@ -63,28 +63,11 @@ def test_build_vibe_insights_detected_includes_blind_spots_and_proxies(
     assert "available" in proxies and "items" in proxies and "note" in proxies
 
 
-def test_build_vibe_insights_not_detected_returns_starter_guide(tmp_path: Path) -> None:
+def test_build_vibe_insights_not_detected_returns_none(tmp_path: Path) -> None:
+    # vibe-detection-rebalance: 비감지 시 None 반환 (이전: starter_guide 포함 dict)
     _make_simple_tree(tmp_path)
     payload = _run(tmp_path)
-    assert payload["detected"] is False
-    guide = payload["starter_guide"]
-    assert isinstance(guide, list) and len(guide) >= 1
-    assert all("action" in item and "reason" in item for item in guide)
-
-
-def test_starter_guide_ai_prompts_follow_3stage_structure(tmp_path: Path) -> None:
-    # briefing-persona-split: starter_guide 의 ai_prompt 도 codebase-briefing 의
-    # 3단 구조 (필수 라벨 셋: [현재 프로젝트], [해줄 일], [끝나고 확인]) 를 따라야 한다.
-    _make_simple_tree(tmp_path)
-    payload = _run(tmp_path)
-    guide = payload["starter_guide"]
-    assert len(guide) >= 3  # CLAUDE.md, intent.md, openspec 도입
-    for item in guide:
-        prompt = item.get("ai_prompt", "")
-        assert prompt, f"starter guide item missing ai_prompt: {item.get('action')}"
-        assert "[현재 프로젝트]" in prompt
-        assert "[해줄 일]" in prompt
-        assert "[성공 기준과 직접 확인 방법]" in prompt
+    assert payload is None
 
 
 def test_build_vibe_insights_uses_ai_key_insight_when_provided(tmp_path: Path) -> None:

@@ -45,7 +45,7 @@ export function BriefingScreen({ data }: Props) {
         details={data.current_state.details}
       />
 
-      <VibeInsightsSection data={data.vibe_insights} />
+      {data.vibe_insights && <VibeInsightsSection data={data.vibe_insights} />}
 
       <NextActionsSection
         actions={data.next_actions}

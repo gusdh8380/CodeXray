@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Lightbulb } from "lucide-react"
@@ -78,11 +77,7 @@ export function VibeInsightsSection({ data }: Props) {
           슬로건: <strong>"주인이 있는 프로젝트"</strong>
         </p>
 
-        {!data.detected ? (
-          <StarterGuide guide={data.starter_guide ?? []} />
-        ) : (
-          <DetectedView data={data} />
-        )}
+        <DetectedView data={data} />
 
         {data.process_proxies && (
           <ProcessProxiesPanel proxies={data.process_proxies} />
@@ -253,61 +248,3 @@ function Timeline({
   )
 }
 
-function StarterGuide({ guide }: { guide: import("@/lib/api").StarterGuideItem[] }) {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm leading-relaxed text-foreground/90">
-        전통 방식으로 만들어진 레포로 보입니다. 바이브코딩을 시작한다면 이 첫 걸음들로 시작하세요.
-      </p>
-      <ul className="space-y-3">
-        {guide.length === 0 ? (
-          <li className="text-sm text-muted-foreground">시작 가이드 데이터가 없습니다.</li>
-        ) : (
-          guide.map((g, i) => <StarterGuideCard key={i} item={g} />)
-        )}
-      </ul>
-    </div>
-  )
-}
-
-function StarterGuideCard({ item }: { item: import("@/lib/api").StarterGuideItem }) {
-  return (
-    <li className="rounded-lg border p-4 space-y-2">
-      <div className="font-semibold text-sm">{item.action}</div>
-      <div className="text-sm text-muted-foreground leading-relaxed">{item.reason}</div>
-      {item.ai_prompt && <CopyPromptBox prompt={item.ai_prompt} />}
-    </li>
-  )
-}
-
-function CopyPromptBox({ prompt }: { prompt: string }) {
-  const [copied, setCopied] = useState(false)
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(prompt)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      /* noop */
-    }
-  }
-  return (
-    <div className="rounded-md border bg-card p-3 space-y-2 mt-2">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-          Claude / Codex 에 복사
-        </span>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="text-xs rounded border px-2 py-1 hover:bg-accent"
-        >
-          {copied ? "복사됨" : "복사"}
-        </button>
-      </div>
-      <p className="text-xs leading-relaxed font-mono text-muted-foreground whitespace-pre-wrap">
-        {prompt}
-      </p>
-    </div>
-  )
-}

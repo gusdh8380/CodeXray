@@ -14,7 +14,6 @@ from .axes import (
 )
 from .detection import detect_vibe_coding
 from .narrative import fallback_narrative
-from .starter_guide import build_starter_guide
 from .timeline import build_timeline
 
 
@@ -26,20 +25,17 @@ def build_vibe_insights(
     hotspots: Any,
     history: Any,
     ai_key_insight: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Build the JSON payload consumed by the React VibeInsightsSection.
 
-    Returns either a *detected* shape with three axes, blind_spots,
-    process_proxies, timeline, and narrative, or a *not-detected* shape with
-    a starter guide.
+    Returns a *detected* shape with three axes, blind_spots, process_proxies,
+    timeline, and narrative when vibe coding is detected. Returns ``None``
+    when not detected — callers MUST handle the absence by omitting the
+    section entirely (no starter guide, no fallback content).
     """
     detected = detect_vibe_coding(root=root, vibe=vibe, history=history)
     if not detected:
-        return {
-            "detected": False,
-            "starter_guide": build_starter_guide(quality=quality, hotspots=hotspots),
-            "blind_spots": get_blind_spots(),
-        }
+        return None
 
     axes = [
         axis_intent(root=root),

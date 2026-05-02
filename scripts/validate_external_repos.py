@@ -44,13 +44,15 @@ def collect_one(repo: Path) -> dict[str, Any]:
     """Return the deterministic vibe_insights payload for `repo`.
 
     AI 호출은 하지 않는다 — `ai_key_insight=None` 이라 narrative 는 fallback 사용.
+    비감지 시 `build_vibe_insights` 가 None 을 반환하므로, 검증 데이터 파일이
+    항상 의미 있는 정보를 담도록 ``{"detected": False}`` 로 wrap 한다.
     """
     resolved = repo.resolve()
     vibe = build_vibe_coding_report(resolved)
     quality = build_quality(resolved)
     hotspots = build_hotspots(resolved)
     history = build_git_history(resolved)
-    return build_vibe_insights(
+    payload = build_vibe_insights(
         root=resolved,
         vibe=vibe,
         quality=quality,
@@ -58,6 +60,7 @@ def collect_one(repo: Path) -> dict[str, Any]:
         history=history,
         ai_key_insight=None,
     )
+    return payload if payload is not None else {"detected": False}
 
 
 def summarize_axis(axis: dict[str, Any]) -> str:
@@ -138,11 +141,9 @@ def main(argv: list[str] | None = None) -> int:
             axis_summary = " | ".join(summarize_axis(a) for a in axes)
             print(f"[OK]   {name:<32} ({elapsed:.1f}s) detected → {axis_summary}")
         else:
-            blind = len(payload.get("blind_spots", []))
-            starter = len(payload.get("starter_guide", []))
             print(
                 f"[OK]   {name:<32} ({elapsed:.1f}s) "
-                f"not-detected → starter_guide={starter} blind_spots={blind}"
+                "not-detected → vibe insights 섹션 비노출"
             )
         try:
             display_path = out_path.relative_to(_REPO_ROOT)

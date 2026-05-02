@@ -159,8 +159,19 @@ def test_briefing_payload_has_five_sections_and_schema_version(tmp_path: Path) -
     for items in by_category.values():
         assert len(items) <= 3
     assert any(a["category"] == "vibe_coding" for a in next_actions), (
-        "vibe_coding 카테고리는 starter_guide(미감지) 또는 axes 약점(감지)에서 합성되어야 함"
+        "vibe_coding 카테고리는 axes 약점(감지된 경우)에서 합성되어야 함"
     )
+
+
+def test_briefing_payload_omits_vibe_insights_when_not_detected(tmp_path: Path) -> None:
+    # vibe-detection-rebalance: 비감지 프로젝트는 vibe_insights 가 None.
+    # vibe_coding 카테고리 카드도 생성되지 않는다.
+    (tmp_path / "a.py").write_text("print('hi')\n")
+    (tmp_path / "README.md").write_text("# project\n")
+    payload = build_briefing_payload(tmp_path, ai=None)
+    assert payload["vibe_insights"] is None
+    next_actions = payload["next_actions"]
+    assert all(a["category"] != "vibe_coding" for a in next_actions)
 
 
 def test_briefing_payload_includes_zero_action_state_field(tmp_path: Path) -> None:

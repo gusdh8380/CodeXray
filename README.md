@@ -1,217 +1,191 @@
 # CodeXray
 
-[![CI](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml/badge.svg)](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/codexray-wai.svg)](https://pypi.org/project/codexray-wai/)
+[![CI](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml/badge.svg)](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> 임의의 코드베이스를 입력하면 구조를 시각화하고 품질을 평가해, **"다음에 무엇을 할지"의 근거**를 제공한다.
+> 본인이 만든 vibe coding 프로젝트가 *주인이 있는 프로젝트* 인지 점검하고, **"다음에 무엇을 해야 할지"** 를 받아 보세요.
 
-10 개 CLI 명령 + 웹 UI (React SPA) 로 인벤토리·의존성 그래프·메트릭·진입점·정량 등급·핫스팟·종합 리포트·인터랙티브 대시보드·AI 정성 평가·바이브코딩 진단을 한 번에. 결정론적 정량 분석이 우선, AI는 그 위에 정성 권고만 더한다.
+코드 분석 + AI 협업 흔적 진단 + 다음 행동 추천을 화면 하나에. AI 도구 (Claude Code · Codex CLI · Cursor 등) 로 코드를 만들어 본 적 있는 누구나 사용 가능합니다.
 
-## 설치
+---
 
-### Windows / macOS / Linux 공통
+## 빠른 시작 (3 단계)
 
 ```bash
+# 1. 설치
 pip install codexray-wai
+
+# 2. 실행
+codexray serve
+
+# 3. 브라우저가 자동으로 열립니다 → 분석할 폴더 선택
 ```
 
-또는 uv 사용자:
+끝. 분석 결과가 나오면 *지금 뭘 해야 해* 카드만 보고 그대로 따라가시면 됩니다.
 
-```bash
-uv tool install codexray-wai
-```
+---
 
-설치 후 첫 실행:
+## 화면에서 보게 되는 것
 
-```bash
-codexray --help
-codexray dashboard /path/to/your/repo > dashboard.html  # self-contained HTML
-codexray serve                                          # http://127.0.0.1:8080 SPA
-```
+### 1. 정체 — 이게 뭐야?
+사람이 알아들을 수 있는 한 단락 요약. 메트릭 용어 (coupling, fan-in 같은) 없이 평어로.
 
-### Prerequisite
+### 2. 어떻게 만들어졌나
+구조의 핵심 — 어떤 파일이 *시스템 전체를 붙잡고 있는지*, 진입점은 어디인지.
+
+### 3. 지금 상태
+4 차원 품질 등급 (A~F) + 위험도 가장 높은 파일 (변경 빈도 × 결합도).
+
+### 4. 바이브코딩 인사이트 ★
+*"주인이 있는 프로젝트"* 인지 3 축으로 진단:
+- **의도** — 의도가 글로 박혔는가 (CLAUDE.md / docs/intent.md / pyproject description 등)
+- **검증** — 결과를 사람이 직접 확인했는가 (validation 흔적 / 테스트 / examples)
+- **이어받기** — 다음 세션이 이어받을 수 있는가 (회고 / 핸드오프 / 작은 PR)
+
+각 축은 4 단계 상태 (`강함 / 보통 / 약함 / 판단유보`). 점수 (0–100) 는 일부러 안 보여줘요 — *정확해 보이는 숫자는 사용자를 오해시키니까*.
+
+### 5. 지금 뭘 해야 해
+0–3 개의 다음 행동 카드. 각 카드에 *Claude / Codex 에 그대로 복사할 prompt* 동봉. 비개발자도 새 AI 세션에 붙여 실행만 하면 됨.
+
+화면 아래쪽엔 *이 도구가 못 보는 4 가지* 자가 점검 블록도 항상 노출 — 도구가 코드만 봐서는 못 잡는 차원 (의도의 깊이, 외부 도구의 기록 등) 을 *사용자가 직접 점검* 하라는 환기.
+
+---
+
+## Prerequisite
 
 - **Python 3.11+** ([python.org](https://python.org) 또는 OS 패키지 매니저)
 - **선택**: AI 정성 평가용 CLI — 둘 중 하나
-  - **Codex CLI**: macOS `brew install --cask codex` · Windows `scoop install codex` 또는 [codex 공식 바이너리](https://github.com/openai/codex). ChatGPT Plus/Pro/Codex Plus 구독 활용
+  - **Codex CLI**: macOS `brew install --cask codex` · Windows `scoop install codex` · [공식 바이너리](https://github.com/openai/codex). ChatGPT Plus/Pro/Codex Plus 구독 활용
   - **Claude Code**: macOS `brew install claude-code` · Windows `winget install anthropic.claude-code`. Claude Pro/Max 구독 활용
-- AI CLI 없으면 결정론 분석 (인벤토리·그래프·메트릭·hotspots·dashboard) 까지 동작. AI 정성 평가만 비활성.
+- AI CLI 가 없어도 결정론 분석 (구조·등급·핫스팟·바이브코딩 진단) 까지 정상 동작. AI 가 만드는 *해석 narrative* 만 비활성.
 
-## 개발자용 — git clone 방식
+---
+
+## Vibe Coding 처음 시작하기
+
+이 도구는 vibe coding 프로젝트의 *진단* 을 도울 뿐, vibe coding 자체를 배우려면 아래 권위 자료부터:
+
+- **Anthropic — [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)** · `CLAUDE.md` 의 역할과 작성 원칙
+- **OpenAI Codex — [AGENTS.md guide](https://agents.md)** · `AGENTS.md` 형식 — CLAUDE.md 와 짝꿍 컨벤션
+- **Andrej Karpathy — [vibe coding 용어의 출처](https://x.com/karpathy/status/1886192184808149383)** · 본 분야 명명자의 원본 정의
+- **Simon Willison — [블로그 LLM 태그](https://simonwillison.net/tags/llms/)** · "Context is king", "Tests are non-negotiable"
+- **Kent Beck — [Tidy First? Substack](https://tidyfirst.substack.com/)** · Constrain Context · Preserve Optionality · Maintain Human Judgment
+- **Geoffrey Huntley — [ghuntley.com](https://ghuntley.com/)** · "한 번에 한 가지, 매 루프마다 계획"
+- **Birgitta Böckeler (Thoughtworks) — [Exploring Generative AI](https://martinfowler.com/articles/exploring-gen-ai.html)** · "AI is an accelerator, not an automator"
+- **Will Larson — [Theory of improvement (Irrational)](https://lethain.com/)** · 점수·등급의 한계와 *질적 진보* 의 본성
+- **GitHub Spec Kit — [github/spec-kit](https://github.com/github/spec-kit)** · intent-driven development
+- **Cursor / Cline / Aider** · Plan Mode · Memory Bank · `/undo` 패턴. [Cursor](https://www.cursor.com/) · [Cline](https://github.com/cline/cline) · [Aider](https://aider.chat/)
+
+도구의 평가 기준도 이 자료들에서 합성됐습니다 (브리핑 화면 *"이 도구가 바이브코딩을 어떻게 평가하나요?"* 토글에 동일 출처).
+
+---
+
+## 자주 묻는 질문
+
+**Q. 내 프로젝트가 vibe coding 으로 만든 게 아닌데도 분석되나요?**
+→ 분석은 됩니다 (구조·품질·핫스팟). 다만 *바이브코딩 인사이트 섹션* 은 사라지고 4 섹션만 노출. 깔끔한 일반 OSS 분석 도구로 동작.
+
+**Q. 평가 점수가 자꾸 약하게 나옵니다.**
+→ 화면 아래 *"이 도구가 바이브코딩을 어떻게 평가하나요?"* 토글을 펼치고 8 운영 신호를 살펴보세요. 거의 항상 *외부화된 의도 (CLAUDE.md / 의도 문서)* 가 빠져 있습니다. 이게 vibe coding 의 가장 중요한 출발점입니다.
+
+**Q. 결과가 신뢰할 만한가요?**
+→ 외부 OSS 9 개로 검증된 신호 풀 (`docs/validation/non-roboco-validation-results.md`). 결정론 분석이라 같은 입력은 항상 같은 출력. AI 해석 부분은 별도 캐시에 분리 — *결정론 ≠ AI 정성* 명확히 분리됨.
+
+**Q. 코드를 외부로 보내나요?**
+→ **로컬 실행 우선**. AI 정성 평가만 본인의 codex/claude CLI 로 셸아웃. AI 안 쓰면 모든 분석이 100% 로컬.
+
+---
+
+## 개발자용 — 더 깊이
+
+<details>
+<summary>CLI 단독 명령 (10 개)</summary>
+
+| 명령 | 출력 | 비용 |
+|---|---|---|
+| `codexray serve` | 웹 UI 띄움 (대부분 이거 한 줄로 충분) | 즉시 |
+| `codexray dashboard <path>` | self-contained HTML 인터랙티브 대시보드 | ~2.4s |
+| `codexray report <path>` | 1페이지 종합 Markdown + 룰 기반 권고 5 개 | ~2.4s |
+| `codexray review <path>` | AI 정성 평가 JSON | 1~5 분 |
+| `codexray inventory <path>` | 언어·파일·LoC 표 | ~0.5s |
+| `codexray graph <path>` | 의존성 그래프 JSON (Py/JS/TS/C# type-resolved) | ~0.6s |
+| `codexray metrics <path>` | fan-in/out · SCC · is_dag JSON | ~0.5s |
+| `codexray entrypoints <path>` | 진입점 식별 JSON | ~0.5s |
+| `codexray quality <path>` | 4 차원 등급 JSON | ~1.0s |
+| `codexray hotspots <path>` | 변경 빈도 × 결합도 매트릭스 JSON | ~0.7s |
+
+대상 언어: **Python · JavaScript · TypeScript · C#** (Java 후속).
+
+</details>
+
+<details>
+<summary>환경변수</summary>
+
+| 이름 | 기본값 | 설명 |
+|---|---|---|
+| `CODEXRAY_AI_BACKEND` | `auto` | `auto` (codex > claude 자동) / `codex` / `claude` 강제 |
+| `CODEXRAY_AI_TOP_N` | `5` | `review` 명령이 처리할 hotspot 파일 수 |
+
+</details>
+
+<details>
+<summary>git clone 방식 (소스 빌드)</summary>
 
 ```bash
 git clone https://github.com/gusdh8380/CodeXray.git
 cd CodeXray
 uv sync
-cd frontend && npm install && npm run build  # SPA 빌드 (선택, dashboard 만 쓰면 불필요)
-
-# 가장 의미 있는 한 줄 — 인터랙티브 대시보드
-uv run codexray dashboard /path/to/your/repo > dashboard.html
-open dashboard.html
+cd frontend && npm install && npm run build  # web UI 쓰려면 필수
+uv run codexray serve
 ```
 
-## 10개 명령
-
-| 명령 | 출력 | 비용 |
-|---|---|---|
-| `codexray serve` | 웹 UI (React SPA) 띄움 — 5섹션 브리핑 + 미시 분석 + 그래프 + 바이브코딩 진단 | 즉시 |
-| `codexray dashboard <path>` | self-contained HTML 인터랙티브 대시보드 | 2.4s |
-| `codexray report <path>` | 1페이지 종합 Markdown + 룰 기반 권고 5개 | 2.4s |
-| `codexray review <path>` | AI 정성 평가 JSON (codex/claude CLI 셸아웃) | 1~5분 |
-| `codexray inventory <path>` | 언어·파일·LoC 표 | 0.5s |
-| `codexray graph <path>` | 의존성 그래프 JSON (Py/JS/TS/C# type-resolved) | 0.6s |
-| `codexray metrics <path>` | fan-in/out · SCC · is_dag JSON | 0.5s |
-| `codexray entrypoints <path>` | 진입점 식별 JSON (`__main__`, `Main`, MonoBehaviour, manifests) | 0.5s |
-| `codexray quality <path>` | 4차원(coupling/cohesion/documentation/test) A~F 등급 JSON | 1.0s |
-| `codexray hotspots <path>` | 변경빈도×결합도 4 카테고리 매트릭스 JSON | 0.7s |
-
-대상 언어: **Python · JavaScript · TypeScript · C#** (Java는 후속).
-기본 사용법은 `codexray serve` 한 줄 — 화면이 알아서 분석·해석·다음 행동까지.
-
-## 예시 출력 (Unity C# 게임 검증)
-
-```text
-$ codexray report ~/CivilSim
-# CodeXray Report — `~/CivilSim`
-**Date:** 2026-04-28
-
-## Overall Grade: D (40)
-| dimension | grade | score | detail |
-| coupling | F | 33 | avg_fan_inout=6.72, max=44 |
-| cohesion | A | 92 | groups_evaluated=3 |
-| documentation | F | 33 | documented=86, items_total=262 |
-| test | F | 4 | ratio=0.02, src_loc=8684, test_loc=194 |
-
-## Top Hotspots
-| path | change_count | coupling |
-| `Assets/Scripts/Core/GameManager.cs` | 15 | 45 |
-| `Assets/Scripts/Core/GameEvents.cs`  | 11 | 25 |
-...
-
-## Recommendations
-1. Top hotspot: `Core/GameManager.cs` (change=15, coupling=45). 책임 분리·테스트 추가 우선.
-2. `coupling` grade F (score 33). detail: avg_fan_inout=6.72, max=44.
-3. `test` grade F (score 4). detail: ratio=0.02.
-4. Cycle detected — largest SCC size 14, 39 SCCs total. 사이클 분해 검토.
-...
+테스트 + 린트:
+```bash
+uv run pytest tests/ -q       # 320 tests
+uv run ruff check
 ```
 
-AI 정성 평가는 본인 구독을 셸아웃으로 호출 (별도 API 키 결제 불필요):
+</details>
 
-```text
-$ CODEXRAY_AI_TOP_N=1 codexray review ~/CivilSim
-{
-  "backend": "codex",
-  "reviews": [{
-    "path": "Assets/Scripts/Core/GameManager.cs",
-    "dimensions": {
-      "design": {"score": 57, "evidence_lines": [16, 19, 21, 60, 102, 122],
-        "comment": "싱글턴 + 다수 서브시스템 직접 노출은 서비스 로케이터 형태...",
-        "suggestion": "도메인별 파사드(예: 건설/인구/인프라)로 분리하고 ..."},
-      ...
-    },
-    "confidence": "medium",
-    "limitations": "..."
-  }]
-}
-```
-
-## 환경변수
-
-| 이름 | 기본값 | 설명 |
-|---|---|---|
-| `CODEXRAY_AI_BACKEND` | `auto` | `auto` (codex > claude 자동 감지) / `codex` / `claude` 강제 |
-| `CODEXRAY_AI_TOP_N` | `5` | `review` 명령이 처리할 hotspot 파일 수 |
-
-## AI 백엔드 (선택)
-
-`review` 명령은 다음 중 하나만 있으면 됩니다:
-- **OpenAI Codex CLI** — `brew install --cask codex && codex login` (ChatGPT Plus/Pro/Codex Plus 구독 활용)
-- **Claude Code** — `claude` CLI가 PATH에 있으면 자동 사용 (Claude Pro/Max 구독 활용)
-
-API 키 별도 결제 없이 본인 구독 한도 안에서 호출. 어느 도구가 깔려 있든 동일 인터페이스(`AIAdapter` Protocol).
-
-## 아키텍처
+<details>
+<summary>아키텍처 + 프로젝트 규약</summary>
 
 ```
 src/codexray/
-├── walk.py            ← .gitignore + 무시 디렉토리 + 심볼릭 링크 비추적
-├── language.py        ← 확장자 → 언어 매핑
-├── loc.py             ← 비어있지 않은 줄 수
-├── inventory.py       ← 언어별 파일·LoC·mtime 집계
-├── render.py          ← rich.table 인벤토리 출력
-├── graph/             ← 파일↔파일 의존성 (Python AST + JS 정규식 + C# type-resolution)
-├── metrics/           ← fan-in/out + Tarjan SCC + is_dag
-├── entrypoints/       ← __main__ / Main / MonoBehaviour / manifest detector
-├── quality/           ← 4차원 점수 + A~F 매핑
-├── hotspots/          ← git log + 결합도 매트릭스
-├── report/            ← 6 builder 종합 + 룰 기반 권고 + Markdown
-├── dashboard/         ← 6 builder 종합 + 단일 HTML + D3 force-directed
-├── ai/                ← 어댑터 패턴 (Codex/Claude CLI 셸아웃) + 안전장치 강제 파서
-└── cli.py             ← typer 진입점 (10 서브커맨드)
+├── walk · language · loc · inventory     ← 파일 수집·언어 매핑
+├── graph/ · metrics/ · entrypoints/      ← 의존성·메트릭·진입점
+├── quality/ · hotspots/                  ← 등급·핫스팟
+├── vibe_insights/                        ← 3 축 진단·신호 풀·9 룰 카드
+├── briefing/                             ← 결정론 5 섹션 합성
+├── web/                                  ← FastAPI + React SPA
+├── ai/                                   ← codex/claude CLI 어댑터
+└── cli.py                                ← typer 진입점 (10 서브커맨드)
 ```
 
-`graph` → `metrics`/`hotspots`/`report`/`dashboard`의 입력이고, `hotspots` → `review`의 우선순위 입력. 모든 하위 모듈은 결정론적 + frozen dataclass.
+`docs/` 에 의도·검증 결과·회고. `openspec/` 에 36 개 archived change. 모든 변경은 OpenSpec validate 게이트 통과 + 자기 적용 + 외부 OSS 검증 + 3 OS CI 통과.
 
-## 개발
+설계 원칙 (`docs/constraints.md`): **로컬 실행 우선, AI 는 opt-in, 근거 라인 인용 필수, 사용자가 거절·재평가 가능**.
 
-```bash
-uv sync
-uv run pytest -q          # 320 tests
-uv run ruff check
-uv run codexray report .  # 자기 자신에게 적용 (현재 D(57))
-```
+</details>
 
-### Web UI (React SPA)
-
-`uv run codexray serve` 가 띄우는 웹 UI는 React + Vite + Tailwind v4. 백엔드 변경 후 정적 자산만 다시 빌드하면 됨:
-
-```bash
-cd frontend
-npm install        # 최초 1회
-npm run build      # frontend/dist 생성 → FastAPI가 정적 서빙
-```
-
-`frontend/dist`가 없으면 `/` 라우트는 SPA를 제공하지 않으므로 빌드를 한 번은 실행해야 한다. 개발 중 핫리로드가 필요하면 별도 터미널에서 `npm run dev` (Vite dev server, 백엔드 API는 8080으로 프록시).
-
-## 프로젝트 규약
-
-`docs/`에 vision/intent/constraints + vibe-coding 5단계 + 검증 메모 + 회고. `openspec/`에 36개 archived change (매 변경의 proposal/design/spec/tasks). 모든 변경은 OpenSpec validate 게이트 통과 + CodeXray 자기 + 외부 OSS 검증 + 3 OS CI 게이트 통과.
-
-설계 원칙은 `docs/constraints.md`에 명시 — **로컬 실행 우선, AI는 opt-in, 근거 라인 인용 필수, 사용자가 거절·재평가 가능**.
+---
 
 ## Status
 
-**Beta 단계** — PyPI 첫 publish 완료 (`codexray-wai 0.1.0`, 2026-05-02). 동료가 `pip install codexray-wai` 한 줄로 설치 가능. 3 OS CI 자동 검증 + 320 tests + 외부 OSS 9 개 검증 + 평가 신호 풀 일반화 완료.
+**Beta — `pip install codexray-wai` 설치 가능** (2026-05-02).
 
-**Phase 1 (2026-04-28) MVP 출하**: intent.md 의 6 개 핵심 feature 모두 동작.
-**Phase 2 (2026-04-30 ~ 05-02)**: 브리핑 화면 (5 섹션) + 비개발자 페르소나 분리 + 바이브코딩 인사이트 (3 축 진단·9 룰 카드 합성·평가 철학 토글) + 외부 OSS 검증 + 신호 풀 일반화 + 옵션 A' (비감지 시 vibe insights 비노출) + 3 OS CI + PyPI 배포.
+직전 큰 변경:
+- `pypi-distribution` — PyPI 첫 publish
+- `cross-platform-ci-setup` — 3 OS 자동 검증
+- `vibe-signal-pool-expand` — 일반 OSS 신호 풀 확장 (5/9 외부 OSS 셀 개선)
+- `vibe-detection-rebalance` — 비-AI 프로젝트는 vibe insights 섹션 자동 비노출
+- `non-roboco-validation` — 외부 OSS 9 개 분석 결과 문서화
+- `vibe-insights-realign` — 3 축 진단 + 4 단계 상태 + 9 룰 카드 + 평가 철학 토글
 
-후속 변경 후보:
-- `release-workflow` — GitHub Actions tag-push 자동 PyPI publish
-- `bundle-composition-validation` — Python 결정론 ↔ AI 출력 상호 검증 데이터 수집
-- `vibe-thresholds-tune` — 70/40/10 임계값 재검토 (n 확장 후)
-- `frontend-ci` — CI matrix 에 npm build 추가
-- `add-graph-java` — Java import 추출 (Phase 1 의 잔여)
+전체 history: [`openspec/changes/archive/`](openspec/changes/archive/), 검증 메모: [`docs/validation/`](docs/validation/), 회고: [`docs/vibe-coding/retro-2026-04-28.md`](docs/vibe-coding/retro-2026-04-28.md)
 
-회고: [`docs/vibe-coding/retro-2026-04-28.md`](docs/vibe-coding/retro-2026-04-28.md), 검증: [`docs/validation/`](docs/validation/), 변경 history: [`openspec/changes/archive/`](openspec/changes/archive/)
-
-## Vibe Coding 처음 시작하기
-
-이 도구는 vibe coding 프로젝트의 *진단* 을 도울 뿐, vibe coding 자체를 배우려면 아래 권위 자료부터 시작하세요. 도구의 평가 기준도 이 자료들에서 합성된 것입니다 (브리핑 화면 *"이 도구가 바이브코딩을 어떻게 평가하나요?"* 토글의 8번 섹션과 동일).
-
-- **Anthropic — [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)** · `CLAUDE.md` 의 역할과 작성 원칙. 도구 사용자가 가장 먼저 볼 자료.
-- **OpenAI Codex — [AGENTS.md guide](https://agents.md)** · `AGENTS.md` / `PLANS.md` / ExecPlan 형식. CLAUDE.md 와 짝꿍 컨벤션.
-- **Andrej Karpathy — [vibe coding 용어의 출처](https://x.com/karpathy/status/1886192184808149383)** · "AI 와 작업할 때 인간 미감과 판단의 역할" — 본 분야 명명자의 원본 정의.
-- **Simon Willison — [블로그 LLM 태그](https://simonwillison.net/tags/llms/)** · "Context is king", "Tests are non-negotiable" 같은 핵심 명문이 모인 곳.
-- **Kent Beck — [Tidy First? Substack](https://tidyfirst.substack.com/)** · Constrain Context · Preserve Optionality · Maintain Human Judgment 권고.
-- **Geoffrey Huntley — [ghuntley.com](https://ghuntley.com/)** · "한 번에 한 가지, 매 루프마다 계획" — 작업 분할의 실제.
-- **Birgitta Böckeler (Thoughtworks) — [Exploring Generative AI](https://martinfowler.com/articles/exploring-gen-ai.html)** · "AI is an accelerator, not an automator" 시리즈.
-- **Will Larson — [Theory of improvement (Irrational)](https://lethain.com/)** · 점수·등급의 한계와 *질적 진보* 의 본성.
-- **GitHub Spec Kit — [github/spec-kit](https://github.com/github/spec-kit)** · intent-driven development 의 형식 — 의도부터 적고 코드는 그 다음.
-- **Cursor / Cline / Aider** · Plan Mode · Memory Bank · `/undo` 패턴의 실전 도구. 각각 [Cursor](https://www.cursor.com/), [Cline](https://github.com/cline/cline), [Aider](https://aider.chat/) 공식.
-
-이 자료들은 영어 위주 — 한국어 자료가 추가되면 이 섹션을 갱신할 예정. README 와 *평가 철학 토글* 을 함께 갱신해 두 곳을 동기화 유지하세요.
+---
 
 ## License
 

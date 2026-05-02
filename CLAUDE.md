@@ -32,15 +32,14 @@ uv run codexray serve --no-browser
 
 활성 OpenSpec 변경 없음.
 
-직전 archive (2026-05-02): **`vibe-detection-rebalance`** — 옵션 A' 채택 (detection 게이트 유지 + 비감지 시 vibe insights 섹션 *통째로 비노출* + starter_guide 완전 제거). 두 페르소나 분리: 동료(자기 vibe 프로젝트)는 변화 없음, 본인(fastapi 같은 일반 OSS)은 깔끔한 일반 분석 도구로 변신. SCHEMA_VERSION 4→5 / ai_briefing 6→7 bump. `docs/validation/vibe-detection-rebalance-{self,fastapi}.md` 검증 통과.
+직전 archive (2026-05-02): **`readme-vibe-coding-resources`** — README 에 "Vibe Coding 처음 시작하기" 섹션 추가. 외부 학습 자료 10 개 (Anthropic, OpenAI Codex, Karpathy, Simon Willison, Kent Beck, Geoffrey Huntley, Birgitta Böckeler, Will Larson, GitHub Spec Kit, Cursor/Cline/Aider) — `EvaluationPhilosophyToggle` Section 8 과 동기화. starter_guide 제거 (직전 변경) 의 학습 진입점 보강.
 
 다음 변경 후보:
 - **vibe-signal-pool-expand**: pyproject description / examples / MAINTAINERS 등 신호 풀 확장. ROBOCO 컨벤션 의존도 추가 완화.
-- **readme-vibe-coding-resources**: vibe coding 처음 시작하는 사용자를 위해 README 에 외부 자료 (Anthropic Best Practices, OpenAI AGENTS.md guide 등) 링크. starter_guide 제거 후 학습 진입점 보강.
-- **bundle-composition-rebalance**: Python·AI 상호 검증 관계 (앵커링·long-tail·과번역 위험 — `docs/flow.md` 미래 섹션 참조).
-- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드.
+- **bundle-composition-validation**: Python 결정론 결과가 AI 출력에 미치는 앵커링·long-tail·과번역 사례 데이터 수집. bundle-composition-rebalance 진입 전 입증.
+- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드. 별도 환경 마련 후 진행.
 
-이전 archive: 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
+이전 archive: 2026-05-02 `vibe-detection-rebalance` (비감지 시 vibe insights 섹션 비노출 + starter_guide 완전 제거, 옵션 A'). 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
 
 ## Load on Demand
 

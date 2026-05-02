@@ -156,6 +156,23 @@ npm run build      # frontend/dist 생성 → FastAPI가 정적 서빙
 
 회고: [`docs/vibe-coding/retro-2026-04-28.md`](docs/vibe-coding/retro-2026-04-28.md)
 
+## Vibe Coding 처음 시작하기
+
+이 도구는 vibe coding 프로젝트의 *진단* 을 도울 뿐, vibe coding 자체를 배우려면 아래 권위 자료부터 시작하세요. 도구의 평가 기준도 이 자료들에서 합성된 것입니다 (브리핑 화면 *"이 도구가 바이브코딩을 어떻게 평가하나요?"* 토글의 8번 섹션과 동일).
+
+- **Anthropic — [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)** · `CLAUDE.md` 의 역할과 작성 원칙. 도구 사용자가 가장 먼저 볼 자료.
+- **OpenAI Codex — [AGENTS.md guide](https://agents.md)** · `AGENTS.md` / `PLANS.md` / ExecPlan 형식. CLAUDE.md 와 짝꿍 컨벤션.
+- **Andrej Karpathy — [vibe coding 용어의 출처](https://x.com/karpathy/status/1886192184808149383)** · "AI 와 작업할 때 인간 미감과 판단의 역할" — 본 분야 명명자의 원본 정의.
+- **Simon Willison — [블로그 LLM 태그](https://simonwillison.net/tags/llms/)** · "Context is king", "Tests are non-negotiable" 같은 핵심 명문이 모인 곳.
+- **Kent Beck — [Tidy First? Substack](https://tidyfirst.substack.com/)** · Constrain Context · Preserve Optionality · Maintain Human Judgment 권고.
+- **Geoffrey Huntley — [ghuntley.com](https://ghuntley.com/)** · "한 번에 한 가지, 매 루프마다 계획" — 작업 분할의 실제.
+- **Birgitta Böckeler (Thoughtworks) — [Exploring Generative AI](https://martinfowler.com/articles/exploring-gen-ai.html)** · "AI is an accelerator, not an automator" 시리즈.
+- **Will Larson — [Theory of improvement (Irrational)](https://lethain.com/)** · 점수·등급의 한계와 *질적 진보* 의 본성.
+- **GitHub Spec Kit — [github/spec-kit](https://github.com/github/spec-kit)** · intent-driven development 의 형식 — 의도부터 적고 코드는 그 다음.
+- **Cursor / Cline / Aider** · Plan Mode · Memory Bank · `/undo` 패턴의 실전 도구. 각각 [Cursor](https://www.cursor.com/), [Cline](https://github.com/cline/cline), [Aider](https://aider.chat/) 공식.
+
+이 자료들은 영어 위주 — 한국어 자료가 추가되면 이 섹션을 갱신할 예정. README 와 *평가 철학 토글* 을 함께 갱신해 두 곳을 동기화 유지하세요.
+
 ## License
 
 MIT.

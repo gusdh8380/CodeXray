@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
@@ -10,6 +11,8 @@ from codexray.web import create_app
 from codexray.web.folder_picker import FolderPickerResult
 from codexray.web.jobs import ReviewJob
 
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist" / "index.html"
+
 
 def _make_tree(root: Path) -> None:
     (root / "a.py").write_text("from .b import value\n")
@@ -17,6 +20,10 @@ def _make_tree(root: Path) -> None:
     (root / "README.md").write_text("# example\n")
 
 
+@pytest.mark.skipif(
+    not _FRONTEND_DIST.exists(),
+    reason="frontend/dist 가 없으면 SPA 라우트도 비활성. cross-platform CI 에서 npm build 생략",
+)
 def test_main_page_serves_react_spa_when_dist_exists() -> None:
     client = TestClient(create_app())
     response = client.get("/")

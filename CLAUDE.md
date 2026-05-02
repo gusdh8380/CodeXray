@@ -32,14 +32,15 @@ uv run codexray serve --no-browser
 
 활성 OpenSpec 변경 없음.
 
-직전 archive (2026-05-02): **`vibe-signal-pool-expand`** — 신호 풀에 일반 OSS 관행 추가 (pyproject/package.json description, README ## What 헤더, examples/demo/.storybook, MAINTAINERS/CODEOWNERS/getting-started). 9 외부 OSS 재분석 결과 5 셀 개선 (OpenSpec 의도 weak→moderate, OpenSpec 이어받기 moderate→strong, roboco-cli 의도 weak→moderate, CivilSim 의도 weak→moderate), 자기 적용 회귀 0. `docs/validation/vibe-signal-pool-expand-results.md`.
+직전 archive (2026-05-02): **`cross-platform-ci-setup`** — GitHub Actions OS matrix CI 도입 (ubuntu/macos/windows). 사이클 1 회로 3 OS 모두 통과 (Windows 호환성 추가 fix 불필요 — 이미 잘 갖춰져 있던 결과). 발견된 fix 1 개: `test_main_page_serves_react_spa_when_dist_exists` 가 dist 부재 시 무조건 fail 했던 걸 `pytest.skipif` 로 조건부 처리. README 에 CI badge 추가. `docs/validation/cross-platform-ci-setup-results.md`. 후속 `pypi-distribution` 진입 가능.
 
 다음 변경 후보:
+- **pypi-distribution**: `pip install codexray` 한 줄 설치. pyproject 메타데이터 정비 + README OS 별 설치법 + (실제 publish 는 사용자 PyPI 토큰 필요).
 - **bundle-composition-validation**: Python 결정론 결과가 AI 출력에 미치는 앵커링·long-tail·과번역 사례 데이터 수집. bundle-composition-rebalance 진입 전 입증.
-- **cross-platform-distribution**: Windows/Linux 지원 + 설치 가이드. 별도 환경 마련 후 진행.
 - **vibe-thresholds-tune**: 70/40/10 임계값을 추가 데이터로 재검토 (n 확장 후).
+- **frontend-ci**: CI matrix 에 `npm run build` 추가, frontend 회귀도 OS 별 자동 차단.
 
-이전 archive: 2026-05-02 `readme-vibe-coding-resources` (README 학습 자료 10 개), `vibe-detection-rebalance` (비감지 시 vibe insights 섹션 비노출 + starter_guide 완전 제거, 옵션 A'). 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
+이전 archive: 2026-05-02 `vibe-signal-pool-expand` (신호 풀 일반 OSS 확장), `readme-vibe-coding-resources` (학습 자료 10 개), `vibe-detection-rebalance` (옵션 A'). 2026-05-01 `non-roboco-validation` (외부 OSS 9 개 검증), `vibe-insights-realign` (3축·4단계 상태·9 룰 엔진·평가 철학 토글). 2026-04-30 briefing-persona-split, briefing-rebuild, categorized-next-actions.
 
 ## Load on Demand
 

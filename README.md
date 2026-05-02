@@ -1,5 +1,7 @@
 # CodeXray
 
+[![CI](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml/badge.svg)](https://github.com/gusdh8380/CodeXray/actions/workflows/ci.yml)
+
 > 임의의 코드베이스를 입력하면 구조를 시각화하고 품질을 평가해, **"다음에 무엇을 할지"의 근거**를 제공한다.
 
 8개 CLI 명령으로 인벤토리·의존성 그래프·메트릭·진입점·정량 등급·핫스팟·종합 리포트·인터랙티브 대시보드·AI 정성 평가를 한 번에. 결정론적 정량 분석이 우선, AI는 그 위에 정성 권고만 더한다.
